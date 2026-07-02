@@ -1,17 +1,19 @@
 import { Api } from '@app/api-core';
 import { Effect } from 'effect';
 import { HttpApiBuilder } from 'effect/unstable/httpapi';
+import { Slice } from '../../Slice/service';
 
-/** Placeholder `actions` handlers until the ledger service lands in wave 3. */
+/** Live `actions` handlers backed by the in-memory insurance slice. */
 export const HttpActionsLive = HttpApiBuilder.group(
   Api,
   'actions',
   Effect.fn(function* (handlers) {
+    const slice = yield* Slice;
     return handlers
-      .handle('resolveApproval', () =>
-        Effect.die('actions.resolveApproval not implemented')
+      .handle('resolveApproval', ({ params, payload }) =>
+        slice.resolveApproval(params.id, payload)
       )
-      .handle('undo', () => Effect.die('actions.undo not implemented'))
-      .handle('ledger', () => Effect.die('actions.ledger not implemented'));
+      .handle('undo', ({ params }) => slice.undoAction(params.id))
+      .handle('ledger', () => slice.listLedger());
   })
 );

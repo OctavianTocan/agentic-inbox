@@ -1,4 +1,5 @@
 import { Layer } from 'effect';
+import { Slice } from '../Slice/service';
 import { HttpActionsLive } from './Actions/Http';
 import { HttpChatLive } from './Chat/Http';
 import { HttpSystemLive } from './System/Http';
@@ -10,4 +11,4 @@ export const CoreModulesLive = Layer.mergeAll(
   HttpTriageLive,
   HttpActionsLive,
   HttpChatLive
-);
+).pipe(Layer.provide(Slice.layer.pipe(Layer.orDie)));
