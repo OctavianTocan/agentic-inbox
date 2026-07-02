@@ -1,12 +1,13 @@
 "use client";
 
-import { getToolName, isToolUIPart } from "ai";
 import { createContext, type ReactNode, use, useMemo } from "react";
 import type {
+  DynamicToolUIPart,
   NarrowedUIMessagePart,
   PartStatus,
   ToolContextValue,
   ToolStatus,
+  ToolUIPart,
   UIDataTypes,
   UIMessagePart,
   UITools,
@@ -37,7 +38,19 @@ export interface PartProviderProps<
   isLast: boolean;
 }
 
-/** Maps an AI SDK tool-part state string to the UI's {@link ToolStatus}. */
+/** True when the part is a static (`tool-*`) or dynamic tool invocation. */
+function isToolUIPart(
+  part: UIMessagePart<UIDataTypes, UITools>,
+): part is ToolUIPart<UITools> | DynamicToolUIPart {
+  return part.type === "dynamic-tool" || part.type.startsWith("tool-");
+}
+
+/** Tool name of a tool part: the `toolName` field for dynamic tools, else the `tool-` suffix. */
+function getToolName(part: ToolUIPart<UITools> | DynamicToolUIPart): string {
+  return part.type === "dynamic-tool" ? part.toolName : part.type.slice(5);
+}
+
+/** Maps a tool-part state string to the UI's {@link ToolStatus}. */
 function toToolStatus(state: string, errorText?: string): ToolStatus {
   switch (state) {
     case "input-streaming":

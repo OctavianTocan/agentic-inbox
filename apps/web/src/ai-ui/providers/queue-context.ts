@@ -1,7 +1,7 @@
 "use client";
 
-import type { UIMessage } from "ai";
 import { createContext } from "react";
+import type { UIMessage } from "../types";
 
 /**
  * One slot in the projected queue. Carries the harness queue-entry id, the

@@ -1,0 +1,65 @@
+# Dev stack for the Cogram Agentic Inbox.
+#
+# Default (`docker compose up -d` / `just up`) starts only Postgres. The api and
+# web apps run on the host via Bun (`bun run dev:api`, `bun run dev`) against
+# DATABASE_URL from .env — no containers needed for day-to-day dev.
+#
+# The optional `full` profile containerizes api + web too:
+#   docker compose --profile full up -d --build
+name: cogram-agentic-inbox
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: cogram
+      POSTGRES_PASSWORD: cogram
+      POSTGRES_DB: cogram
+    ports:
+      # Host port is 5442 by default to avoid clashing with other local
+      # Postgres instances; the URL in .env.example matches. Override with
+      # DB_PORT if 5442 is taken.
+      - "${DB_PORT:-5442}:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cogram -d cogram"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  api:
+    profiles: ["full"]
+    image: oven/bun:1.3.14-alpine
+    working_dir: /app
+    command: sh -c "bun install && bun run dev:api"
+    environment:
+      DATABASE_URL: postgres://cogram:cogram@db:5432/cogram
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-openai/gpt-5.5}
+      PORT: "8001"
+    ports:
+      - "8001:8001"
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    profiles: ["full"]
+    image: oven/bun:1.3.14-alpine
+    working_dir: /app
+    command: sh -c "bun install && bun run dev"
+    environment:
+      PORT: "3003"
+    ports:
+      - "3003:3003"
+    volumes:
+      - .:/app
+    depends_on:
+      - api
+
+volumes:
+  db-data:

@@ -153,7 +153,10 @@
     "id": "e-016",
     "from": "Dave Hartmann <d.hartmann@allianceconstruction.com>",
     "to": ["pm@firm.com"],
-    "cc": ["d.foster@allianceconstruction.com", "safety@allianceconstruction.com"],
+    "cc": [
+      "d.foster@allianceconstruction.com",
+      "safety@allianceconstruction.com"
+    ],
     "subject": "INCIDENT REPORT - Bay Street - fall arrest anchor failure 5/14",
     "body": "PM and team,\n\nReporting a Class B safety incident at Bay Street this morning at approximately 11:10 AM.\n\nAn ironworker (M. Castillo, ASW Steel) was working on roof joist installation at the south bay. His fall arrest lanyard anchor pulled free from a temporary clamp on a joist top chord. He fell approximately 4 feet to the joist below and was caught by his harness. No injuries.\n\nWork stopped immediately. ASW Steel safety lead and our team conducted an on-the-spot investigation. The anchor was a temp clamp not rated for the load. Root cause: improper anchor selection. All fall arrest anchors site-wide are being re-inspected today.\n\nFormal report will follow. OSHA has been notified per company policy.\n\nDave Hartmann\nSafety Officer, Alliance Construction",
     "timestamp": "2026-05-14T12:05:00Z",
@@ -323,7 +326,12 @@
     "id": "e-033",
     "from": "Diane Foster <d.foster@allianceconstruction.com>",
     "to": ["pm@firm.com"],
-    "cc": ["greg.almonte@harrison-glazing.com", "d.lo@northpoint-mep.com", "l.vasquez@cresttile.com", "pete@donnellyelectric.com"],
+    "cc": [
+      "greg.almonte@harrison-glazing.com",
+      "d.lo@northpoint-mep.com",
+      "l.vasquez@cresttile.com",
+      "pete@donnellyelectric.com"
+    ],
     "subject": "Riverside Tower - Pull planning session 5/22",
     "body": "Setting up the pull-planning session for the curtainwall + MEP + finishes interface on Riverside L2-L8.\n\nProposed:\n- Date: Thu 5/22\n- Time: 1 PM - 4 PM\n- Location: site trailer + Teams hybrid\n- Required: Harrison Glazing, Northpoint MEP, Crest Tile, Donnelly Electric, our PM\n\nLet me know if 5/22 doesn't work and I'll send invites tomorrow.\n\nDiane",
     "timestamp": "2026-05-15T09:30:00Z",
@@ -493,7 +501,10 @@
     "id": "e-050",
     "from": "Dave Hartmann <d.hartmann@allianceconstruction.com>",
     "to": ["pm@firm.com"],
-    "cc": ["safety@allianceconstruction.com", "d.foster@allianceconstruction.com"],
+    "cc": [
+      "safety@allianceconstruction.com",
+      "d.foster@allianceconstruction.com"
+    ],
     "subject": "SAFETY INCIDENT - Maplewood Senior Living - injury 5/16",
     "body": "PM,\n\nReporting a Class A safety incident at Maplewood Senior Living, Saturday 5/16 at approximately 08:45 AM.\n\nA framing carpenter (J. Olsen, Pacific Framing) was struck in the face by a 2x4 that kicked back from a circular saw. He suffered a laceration to the cheek and possible orbital fracture. He was transported by ambulance to St. Vincent's. As of this report he is being assessed.\n\nWork stopped on the south wing. Photo evidence and witness statements being collected. OSHA notified per protocol. Full report by EOD Monday.\n\nDave Hartmann",
     "timestamp": "2026-05-16T10:15:00Z",

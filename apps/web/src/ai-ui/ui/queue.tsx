@@ -1,7 +1,7 @@
 "use client";
 
-import type { UIMessage } from "ai";
 import * as React from "react";
+import type { UIMessage } from "../types";
 import type { QueueEntry } from "../providers/queue-provider";
 import { useQueue, useQueueOptional } from "../providers/queue-provider";
 

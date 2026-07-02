@@ -1,33 +1,27 @@
-import type {
-  ReasoningUIPart as AISdkReasoningUIPart,
-  UIMessage as AISdkUIMessage,
-  ChatStatus,
-  DataUIPart,
-  DynamicToolUIPart,
-  FileUIPart,
-  ImagePart,
-  SourceDocumentUIPart,
-  SourceUrlUIPart,
-  StepStartUIPart,
-  TextUIPart,
-  ToolUIPart,
-  UIDataTypes,
-  UITools,
-} from "ai";
+/** Opaque provider-specific metadata bag carried on message parts. */
+export type ProviderMetadata = Record<string, Record<string, unknown>>;
 
-export type {
-  ChatRequestOptions,
-  ChatStatus,
-  DataUIPart,
-  DynamicToolUIPart,
-  FileUIPart,
-  ImagePart,
-  TextUIPart,
-  ToolResultPart,
-  ToolUIPart,
-  UIDataTypes,
-  UITools,
-} from "ai";
+/** Map of tool name to that tool's input/output types for a message stream. */
+export type UITools = Record<string, { input: unknown; output: unknown }>;
+
+/** Map of data-part name to that part's payload type for a message stream. */
+export type UIDataTypes = Record<string, unknown>;
+
+/** Extra per-request options a chat transport may forward to its backend. */
+export type ChatRequestOptions = {
+  headers?: Record<string, string> | Headers;
+  body?: object;
+  metadata?: unknown;
+};
+
+export type ChatStatus = "submitted" | "streaming" | "ready" | "error";
+
+export type TextUIPart = {
+  type: "text";
+  text: string;
+  state?: "streaming" | "done";
+  providerMetadata?: ProviderMetadata;
+};
 
 /**
  * Reasoning part extended with timing the harness records as the model
@@ -35,10 +29,86 @@ export type {
  * `endedAt` is absent until the model emits `reasoning-end` (or the stream
  * is interrupted before completion).
  */
-export type ReasoningUIPart = AISdkReasoningUIPart & {
+export type ReasoningUIPart = {
+  type: "reasoning";
+  text: string;
+  state?: "streaming" | "done";
+  providerMetadata?: ProviderMetadata;
   startedAt?: number;
   endedAt?: number;
 };
+
+export type SourceUrlUIPart = {
+  type: "source-url";
+  sourceId: string;
+  url: string;
+  title?: string;
+  providerMetadata?: ProviderMetadata;
+};
+
+export type SourceDocumentUIPart = {
+  type: "source-document";
+  sourceId: string;
+  mediaType: string;
+  title: string;
+  filename?: string;
+  providerMetadata?: ProviderMetadata;
+};
+
+export type FileUIPart = {
+  type: "file";
+  mediaType: string;
+  filename?: string;
+  url: string;
+  providerMetadata?: ProviderMetadata;
+};
+
+export type StepStartUIPart = {
+  type: "step-start";
+};
+
+export type ImagePart = {
+  type: "image";
+  image: string | URL;
+  mediaType?: string;
+};
+
+/** Tool-result content block a chat transport may embed in a model message. */
+export type ToolResultPart = {
+  type: "tool-result";
+  toolCallId: string;
+  toolName: string;
+  output: unknown;
+};
+
+export type DataUIPart<DATA_TYPES extends UIDataTypes> = {
+  [NAME in keyof DATA_TYPES & string]: {
+    type: `data-${NAME}`;
+    id?: string;
+    data: DATA_TYPES[NAME];
+  };
+}[keyof DATA_TYPES & string];
+
+type ToolInvocation<INPUT, OUTPUT> = {
+  toolCallId: string;
+  providerExecuted?: boolean;
+} & (
+  | { state: "input-streaming"; input?: Partial<INPUT>; output?: never; errorText?: never }
+  | { state: "input-available"; input: INPUT; output?: never; errorText?: never }
+  | { state: "output-available"; input: INPUT; output: OUTPUT; errorText?: never }
+  | { state: "output-error"; input: INPUT | undefined; output?: never; errorText: string }
+);
+
+export type ToolUIPart<TOOLS extends UITools = UITools> = {
+  [NAME in keyof TOOLS & string]: {
+    type: `tool-${NAME}`;
+  } & ToolInvocation<TOOLS[NAME]["input"], TOOLS[NAME]["output"]>;
+}[keyof TOOLS & string];
+
+export type DynamicToolUIPart = {
+  type: "dynamic-tool";
+  toolName: string;
+} & ToolInvocation<unknown, unknown>;
 
 export type UIMessagePart<
   DATA_TYPES extends UIDataTypes = UIDataTypes,
@@ -58,7 +128,10 @@ export type UIMessage<
   METADATA = unknown,
   DATA_TYPES extends UIDataTypes = UIDataTypes,
   TOOLS extends UITools = UITools,
-> = Omit<AISdkUIMessage<METADATA, DATA_TYPES, TOOLS>, "parts"> & {
+> = {
+  id: string;
+  role: "system" | "user" | "assistant";
+  metadata?: METADATA;
   parts: UIMessagePart<DATA_TYPES, TOOLS>[];
 };
 

@@ -67,11 +67,7 @@
         "apps/api/src/Main.ts",
         "apps/api/src/Modules/**/*.ts",
         "packages/api-core/src/Api.ts",
-        "packages/api-core/src/Modules/**/*.ts",
-        "packages/clients/ai-sdk/src/AiSdk.ts",
-        "packages/clients/ai-sdk/src/Errors.ts",
-        "packages/clients/ai-sdk/src/StreamText.ts",
-        "packages/clients/ai-sdk/test/AiSdk.test.ts"
+        "packages/api-core/src/Modules/**/*.ts"
       ],
       "linter": {
         "rules": {

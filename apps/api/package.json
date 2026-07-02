@@ -14,10 +14,9 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@clients/ai-sdk": "workspace:*",
     "@app/api-core": "workspace:*",
     "@effect/platform-bun": "catalog:",
-    "ai": "catalog:",
+    "@effect/sql-pg": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

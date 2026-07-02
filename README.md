@@ -16,31 +16,50 @@ Inherited from the `cogram-ai-app-template` base:
 - `apps/web`: Next.js 16 App Router frontend, React 19, Tailwind CSS 4, a
   vendored design system under `apps/web/src/design-system`, and headless AI
   message/composer primitives under `apps/web/src/ai-ui`.
-- `apps/api`: optional Effect v4 backend (`@effect/platform-bun`), serving
-  `/api/v1` on port 8001.
+- `apps/api`: Effect v4 backend (`@effect/platform-bun`), serving `/api/v1` on
+  port 8001, with Postgres persistence via `@effect/sql-pg`.
 - `packages/api-core`: shared HTTP API contract/schemas for the backend.
-- `packages/clients/ai-sdk`: Effect wrapper around the Vercel AI SDK (`ai`
-  package) for LLM calls.
+- PostgreSQL 17 for the action ledger, decisions, and conversation history
+  (run locally via docker-compose).
+- LLM calls go through OpenRouter (`OPENROUTER_MODEL`, default
+  `openai/gpt-5.5`).
 - Biome (lint/format), TypeScript 6, Vitest, lefthook for git hooks.
 
 ## Install & run
 
 ```bash
+cp .env.example .env      # then fill in OPENROUTER_API_KEY
 bun install
-bun run dev        # apps/web on the Next.js dev server
-bun run dev:api    # apps/api Effect backend on :8001 (optional, if used)
-bun run typecheck
-bun run lint
-bun run test
-bun run build
+just up                   # start Postgres (docker) and wait until healthy
+just db-migrate           # apply DB migrations
+bun run dev:api           # apps/api Effect backend on :8001
+bun run dev               # apps/web on the Next.js dev server (:3003)
 ```
 
-Or via the Justfile: `just dev`, `just api`, `just web`, `just build`,
-`just test`, `just typecheck`, `just lint`, `just format`, `just ci`.
+The database runs in Docker; the api and web apps run on the host via Bun.
+`DATABASE_URL` in `.env` matches the compose Postgres service.
 
-Copy `.env.example` to `.env.local` and fill in only the provider key(s) this
-project actually uses (e.g. an OpenRouter or Anthropic/OpenAI key) before
-running anything that calls an LLM.
+### Database (docker-compose)
+
+| Recipe | What it does |
+| --- | --- |
+| `just up` | Start the Postgres dev database (detached) and wait until healthy |
+| `just down` | Stop the stack, keeping the data volume |
+| `just db-clean` | Stop the stack and delete the data volume |
+| `just db-migrate` | Apply pending migrations against the running database |
+| `just db-reset` | Wipe the volume, recreate the database, and re-migrate |
+
+A fully containerized stack (db + api + web) is available behind a profile:
+
+```bash
+docker compose --profile full up -d --build
+```
+
+### Other recipes
+
+`just dev`, `just api`, `just web`, `just build`, `just test`, `just typecheck`,
+`just lint`, `just format`, `just ci` all delegate to the matching `bun run`
+scripts.
 
 ## Data
 
