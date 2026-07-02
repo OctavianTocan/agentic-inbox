@@ -16,3 +16,8 @@ const loader: Migrator.Loader = Effect.succeed([
 export const MigratorLive = PgMigrator.layer({ loader }).pipe(
   Layer.provide([DatabaseLive, BunServices.layer])
 );
+
+/** Runs pending migrations against the configured Postgres database. */
+export const runMigrations = PgMigrator.run({ loader }).pipe(
+  Effect.provide([DatabaseLive, BunServices.layer])
+);

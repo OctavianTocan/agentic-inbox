@@ -3,7 +3,8 @@ import { Effect, Redacted } from 'effect';
 import initialMigration from '../../migrations/0001_initial';
 
 const TEST_DATABASE_URL =
-  process.env.DATABASE_URL ?? 'postgres://cogram:cogram@localhost:5442/cogram';
+  process.env.TEST_DATABASE_URL ??
+  'postgres://cogram:cogram@localhost:5442/cogram';
 
 /** Postgres pool for tests, pointed at the docker-compose database. */
 export const TestDatabaseLive = PgClient.layer({

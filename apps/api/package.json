@@ -9,6 +9,7 @@
   },
   "scripts": {
     "dev": "bun --watch run src/Main.ts",
+    "migrate": "bun run src/Infrastructure/Database/Migrate.ts",
     "start": "bun run src/Main.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests"

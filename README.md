@@ -32,12 +32,14 @@ cp .env.example .env      # then fill in OPENROUTER_API_KEY
 bun install
 just up                   # start Postgres (docker) and wait until healthy
 just db-migrate           # apply DB migrations
-bun run dev:api           # apps/api Effect backend on :8001
+just api                  # apps/api Effect backend on :8001
 bun run dev               # apps/web on the Next.js dev server (:3003)
 ```
 
 The database runs in Docker; the api and web apps run on the host via Bun.
-`DATABASE_URL` in `.env` matches the compose Postgres service.
+`DATABASE_URL` in `.env` matches the compose Postgres service. The `just api`
+and `just db-migrate` recipes source `.env` before starting the API so stale
+shell exports do not override the local database URL.
 
 ### Database (docker-compose)
 

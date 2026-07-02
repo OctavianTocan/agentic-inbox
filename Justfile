@@ -2,7 +2,7 @@ dev:
   bun run dev
 
 api:
-  bun run dev:api
+  set -a; . ./.env; set +a; bun run dev:api
 
 web:
   bun run dev:web
@@ -42,4 +42,4 @@ db-reset: db-clean up db-migrate
 
 # Apply pending migrations against the running database (apps/api owns the runner).
 db-migrate:
-  bun run --cwd apps/api migrate
+  set -a; . ./.env; set +a; bun run --cwd apps/api migrate
