@@ -52,12 +52,11 @@ export function EmailRow({
     <Item
       aria-current={isSelected}
       className={cn(
-        'cursor-pointer border-border',
-        isSelected && 'bg-muted ring-1 ring-ring/40'
+        'cursor-pointer rounded-none border-0 px-6 py-3',
+        isSelected && 'bg-muted'
       )}
       data-email-id={email.id}
       onClick={() => onSelect(email.id)}
-      variant="outline"
     >
       <ItemContent>
         <ItemTitle className="w-full justify-between gap-3">

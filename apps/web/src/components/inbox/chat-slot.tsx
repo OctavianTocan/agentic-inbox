@@ -1,7 +1,7 @@
 'use client';
 
 import ChatPanel from '@/components/chat/panel';
-import { PanelRightIcon } from '@/design-system/components/icons';
+import { BotIcon, PanelRightIcon } from '@/design-system/components/icons';
 import { Button } from '@/design-system/components/ui/button';
 import { cn } from '@/design-system/lib/utils';
 
@@ -11,8 +11,7 @@ type ChatSlotProps = {
 };
 
 /**
- * Right-edge collapsible chat slot. Stays mounted and hidden with CSS when
- * closed so the chat agent's conversation state survives toggles.
+ * Right-edge agent panel with a narrow collapse rail and resizable host panel.
  *
  * @param isOpen - Whether the chat panel is expanded.
  * @param onToggle - Called to flip the open state.
@@ -20,29 +19,28 @@ type ChatSlotProps = {
  */
 export function ChatSlot({ isOpen, onToggle }: ChatSlotProps) {
   return (
-    <div className="flex h-full">
-      <div className="flex flex-col border-l bg-card">
+    <aside className="flex h-full min-w-0 bg-card" data-slot="chat-slot">
+      <div className="flex w-11 shrink-0 flex-col items-center border-l bg-sidebar/60 py-2">
         <Button
           aria-label={isOpen ? 'Hide chat' : 'Show chat'}
           aria-pressed={isOpen}
-          className="m-1"
+          className="size-7"
           onClick={onToggle}
-          size="icon"
+          size="icon-sm"
           variant="ghost"
         >
-          <PanelRightIcon />
+          <PanelRightIcon className="size-4" />
         </Button>
       </div>
-      <div
-        className={cn(
-          'h-full w-96 overflow-hidden border-l bg-card transition-all',
-          isOpen ? 'w-96' : 'w-0 border-l-0'
-        )}
-      >
-        <div className={cn('h-full', isOpen ? 'block' : 'hidden')}>
+      <div className={cn('min-w-0 flex-1', isOpen ? 'flex' : 'hidden')}>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <div className="flex h-12 shrink-0 items-center gap-2 border-b px-4">
+            <BotIcon className="size-4 text-muted-foreground" />
+            <span className="font-medium text-sm">Agent</span>
+          </div>
           <ChatPanel />
         </div>
       </div>
-    </div>
+    </aside>
   );
 }

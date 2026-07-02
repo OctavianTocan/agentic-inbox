@@ -45,7 +45,7 @@ function renderInboxShell() {
 }
 
 describe('InboxShell', () => {
-  it('shows the run view first, then the populated inbox with percentage panel sizes', async () => {
+  it('shows the run view first, then the populated inbox with resizable list/detail/chat panels', async () => {
     const { container } = renderInboxShell();
 
     expect(screen.getByText('Triaging your inbox')).toBeDefined();
@@ -65,12 +65,15 @@ describe('InboxShell', () => {
       screen.getAllByText(/RFI-187: Lobby east wall finish at Riverside Tower/)
         .length
     ).toBeGreaterThan(0);
+    expect(screen.getByLabelText('Hide chat')).toBeDefined();
+    expect(screen.queryByLabelText('Stop generating')).toBeNull();
 
     const panelStyles = Array.from(
       container.querySelectorAll('[data-panel]')
     ).map((panel) => panel.getAttribute('style') ?? '');
 
-    expect(panelStyles[0]).toContain('flex: 40 1 0px');
-    expect(panelStyles[1]).toContain('flex: 60 1 0px');
+    expect(panelStyles[0]).toContain('flex: 30 1 0px');
+    expect(panelStyles[1]).toContain('flex: 42 1 0px');
+    expect(panelStyles[2]).toContain('flex: 28 1 0px');
   });
 });

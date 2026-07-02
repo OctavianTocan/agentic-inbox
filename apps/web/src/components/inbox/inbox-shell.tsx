@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ResizableHandle,
   ResizablePanel,
@@ -65,8 +65,8 @@ function threadContext(
 }
 
 /**
- * Four-panel inbox shell: sidebar, list, detail pane, and chat slot. Owns the
- * selection and filter state and binds j/k/enter/e/d/u keyboard shortcuts.
+ * Inbox shell: filter rail, list, detail pane, and resizable chat slot. Owns
+ * the selection and filter state and binds j/k/enter/e/d/u keyboard shortcuts.
  *
  * @returns The inbox application shell.
  */
@@ -74,7 +74,7 @@ export function InboxShell() {
   const { inbox, isLoading, approve, deny, undo } = useInbox();
   const [filters, setFilters] = useState<InboxFilters>(EMPTY_FILTERS);
   const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
-  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(true);
   const [hasRun, setHasRun] = useState(false);
 
   const items = inbox?.items ?? [];
@@ -95,6 +95,17 @@ export function InboxShell() {
   const selectedIndex = visibleItems.findIndex(
     (item) => item.email.id === selectedEmailId
   );
+
+  useEffect(() => {
+    const firstVisibleEmailId = visibleItems[0]?.email.id ?? null;
+    if (visibleItems.length === 0) {
+      setSelectedEmailId(null);
+      return;
+    }
+    if (selectedIndex === -1) {
+      setSelectedEmailId(firstVisibleEmailId);
+    }
+  }, [visibleItems, selectedIndex]);
 
   const moveSelection = useCallback(
     (delta: number) => {
@@ -146,7 +157,12 @@ export function InboxShell() {
 
   if (isLoading || inbox === null || !hasRun) {
     return (
-      <SidebarProvider>
+      <SidebarProvider
+        defaultWidth={264}
+        maxWidth={360}
+        minWidth={220}
+        resizable
+      >
         <SidebarInset className="h-svh min-w-0 overflow-hidden">
           <RunView
             items={items}
@@ -162,7 +178,7 @@ export function InboxShell() {
   }
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultWidth={264} maxWidth={360} minWidth={220} resizable>
       <InboxSidebar
         filters={filters}
         items={items}
@@ -171,10 +187,15 @@ export function InboxShell() {
       />
       <SidebarInset className="h-svh min-w-0 flex-row overflow-hidden">
         <ResizablePanelGroup
-          defaultLayout={{ 'inbox-list': 40, 'inbox-detail': 60 }}
+          defaultLayout={
+            isChatOpen
+              ? { 'inbox-list': 30, 'inbox-detail': 42, 'agent-chat': 28 }
+              : { 'inbox-list': 38, 'inbox-detail': 58, 'agent-chat': 4 }
+          }
+          key={isChatOpen ? 'chat-open' : 'chat-closed'}
           orientation="horizontal"
         >
-          <ResizablePanel defaultSize="40%" id="inbox-list" minSize="28%">
+          <ResizablePanel defaultSize="30%" id="inbox-list" minSize="24%">
             <div className="flex h-full flex-col overflow-hidden">
               <InboxSummaryBlock
                 isLoading={isLoading}
@@ -194,7 +215,7 @@ export function InboxShell() {
             </div>
           </ResizablePanel>
           <ResizableHandle withHandle />
-          <ResizablePanel defaultSize="60%" id="inbox-detail" minSize="30%">
+          <ResizablePanel defaultSize="42%" id="inbox-detail" minSize="32%">
             <DetailPane
               item={selectedItem}
               onApprove={approve}
@@ -203,11 +224,19 @@ export function InboxShell() {
               thread={threadContext(selectedItem, items)}
             />
           </ResizablePanel>
+          <ResizableHandle withHandle={isChatOpen} />
+          <ResizablePanel
+            defaultSize={isChatOpen ? '28%' : '4%'}
+            id="agent-chat"
+            maxSize={isChatOpen ? '34%' : '4%'}
+            minSize={isChatOpen ? '22%' : '4%'}
+          >
+            <ChatSlot
+              isOpen={isChatOpen}
+              onToggle={() => setIsChatOpen((prev) => !prev)}
+            />
+          </ResizablePanel>
         </ResizablePanelGroup>
-        <ChatSlot
-          isOpen={isChatOpen}
-          onToggle={() => setIsChatOpen((prev) => !prev)}
-        />
       </SidebarInset>
     </SidebarProvider>
   );

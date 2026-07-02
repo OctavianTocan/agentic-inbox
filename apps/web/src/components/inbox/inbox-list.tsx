@@ -97,7 +97,7 @@ export function InboxList({
       {pending.length > 0 ? (
         <>
           <SectionLabel>Awaiting your approval</SectionLabel>
-          <ItemGroup className="gap-2 px-6">
+          <ItemGroup className="gap-0 divide-y px-0">
             {visiblePending.map((item) => (
               <EmailRow
                 isSelected={selectedEmailId === item.email.id}
@@ -125,7 +125,7 @@ export function InboxList({
       {rest.length > 0 ? (
         <>
           <SectionLabel>Inbox</SectionLabel>
-          <ItemGroup className="gap-2 px-6">
+          <ItemGroup className="gap-0 divide-y px-0">
             {rest.map((item) => (
               <EmailRow
                 isSelected={selectedEmailId === item.email.id}

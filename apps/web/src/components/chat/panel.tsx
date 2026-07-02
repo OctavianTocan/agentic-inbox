@@ -98,8 +98,9 @@ function ThinkingRow() {
 
 /** Message stream and composer; empty state replaces the stream when idle. */
 function ChatSurface() {
-  const { messages } = useThread();
+  const { messages, status } = useThread();
   const hasMessages = messages.length > 0;
+  const isBusy = status.type === 'submitting' || status.type === 'streaming';
 
   return (
     <Thread className="min-h-0 flex-1">
@@ -123,7 +124,7 @@ function ChatSurface() {
             <span />
             <div className="flex items-center gap-1">
               <ComposerSendButton />
-              <ComposerStopButton />
+              {isBusy ? <ComposerStopButton /> : null}
             </div>
           </ComposerFooter>
         </Composer>
