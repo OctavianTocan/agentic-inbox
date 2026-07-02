@@ -31,7 +31,7 @@ const RecordTriageParams = Schema.Struct({
 const SendReplyParams = Schema.Struct({
   emailId: EmailId,
   body: Schema.String,
-  summary: Schema.optional(Schema.String)
+  summary: Schema.optionalKey(Schema.String)
 });
 
 const FileParams = Schema.Struct({
@@ -131,7 +131,7 @@ export const GetThread = Tool.make('get_thread', {
 /** Lists ledger entries, optionally for one email. */
 export const ListLedger = Tool.make('list_ledger', {
   description: 'List recent action ledger entries.',
-  parameters: Schema.Struct({ emailId: Schema.optional(EmailId) }),
+  parameters: Schema.Struct({ emailId: Schema.optionalKey(EmailId) }),
   success: Schema.Array(
     Schema.Struct({
       id: LedgerEntryId,
