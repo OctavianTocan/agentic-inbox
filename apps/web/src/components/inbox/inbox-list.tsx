@@ -15,6 +15,7 @@ type InboxListProps = {
   readonly items: readonly InboxItem[];
   readonly filters: InboxFilters;
   readonly selectedEmailId: string | null;
+  readonly viewedEmailIds: ReadonlySet<string>;
   readonly onSelect: (emailId: string) => void;
   readonly onApprove: (approvalId: string) => void;
   readonly onDeny: (approvalId: string) => void;
@@ -41,6 +42,7 @@ function SectionLabel({ children }: SectionLabelProps) {
  * @param items - All triaged inbox items.
  * @param filters - Active status/project/category/severity filters.
  * @param selectedEmailId - The open detail selection, or null.
+ * @param viewedEmailIds - Emails the reviewer has already opened this session.
  * @param onSelect - Called with an email id when a row is activated.
  * @param onApprove - Called with an approval id to approve inline.
  * @param onDeny - Called with an approval id to deny inline.
@@ -50,6 +52,7 @@ export function InboxList({
   items,
   filters,
   selectedEmailId,
+  viewedEmailIds,
   onSelect,
   onApprove,
   onDeny
@@ -101,6 +104,10 @@ export function InboxList({
             {visiblePending.map((item) => (
               <EmailRow
                 isSelected={selectedEmailId === item.email.id}
+                isDimmed={
+                  viewedEmailIds.has(item.email.id) ||
+                  item.status !== 'needs_attention'
+                }
                 item={item}
                 key={item.email.id}
                 onApprove={rowProps.onApprove}
@@ -129,6 +136,10 @@ export function InboxList({
             {rest.map((item) => (
               <EmailRow
                 isSelected={selectedEmailId === item.email.id}
+                isDimmed={
+                  viewedEmailIds.has(item.email.id) ||
+                  item.status !== 'needs_attention'
+                }
                 item={item}
                 key={item.email.id}
                 onApprove={rowProps.onApprove}

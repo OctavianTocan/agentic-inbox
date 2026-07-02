@@ -23,6 +23,7 @@ import type { InboxItem } from '@/lib/inbox/types';
 type EmailRowProps = {
   readonly item: InboxItem;
   readonly isSelected: boolean;
+  readonly isDimmed: boolean;
   readonly onSelect: (emailId: string) => void;
   readonly onApprove: (approvalId: string) => void;
   readonly onDeny: (approvalId: string) => void;
@@ -34,6 +35,7 @@ type EmailRowProps = {
  *
  * @param item - The joined email, decision, status, and pending state.
  * @param isSelected - Whether this row is the open detail selection.
+ * @param isDimmed - Whether the row has already been reviewed or handled.
  * @param onSelect - Called with the email id when the row is activated.
  * @param onApprove - Called with the approval id to approve inline.
  * @param onDeny - Called with the approval id to deny inline.
@@ -42,6 +44,7 @@ type EmailRowProps = {
 export function EmailRow({
   item,
   isSelected,
+  isDimmed,
   onSelect,
   onApprove,
   onDeny
@@ -54,6 +57,7 @@ export function EmailRow({
       className={cn(
         'cursor-pointer rounded-none border-0 px-4 py-3.5 sm:px-6',
         'hover:bg-muted/60',
+        isDimmed && !isSelected && 'opacity-55',
         isSelected && 'bg-primary/5'
       )}
       data-email-id={email.id}

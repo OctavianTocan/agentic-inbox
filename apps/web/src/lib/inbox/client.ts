@@ -218,6 +218,8 @@ async function* triageEventsFromResponse(
         if (event !== null) {
           if (event.type === 'done') {
             sawDone = true;
+            yield event;
+            return;
           }
           yield event;
         }
@@ -229,6 +231,8 @@ async function* triageEventsFromResponse(
       if (event !== null) {
         if (event.type === 'done') {
           sawDone = true;
+          yield event;
+          return;
         }
         yield event;
       }
@@ -237,6 +241,9 @@ async function* triageEventsFromResponse(
       throw new Error('Triage run ended before completion');
     }
   } finally {
+    if (sawDone) {
+      await reader.cancel();
+    }
     reader.releaseLock();
   }
 }

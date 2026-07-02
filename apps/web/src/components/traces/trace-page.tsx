@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { type KeyboardEvent, useMemo, useState } from 'react';
+import { EMPTY_FILTERS } from '@/components/inbox/filters';
+import { InboxSidebar } from '@/components/inbox/inbox-sidebar';
 import { useInbox } from '@/components/inbox/use-inbox';
 import {
   ArchiveIcon,
@@ -21,6 +23,10 @@ import {
   ItemTitle
 } from '@/design-system/components/ui/item';
 import { Separator } from '@/design-system/components/ui/separator';
+import {
+  SidebarInset,
+  SidebarProvider
+} from '@/design-system/components/ui/sidebar';
 import { cn } from '@/design-system/lib/utils';
 import {
   ACTION_LABELS,
@@ -207,6 +213,10 @@ export function AuditPage() {
   );
   const selected = records.find(({ entry }) => entry.id === selectedId);
   const selectedRecord = selected ?? records[0] ?? null;
+  const ledger = useMemo(
+    () => records.map((record) => record.entry),
+    [records]
+  );
 
   if (isLoading || inbox === null) {
     return (
@@ -218,38 +228,50 @@ export function AuditPage() {
   }
 
   return (
-    <main className="flex h-dvh flex-col overflow-hidden bg-background">
-      <header className="flex h-14 shrink-0 items-center justify-between border-b bg-sidebar px-5">
-        <div className="flex items-center gap-2">
-          <HistoryIcon className="size-4 text-muted-foreground" />
-          <span className="font-semibold text-sm">Audit</span>
-        </div>
-        <Button render={<Link href="/" />} size="sm" variant="outline">
-          <InboxIcon />
-          Inbox
-        </Button>
-      </header>
+    <SidebarProvider defaultWidth={264} maxWidth={360} minWidth={220} resizable>
+      <InboxSidebar
+        activeSection="audit"
+        filters={EMPTY_FILTERS}
+        items={inbox.items}
+        ledger={ledger}
+        onFiltersChange={() => undefined}
+        showFilters={false}
+      />
+      <SidebarInset className="h-dvh min-w-0 overflow-hidden bg-background">
+        <main className="flex h-dvh flex-col overflow-hidden">
+          <header className="flex h-14 shrink-0 items-center justify-between border-b bg-sidebar px-5">
+            <div className="flex items-center gap-2">
+              <HistoryIcon className="size-4 text-muted-foreground" />
+              <span className="font-semibold text-sm">Audit</span>
+            </div>
+            <Button render={<Link href="/" />} size="sm" variant="outline">
+              <InboxIcon />
+              Inbox
+            </Button>
+          </header>
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 grid-rows-[minmax(0,42%)_minmax(0,58%)] md:grid-cols-[minmax(320px,420px)_1fr] md:grid-rows-1">
-        <section className="flex min-w-0 flex-col border-r">
-          <div className="border-b px-5 py-4">
-            <p className="font-medium text-sm tabular-nums">
-              {records.length} audit events
-            </p>
-            <p className="text-muted-foreground text-xs">
-              Newest actions first
-            </p>
+          <div className="grid min-h-0 flex-1 grid-cols-1 grid-rows-[minmax(0,42%)_minmax(0,58%)] md:grid-cols-[minmax(320px,420px)_1fr] md:grid-rows-1">
+            <section className="flex min-w-0 flex-col border-r">
+              <div className="border-b px-5 py-4">
+                <p className="font-medium text-sm tabular-nums">
+                  {records.length} audit events
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  Newest actions first
+                </p>
+              </div>
+              <AuditList
+                onSelect={setSelectedId}
+                records={records}
+                selectedId={selectedRecord?.entry.id ?? null}
+              />
+            </section>
+            <section className="min-h-0 border-t md:border-t-0">
+              <AuditDetail record={selectedRecord} />
+            </section>
           </div>
-          <AuditList
-            onSelect={setSelectedId}
-            records={records}
-            selectedId={selectedRecord?.entry.id ?? null}
-          />
-        </section>
-        <section className="min-h-0 border-t md:border-t-0">
-          <AuditDetail record={selectedRecord} />
-        </section>
-      </div>
-    </main>
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

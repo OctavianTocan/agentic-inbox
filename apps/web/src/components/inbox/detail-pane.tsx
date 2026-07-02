@@ -98,8 +98,8 @@ export function DetailPane({
   const { email, decision, status, pendingApproval } = item;
 
   return (
-    <div className="flex h-full flex-col overflow-y-auto">
-      <div className="border-b bg-card px-6 py-4">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+      <div className="shrink-0 border-b bg-card px-6 py-4">
         <div className="flex flex-wrap items-center gap-2">
           {decision ? (
             <Badge variant={severityBadgeVariant(decision.severity)}>
@@ -120,84 +120,86 @@ export function DetailPane({
         </h2>
       </div>
 
-      <div className="flex flex-col gap-6 px-6 py-5">
-        {thread.length > 0 ? (
-          <div className="flex flex-col gap-4">
-            {thread.map((context) => (
-              <EmailBlock isContext item={context} key={context.email.id} />
-            ))}
-            <Separator />
-          </div>
-        ) : null}
-        <EmailBlock isContext={false} item={item} />
+      <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+        <div className="flex flex-col gap-6">
+          {thread.length > 0 ? (
+            <div className="flex flex-col gap-4">
+              {thread.map((context) => (
+                <EmailBlock isContext item={context} key={context.email.id} />
+              ))}
+              <Separator />
+            </div>
+          ) : null}
+          <EmailBlock isContext={false} item={item} />
 
-        {decision ? (
-          <div className="flex flex-col gap-4">
-            <Separator />
-            <section className="flex flex-col gap-2">
-              <h3 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
-                Why the agent decided this
-              </h3>
-              <div className="prose prose-sm max-w-none text-sm">
-                <Markdown>{decision.rationale}</Markdown>
-              </div>
-            </section>
-            {decision.keyFacts.length > 0 ? (
-              <section className="flex flex-col gap-2 rounded-md bg-muted/60 p-4">
+          {decision ? (
+            <div className="flex flex-col gap-4">
+              <Separator />
+              <section className="flex flex-col gap-2">
                 <h3 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
-                  Key facts
+                  Why the agent decided this
                 </h3>
-                <ul className="flex flex-col gap-1 text-sm">
-                  {decision.keyFacts.map((fact) => (
-                    <li className="flex gap-2" key={fact}>
-                      <span className="text-muted-foreground">·</span>
-                      <span>{fact}</span>
-                    </li>
-                  ))}
-                </ul>
+                <div className="prose prose-sm max-w-none text-sm">
+                  <Markdown>{decision.rationale}</Markdown>
+                </div>
               </section>
-            ) : null}
-          </div>
-        ) : null}
+              {decision.keyFacts.length > 0 ? (
+                <section className="flex flex-col gap-2 rounded-md bg-muted/60 p-4">
+                  <h3 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
+                    Key facts
+                  </h3>
+                  <ul className="flex flex-col gap-1 text-sm">
+                    {decision.keyFacts.map((fact) => (
+                      <li className="flex gap-2" key={fact}>
+                        <span className="text-muted-foreground">·</span>
+                        <span>{fact}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ) : null}
+            </div>
+          ) : null}
 
-        {pendingApproval ? (
-          <EditAcceptCard
-            approval={pendingApproval}
-            onApprove={onApprove}
-            onDeny={onDeny}
-          />
-        ) : null}
+          {pendingApproval ? (
+            <EditAcceptCard
+              approval={pendingApproval}
+              onApprove={onApprove}
+              onDeny={onDeny}
+            />
+          ) : null}
 
-        {activeActions.length > 0 ? (
-          <section className="flex flex-col gap-2">
-            <Separator />
-            <h3 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
-              What the agent did
-            </h3>
-            {activeActions.map((entry) => (
-              <div
-                className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2"
-                key={entry.id}
-              >
-                <span className="flex items-center gap-2 text-sm">
-                  <CircleCheckIcon className="size-4 text-success" />
-                  {entry.summary}
-                  <Badge variant="secondary">
-                    {ACTION_LABELS[entry.action]}
-                  </Badge>
-                </span>
-                <Button
-                  onClick={() => onUndo(entry.id, email.id)}
-                  size="sm"
-                  variant="ghost"
+          {activeActions.length > 0 ? (
+            <section className="flex flex-col gap-2">
+              <Separator />
+              <h3 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
+                What the agent did
+              </h3>
+              {activeActions.map((entry) => (
+                <div
+                  className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2"
+                  key={entry.id}
                 >
-                  <RotateCcwIcon />
-                  Undo
-                </Button>
-              </div>
-            ))}
-          </section>
-        ) : null}
+                  <span className="flex items-center gap-2 text-sm">
+                    <CircleCheckIcon className="size-4 text-success" />
+                    {entry.summary}
+                    <Badge variant="secondary">
+                      {ACTION_LABELS[entry.action]}
+                    </Badge>
+                  </span>
+                  <Button
+                    onClick={() => onUndo(entry.id, email.id)}
+                    size="sm"
+                    variant="ghost"
+                  >
+                    <RotateCcwIcon />
+                    Undo
+                  </Button>
+                </div>
+              ))}
+            </section>
+          ) : null}
+        </div>
       </div>
     </div>
   );

@@ -88,14 +88,6 @@ export function RunView({ items, onRun, onComplete }: RunViewProps) {
   return (
     <div className="mx-auto flex h-full w-full max-w-3xl flex-col justify-center gap-7 px-5 py-10 sm:px-8">
       <div className="flex flex-col gap-3">
-        <div className="flex items-center gap-2 text-muted-foreground text-sm">
-          <AgentSpinner
-            label="Agent ready"
-            size={0.85}
-            variant={phase === 'running' ? 'arc' : 'dots'}
-          />
-          Batch agent
-        </div>
         <h1 className="font-sans font-semibold text-2xl tracking-normal sm:text-3xl">
           Run the agent across the inbox?
         </h1>

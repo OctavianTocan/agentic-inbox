@@ -4,18 +4,11 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import ChatPanel from '@/components/chat/panel';
 import {
-  BotIcon,
   HistoryIcon,
-  InboxIcon,
-  ListFilterIcon
+  MenuIcon,
+  SearchIcon
 } from '@/design-system/components/icons';
 import { Button } from '@/design-system/components/ui/button';
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle
-} from '@/design-system/components/ui/drawer';
 import {
   ResizableHandle,
   ResizablePanel,
@@ -40,7 +33,7 @@ import { ChatSlot } from './chat-slot';
 import { DetailPane } from './detail-pane';
 import { EMPTY_FILTERS, type InboxFilters, matchesFilters } from './filters';
 import { InboxList } from './inbox-list';
-import { InboxFilterPanel, InboxSidebar } from './inbox-sidebar';
+import { InboxSidebar } from './inbox-sidebar';
 import { InboxSummaryBlock } from './inbox-summary';
 import { RunView } from './run-view';
 import { useInbox } from './use-inbox';
@@ -87,93 +80,56 @@ function threadContext(
 }
 
 type MobileTopBarProps = {
-  readonly activeFilterCount: number;
   readonly itemCount: number;
   readonly ledgerCount: number;
   readonly needsAttentionCount: number;
   readonly onOpenChat: () => void;
-  readonly onOpenFilters: () => void;
 };
 
 /** Mobile toolbar with large buttons for the hidden side panels. */
 function MobileTopBar({
-  activeFilterCount,
   itemCount,
   ledgerCount,
   needsAttentionCount,
-  onOpenChat,
-  onOpenFilters
+  onOpenChat
 }: MobileTopBarProps) {
   const { setOpenMobile } = useSidebar();
 
   return (
-    <div className="shrink-0 border-b bg-sidebar/95 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] backdrop-blur md:hidden">
-      <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <p className="truncate font-semibold text-sm">Agentic Inbox</p>
-          <p className="truncate text-muted-foreground text-xs tabular-nums">
-            {needsAttentionCount} need attention / {itemCount} emails
-          </p>
-        </div>
+    <div className="shrink-0 border-b bg-sidebar/95 px-3 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] backdrop-blur md:hidden">
+      <div className="flex items-center gap-2">
         <Button
-          className="h-10 shrink-0"
-          render={<Link href="/audit" />}
-          size="sm"
-          variant="outline"
-        >
-          <HistoryIcon />
-          Audit
-          {ledgerCount > 0 ? (
-            <span className="text-muted-foreground tabular-nums">
-              {ledgerCount}
-            </span>
-          ) : null}
-        </Button>
-      </div>
-      <div className="mt-3 grid grid-cols-3 gap-2">
-        <Button
-          className="h-11 justify-center"
+          aria-label="Open inbox menu"
+          className="size-10 shrink-0"
           onClick={() => setOpenMobile(true)}
-          size="lg"
+          size="icon-lg"
           variant="outline"
         >
-          <InboxIcon />
-          Inbox
+          <MenuIcon />
         </Button>
         <Button
-          className="h-11 justify-center"
-          onClick={onOpenFilters}
-          size="lg"
-          variant="outline"
-        >
-          <ListFilterIcon />
-          Filters
-          {activeFilterCount > 0 ? (
-            <span className="tabular-nums">{activeFilterCount}</span>
-          ) : null}
-        </Button>
-        <Button
-          className="h-11 justify-center"
+          className="h-10 min-w-0 flex-1 justify-start gap-2 px-3 text-left"
           onClick={onOpenChat}
           size="lg"
           variant="outline"
         >
-          <BotIcon />
-          Agent
+          <SearchIcon className="size-4 shrink-0 text-muted-foreground" />
+          <span className="min-w-0 flex-1 truncate text-muted-foreground">
+            Ask about {needsAttentionCount} of {itemCount} emails
+          </span>
+        </Button>
+        <Button
+          aria-label={`Open audit with ${ledgerCount} events`}
+          className="size-10 shrink-0"
+          render={<Link href="/audit" />}
+          size="icon-lg"
+          variant="outline"
+        >
+          <HistoryIcon />
         </Button>
       </div>
     </div>
   );
-}
-
-/** Counts active filters without depending on object key iteration order. */
-function countActiveFilters(filters: InboxFilters): number {
-  return [
-    filters.status,
-    filters.project,
-    filters.category,
-    filters.severity
-  ].filter(Boolean).length;
 }
 
 /** Counts inbox rows with the requested status. */
@@ -195,10 +151,12 @@ export function InboxShell() {
     useInbox();
   const [filters, setFilters] = useState<InboxFilters>(EMPTY_FILTERS);
   const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
+  const [viewedEmailIds, setViewedEmailIds] = useState<ReadonlySet<string>>(
+    () => new Set()
+  );
   const [isChatOpen, setIsChatOpen] = useState(true);
   const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
   const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(false);
-  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const [hasRun, setHasRun] = useState(false);
 
   const items = inbox?.items ?? [];
@@ -239,6 +197,7 @@ export function InboxShell() {
 
   const selectEmail = useCallback((emailId: string) => {
     setSelectedEmailId(emailId);
+    setViewedEmailIds((current) => new Set(current).add(emailId));
     setIsMobileDetailOpen(true);
   }, []);
 
@@ -323,12 +282,10 @@ export function InboxShell() {
       <SidebarInset className="h-svh min-w-0 overflow-hidden">
         <div className="flex h-svh flex-col overflow-hidden md:hidden">
           <MobileTopBar
-            activeFilterCount={countActiveFilters(filters)}
             itemCount={items.length}
             ledgerCount={ledger.length}
             needsAttentionCount={countByStatus(items, 'needs_attention')}
             onOpenChat={() => setIsMobileChatOpen(true)}
-            onOpenFilters={() => setIsMobileFiltersOpen(true)}
           />
           <div className="min-h-0 flex-1 overflow-y-auto">
             <InboxSummaryBlock
@@ -343,32 +300,16 @@ export function InboxShell() {
               onDeny={(id) => void deny(id)}
               onSelect={selectEmail}
               selectedEmailId={selectedEmailId}
+              viewedEmailIds={viewedEmailIds}
             />
           </div>
-          <Drawer
-            onOpenChange={setIsMobileFiltersOpen}
-            open={isMobileFiltersOpen}
-          >
-            <DrawerContent className="max-h-[88svh]">
-              <DrawerHeader>
-                <DrawerTitle>Filters</DrawerTitle>
-              </DrawerHeader>
-              <div className="min-h-0 overflow-y-auto px-4 pb-6">
-                <InboxFilterPanel
-                  filters={filters}
-                  items={items}
-                  onFiltersChange={setFilters}
-                />
-              </div>
-            </DrawerContent>
-          </Drawer>
           <Sheet onOpenChange={setIsMobileChatOpen} open={isMobileChatOpen}>
             <SheetContent className="!w-full p-0 sm:max-w-none" side="right">
               <SheetHeader className="sr-only">
                 <SheetTitle>Agent</SheetTitle>
               </SheetHeader>
               <div className="flex h-full min-h-0 flex-col pt-10">
-                <ChatPanel />
+                <ChatPanel composerPosition="top" />
               </div>
             </SheetContent>
           </Sheet>
@@ -413,8 +354,9 @@ export function InboxShell() {
                     items={items}
                     onApprove={(id) => void approve(id)}
                     onDeny={(id) => void deny(id)}
-                    onSelect={setSelectedEmailId}
+                    onSelect={selectEmail}
                     selectedEmailId={selectedEmailId}
+                    viewedEmailIds={viewedEmailIds}
                   />
                 </div>
               </div>

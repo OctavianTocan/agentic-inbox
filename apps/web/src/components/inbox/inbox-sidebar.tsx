@@ -55,6 +55,8 @@ type InboxSidebarProps = {
   readonly ledger: readonly LedgerEntry[];
   readonly filters: InboxFilters;
   readonly onFiltersChange: (filters: InboxFilters) => void;
+  readonly activeSection?: 'inbox' | 'audit';
+  readonly showFilters?: boolean;
 };
 
 type FilterMeta = {
@@ -66,6 +68,8 @@ type FilterMeta = {
 type SidebarMetric = {
   readonly label: string;
   readonly value: number;
+  readonly filters: InboxFilters;
+  readonly isActive: boolean;
 };
 
 type FacetMenuProps<T extends string> = {
@@ -116,15 +120,23 @@ function filterMeta(
 }
 
 /** Compact queue status rows for the desktop sidebar. */
-function queueMetrics(items: readonly InboxItem[]): readonly SidebarMetric[] {
+function queueMetrics(
+  items: readonly InboxItem[],
+  filters: InboxFilters
+): readonly SidebarMetric[] {
   return STATUSES.map((status) => ({
     label: STATUS_LABELS[status],
-    value: countBy(items, status, (item) => item.status)
+    value: countBy(items, status, (item) => item.status),
+    filters: { ...filters, status },
+    isActive: filters.status === status
   }));
 }
 
 /** Busiest projects for the desktop sidebar summary. */
-function projectMetrics(items: readonly InboxItem[]): readonly SidebarMetric[] {
+function projectMetrics(
+  items: readonly InboxItem[],
+  filters: InboxFilters
+): readonly SidebarMetric[] {
   const counts = new Map<string, number>();
   for (const item of items) {
     const project = projectOf(item.email.subject);
@@ -133,16 +145,26 @@ function projectMetrics(items: readonly InboxItem[]): readonly SidebarMetric[] {
   return [...counts.entries()]
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .slice(0, 4)
-    .map(([label, value]) => ({ label, value }));
+    .map(([label, value]) => ({
+      label,
+      value,
+      filters: { ...filters, project: label },
+      isActive: filters.project === label
+    }));
 }
 
 type SidebarMetricSectionProps = {
   readonly label: string;
   readonly metrics: readonly SidebarMetric[];
+  readonly onFiltersChange: (filters: InboxFilters) => void;
 };
 
 /** Short labelled metric list inside the desktop mailbox rail. */
-function SidebarMetricSection({ label, metrics }: SidebarMetricSectionProps) {
+function SidebarMetricSection({
+  label,
+  metrics,
+  onFiltersChange
+}: SidebarMetricSectionProps) {
   return (
     <section className="flex flex-col gap-1">
       <h3 className="px-2 font-medium text-muted-foreground text-xs uppercase tracking-wide">
@@ -150,15 +172,21 @@ function SidebarMetricSection({ label, metrics }: SidebarMetricSectionProps) {
       </h3>
       <div className="grid gap-0.5">
         {metrics.map((metric) => (
-          <div
-            className="flex min-h-7 items-center justify-between gap-3 rounded-md px-2 text-sm"
+          <Button
+            className={cn(
+              'h-7 w-full justify-between px-2',
+              metric.isActive && 'bg-muted'
+            )}
             key={metric.label}
+            onClick={() => onFiltersChange(metric.filters)}
+            size="sm"
+            variant="ghost"
           >
             <span className="min-w-0 truncate">{metric.label}</span>
             <span className="shrink-0 text-muted-foreground text-xs tabular-nums">
               {metric.value}
             </span>
-          </div>
+          </Button>
         ))}
       </div>
     </section>
@@ -413,11 +441,16 @@ export function InboxSidebar({
   items,
   ledger,
   filters,
-  onFiltersChange
+  onFiltersChange,
+  activeSection = 'inbox',
+  showFilters = true
 }: InboxSidebarProps) {
   const meta = useMemo(() => filterMeta(items, filters), [items, filters]);
-  const queue = useMemo(() => queueMetrics(items), [items]);
-  const projects = useMemo(() => projectMetrics(items), [items]);
+  const queue = useMemo(() => queueMetrics(items, filters), [items, filters]);
+  const projects = useMemo(
+    () => projectMetrics(items, filters),
+    [items, filters]
+  );
 
   return (
     <Sidebar collapsible="offcanvas" className="border-r">
@@ -428,34 +461,60 @@ export function InboxSidebar({
         </div>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton isActive>
+            <SidebarMenuButton
+              isActive={activeSection === 'inbox'}
+              render={<Link href="/" />}
+            >
               <InboxIcon className="size-4" />
               <span>Inbox</span>
             </SidebarMenuButton>
             <SidebarMenuBadge>{items.length}</SidebarMenuBadge>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton render={<Link href="/audit" />}>
+            <SidebarMenuButton
+              isActive={activeSection === 'audit'}
+              render={<Link href="/audit" />}
+            >
               <HistoryIcon className="size-4" />
               <span>Audit</span>
             </SidebarMenuButton>
             <SidebarMenuBadge>{ledger.length}</SidebarMenuBadge>
           </SidebarMenuItem>
         </SidebarMenu>
-        <InboxFilterMenu
-          filters={filters}
-          items={items}
-          onFiltersChange={onFiltersChange}
-        />
+        {showFilters ? (
+          <InboxFilterMenu
+            filters={filters}
+            items={items}
+            onFiltersChange={onFiltersChange}
+          />
+        ) : null}
       </SidebarHeader>
       <SidebarContent className="gap-5 px-3 py-3">
-        <SidebarMetricSection label="Queue" metrics={queue} />
-        <SidebarMetricSection label="Projects" metrics={projects} />
-        <div className="px-2 text-muted-foreground text-xs leading-5">
-          {meta.activeCount > 0
-            ? `${meta.activeCount} filter${meta.activeCount === 1 ? '' : 's'} applied`
-            : 'No filters applied'}
-        </div>
+        {showFilters ? (
+          <>
+            <SidebarMetricSection
+              label="Queue"
+              metrics={queue}
+              onFiltersChange={onFiltersChange}
+            />
+            <SidebarMetricSection
+              label="Projects"
+              metrics={projects}
+              onFiltersChange={onFiltersChange}
+            />
+            <div className="px-2 text-muted-foreground text-xs leading-5">
+              {meta.activeCount > 0
+                ? `${meta.activeCount} filter${meta.activeCount === 1 ? '' : 's'} applied`
+                : 'No filters applied'}
+            </div>
+          </>
+        ) : (
+          <SidebarMetricSection
+            label="Queue"
+            metrics={queue}
+            onFiltersChange={onFiltersChange}
+          />
+        )}
       </SidebarContent>
       <SidebarResizeHandle />
     </Sidebar>

@@ -57,6 +57,8 @@ const toolRegistry = createToolRegistry(
   )
 );
 
+type ComposerPosition = 'top' | 'bottom';
+
 /** Empty conversation state with three starter prompts wired to the composer. */
 function EmptyState() {
   return (
@@ -96,49 +98,61 @@ function ThinkingRow() {
   );
 }
 
+type ChatSurfaceProps = {
+  readonly composerPosition: ComposerPosition;
+};
+
 /** Message stream and composer; empty state replaces the stream when idle. */
-function ChatSurface() {
+function ChatSurface({ composerPosition }: ChatSurfaceProps) {
   const { messages, status } = useThread();
   const hasMessages = messages.length > 0;
   const isBusy = status.type === 'submitting' || status.type === 'streaming';
+  const composer = (
+    <Composer>
+      <ComposerContent>
+        <ComposerTextField placeholder="Ask about your inbox…" />
+      </ComposerContent>
+      <ComposerFooter>
+        <span />
+        <div className="flex items-center gap-1">
+          <ComposerSendButton />
+          {isBusy ? <ComposerStopButton /> : null}
+        </div>
+      </ComposerFooter>
+    </Composer>
+  );
 
   return (
     <Thread className="min-h-0 flex-1">
+      {composerPosition === 'top' ? (
+        <div className="shrink-0 border-b px-3 pt-3 pb-2">{composer}</div>
+      ) : null}
       {hasMessages ? (
         <MessageList className="flex-1">
           <MessageListContent>
             <ThreadMessages />
             <ThinkingRow />
-            <MessageListBottomSpacer />
+            <MessageListBottomSpacer className="min-h-8" />
           </MessageListContent>
         </MessageList>
       ) : (
         <EmptyState />
       )}
-      <div className="shrink-0 px-3 pb-3">
-        <Composer>
-          <ComposerContent>
-            <ComposerTextField placeholder="Ask about your inbox…" />
-          </ComposerContent>
-          <ComposerFooter>
-            <span />
-            <div className="flex items-center gap-1">
-              <ComposerSendButton />
-              {isBusy ? <ComposerStopButton /> : null}
-            </div>
-          </ComposerFooter>
-        </Composer>
-      </div>
+      {composerPosition === 'bottom' ? (
+        <div className="shrink-0 px-3 pb-3">{composer}</div>
+      ) : null}
     </Thread>
   );
 }
 
-export interface ChatPanelProps {
+export type ChatPanelProps = {
   /** Streaming backend for a turn; defaults to the API chat transport. */
-  transport?: ChatTransport;
+  readonly transport?: ChatTransport;
+  /** Position of the composer inside the panel. */
+  readonly composerPosition?: ComposerPosition;
   /** Receives a draft when a chat tool part hands off to the inbox detail pane. */
-  onOpenDraft?: DraftBridgeHandler;
-}
+  readonly onOpenDraft?: DraftBridgeHandler;
+};
 
 const noopDraft: DraftBridgeHandler = () => {};
 
@@ -149,6 +163,7 @@ const noopDraft: DraftBridgeHandler = () => {};
  */
 export default function ChatPanel({
   transport,
+  composerPosition = 'bottom',
   onOpenDraft = noopDraft
 }: ChatPanelProps) {
   const resolvedTransport = useMemo(
@@ -166,7 +181,7 @@ export default function ChatPanel({
         toolRegistry={toolRegistry}
       >
         <div className="flex h-full min-h-0 flex-col">
-          <ChatSurface />
+          <ChatSurface composerPosition={composerPosition} />
         </div>
       </ChatRuntime>
     </DraftBridgeProvider>
