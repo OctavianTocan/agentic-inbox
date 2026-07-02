@@ -88,7 +88,7 @@ export function EmailRow({
         </div>
       </ItemContent>
       {pendingApproval ? (
-        <ItemActions className="max-sm:basis-full max-sm:justify-end max-sm:pl-5">
+        <ItemActions className="basis-full justify-end pt-1">
           <Button
             onClick={(event) => {
               event.stopPropagation();
