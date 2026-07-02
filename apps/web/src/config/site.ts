@@ -1,5 +1,5 @@
 export const siteConfig = {
-  name: 'Cogram AI App Template',
+  name: 'Cogram Agentic Inbox',
   description:
-    'A compact Next.js template for AI-heavy frontend take-home projects.'
+    'An AI agent that autonomously triages an AEC project email inbox.'
 };

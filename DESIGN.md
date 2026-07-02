@@ -1,6 +1,6 @@
 ---
 version: alpha
-name: Cogram AI App Template
+name: Cogram Agentic Inbox
 description: Product-focused AI application system extracted from effect-api-layout.
 colors:
   primary: "oklch(0.205 0.005 85)"

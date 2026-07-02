@@ -6,9 +6,36 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Instructions
 
+## Purpose
+
+Cogram take-home task: an agentic inbox for an AEC (architecture/engineering/
+construction) project. An AI agent processes a **fixed set of 80 emails**
+(`data/emails.json`, no new mail arrives) and for each one either acts
+autonomously (routine: RFIs, daily reports, submittals, vendor quotes,
+schedule pings, status updates) or defers to the human (sensitive: change
+orders, claims/disputes, safety incidents, owner escalations). Full brief:
+`docs/TASK.md`.
+
+Constraints that matter for implementation:
+
+- **Sensitive emails must never be auto-actioned.** If a wrong auto-reply
+  could cost real money or create legal exposure, the agent defers — it does
+  not send, promise, or commit anything on its own.
+- **Every agent action must be legible.** The user has to be able to see what
+  the agent did (or didn't do) and why, in plain language, per email.
+- **Fast review is a hard requirement.** Design for a PM with ~5 minutes
+  between meetings triaging the whole inbox, not for reading each email in
+  full.
+- **Wrong calls must be cheaply reversible.** Any auto-action the agent took
+  needs an easy undo/redo or re-triage path — this is a first-class feature,
+  not an edge case.
+- **The dataset is static.** 80 emails, ids `e-001`..`e-080`, keys `id`,
+  `from`, `to`, `cc`, `subject`, `body`, `timestamp`, `in_reply_to`. No
+  pagination, streaming inbox, or live mail integration is needed.
+
 ## Project Shape
 
-- This is a Bun workspace template with a Next.js frontend and an optional Effect v4 backend.
+- This is a Bun workspace (originally scaffolded from `cogram-ai-app-template`) with a Next.js frontend and an optional Effect v4 backend.
 - `apps/web` is the Next.js 16 App Router frontend.
 - `apps/api` is the Effect v4 backend API.
 - `packages/api-core` owns the HTTP API contract and schemas.
@@ -17,6 +44,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - Use `apps/web/src/ai-ui` for headless AI composer/thread behavior.
 - Keep frontend imports local: `@/design-system/...`, `@/ai-ui/...`, and `@/...`.
 - Design intent lives in `DESIGN.md`.
+- The email dataset lives in `data/emails.json`; the task brief lives in `docs/TASK.md`.
 - CodeGraph local indexes live in `.codegraph/` and are ignored by Git.
 - Keep `vendor/`, `.agent/`, `.codegraph/`, and generated `.next/` output out of
   TypeScript LSP project discovery.

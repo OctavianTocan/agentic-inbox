@@ -7,9 +7,9 @@ export class Api extends HttpApi.make('api')
   .add(SystemApi)
   .add(AiApi)
   .prefix('/api/v1')
-  .annotate(OpenApi.Title, 'Cogram AI App Template API')
+  .annotate(OpenApi.Title, 'Cogram Agentic Inbox API')
   .annotate(OpenApi.Version, '0.1.0')
   .annotate(
     OpenApi.Description,
-    'Effect v4 backend contract for the AI app template.'
+    'Effect v4 backend contract for the Cogram Agentic Inbox app.'
   ) {}

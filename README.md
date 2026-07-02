@@ -1,72 +1,56 @@
-# Cogram AI App Template
+# Cogram Agentic Inbox
 
-Bun workspace template for AI-heavy take-home projects. It includes a Next.js 16
-frontend, an optional Effect v4 backend, Biome, TypeScript 6, Vitest, Vercel AI
-SDK wiring, lefthook, and a vendored design system extracted from
-`/mnt/work/code/personal/effect-api-layout`.
+Take-home project: a web app where an AI agent autonomously processes an AEC
+(architecture/engineering/construction) project email inbox of 80 emails. The
+agent auto-handles routine traffic (RFIs, daily reports, submittals, vendor
+quotes, schedule pings), defers anything sensitive (change orders, claims and
+disputes, safety incidents, owner escalations) to the human, and surfaces what
+it did, what needs attention, and why — with easy recovery from wrong calls.
+See `docs/TASK.md` for the full task brief.
 
-It also includes repo-local agent skills, CodeGraph support for local semantic
-code indexing, and a private Tailscale dev URL recipe for tailnet-only previews.
+## Stack
 
-## Commands
+Inherited from the `cogram-ai-app-template` base:
+
+- Bun workspace (`apps/*`, `packages/**/*`), package manager `bun@1.3.14`.
+- `apps/web`: Next.js 16 App Router frontend, React 19, Tailwind CSS 4, a
+  vendored design system under `apps/web/src/design-system`, and headless AI
+  message/composer primitives under `apps/web/src/ai-ui`.
+- `apps/api`: optional Effect v4 backend (`@effect/platform-bun`), serving
+  `/api/v1` on port 8001.
+- `packages/api-core`: shared HTTP API contract/schemas for the backend.
+- `packages/clients/ai-sdk`: Effect wrapper around the Vercel AI SDK (`ai`
+  package) for LLM calls.
+- Biome (lint/format), TypeScript 6, Vitest, lefthook for git hooks.
+
+## Install & run
 
 ```bash
 bun install
-bun run dev
-bun run dev:api
+bun run dev        # apps/web on the Next.js dev server
+bun run dev:api    # apps/api Effect backend on :8001 (optional, if used)
 bun run typecheck
 bun run lint
 bun run test
 bun run build
-bun run codegraph:init
-bun run codegraph:index
 ```
 
-## Entry Points
+Or via the Justfile: `just dev`, `just api`, `just web`, `just build`,
+`just test`, `just typecheck`, `just lint`, `just format`, `just ci`.
 
-- `apps/web/src/app/page.tsx`: default component showcase and visual smoke test.
-- `apps/web/src/app/layout.tsx`: global providers and design-system wiring.
-- `apps/web/src/design-system`: reusable tokens, providers, hooks, icons, and UI primitives.
-- `apps/web/src/ai-ui`: headless AI message/composer primitives used by styled AI components.
-- `apps/api`: Effect v4 backend API, available on port 8001 by default.
-- `packages/api-core`: shared API contract and schemas.
-- `packages/clients/ai-sdk`: Effect wrapper around the Vercel AI SDK.
-- `DESIGN.md`: design-system reference for this template.
-- `.agent/skills`: repo-local skills, including Shelf workflow skills.
-- `.codegraph/`: local CodeGraph index, ignored by Git.
+Copy `.env.example` to `.env.local` and fill in only the provider key(s) this
+project actually uses (e.g. an OpenRouter or Anthropic/OpenAI key) before
+running anything that calls an LLM.
 
-## AI Setup
+## Data
 
-Copy `.env.example` to `.env.local` and fill only the provider keys the project
-uses. The Vercel AI SDK package is installed as `ai`.
+The fixed 80-email dataset lives at `data/emails.json` (sanitized to valid
+JSON — the original source file had a stray 2-byte prefix before the array).
+Each record has `id`, `from`, `to`, `cc`, `subject`, `body`, `timestamp`,
+`in_reply_to`. Treat this as a static snapshot; no new email arrives during
+the exercise.
 
-For simple AI apps, using the AI SDK from Next.js server-side code in `apps/web`
-is a valid first choice. If the user wants a separate backend, keep the backend
-contract in `packages/api-core`, implement handlers in `apps/api`, and wrap all
-AI SDK calls through `packages/clients/ai-sdk`.
+## Task brief
 
-The backend starts with a mock-safe `/api/v1/ai/draft` handler so it runs without
-secrets. To enable a real provider, install the provider package, create a Vercel
-AI SDK `LanguageModel`, provide `AiLanguageModel`, and switch the handler layer
-from `AiDraftServiceMock` to `AiDraftServiceLive`.
-
-## Verification
-
-`bun run ci` runs Biome, TypeScript, and Vitest. `bun run build` builds the
-frontend. Sentrux is binary-first; install it with the upstream instructions,
-then run `bun run arch:sentrux`. React Doctor is available through
-`bun run react:doctor`.
-
-## Local Code Intelligence
-
-Run `bun run codegraph:install` once per machine to wire CodeGraph into your
-agent tools, then run `bun run codegraph:init` in this repo to build the local
-project config and `bun run codegraph:index` to build the local graph.
-CodeGraph stores the index in `.codegraph/`, which is intentionally ignored.
-
-## Private Preview
-
-For a private tailnet URL, start the web app locally and follow
-`docs/tailscale-dev-url.md`. Use `tailscale serve`, verify that the mapping is
-tailnet-only, and confirm `tailscale funnel status` is empty before sharing a
-URL.
+`docs/TASK.md` holds the full take-home task brief (requirements, timing,
+deliverables). `DESIGN.md` holds the inherited design-system reference.
