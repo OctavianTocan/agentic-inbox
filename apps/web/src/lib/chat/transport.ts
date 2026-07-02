@@ -15,7 +15,7 @@ export type ChatTransportEvent =
       readonly toolCallId: string;
       readonly output: unknown;
     }
-  | { readonly type: 'done' };
+  | { readonly type: 'done'; readonly conversationId?: string };
 
 /** One turn's request: the user text plus the prior conversation for context. */
 export interface ChatTransportRequest {

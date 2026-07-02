@@ -33,7 +33,7 @@ import {
   EmptyTitle
 } from '@/design-system/components/ui/empty';
 import { useChatAdapter } from '@/lib/chat/adapter';
-import { createMockTransport } from '@/lib/chat/mock-transport';
+import { createHttpTransport } from '@/lib/chat/http-transport';
 import type { ChatTransport } from '@/lib/chat/transport';
 import {
   type DraftBridgeHandler,
@@ -133,7 +133,7 @@ function ChatSurface() {
 }
 
 export interface ChatPanelProps {
-  /** Streaming backend for a turn; defaults to the scripted mock transport. */
+  /** Streaming backend for a turn; defaults to the API chat transport. */
   transport?: ChatTransport;
   /** Receives a draft when a chat tool part hands off to the inbox detail pane. */
   onOpenDraft?: DraftBridgeHandler;
@@ -142,7 +142,7 @@ export interface ChatPanelProps {
 const noopDraft: DraftBridgeHandler = () => {};
 
 /**
- * Chat sidepanel content: an ai-ui `ChatRuntime` over the (mock) chat
+ * Chat sidepanel content: an ai-ui `ChatRuntime` over the backend chat
  * transport, rendering the design-system thread, tool badges, and composer.
  * The right-edge collapse behavior is owned by the inbox shell.
  */
@@ -151,7 +151,7 @@ export default function ChatPanel({
   onOpenDraft = noopDraft
 }: ChatPanelProps) {
   const resolvedTransport = useMemo(
-    () => transport ?? createMockTransport(),
+    () => transport ?? createHttpTransport(),
     [transport]
   );
   const adapter = useChatAdapter(resolvedTransport);
