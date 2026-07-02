@@ -32,6 +32,9 @@ export class ActionService extends Context.Service<
     readonly sendReply: (input: SendReplyInput) => Effect.Effect<LedgerEntry>;
     readonly archive: (input: FileInput) => Effect.Effect<LedgerEntry>;
     readonly flagForReview: (input: FileInput) => Effect.Effect<LedgerEntry>;
+    readonly listLedger: (
+      emailId?: EmailIdType
+    ) => Effect.Effect<ReadonlyArray<LedgerEntry>>;
     readonly undoAction: (
       entryId: LedgerEntryIdType,
       actor: ActorType
@@ -86,6 +89,11 @@ export const ActionServiceBody: Layer.Layer<
         })
     );
 
+    const listLedger = Effect.fn('ActionService.listLedger')(
+      (emailId?: EmailIdType) =>
+        emailId === undefined ? ledger.list() : ledger.listByEmail(emailId)
+    );
+
     const undoAction = Effect.fn('ActionService.undoAction')(function* (
       entryId: LedgerEntryIdType,
       actor: ActorType
@@ -125,6 +133,7 @@ export const ActionServiceBody: Layer.Layer<
       sendReply,
       archive,
       flagForReview,
+      listLedger,
       undoAction
     } as const;
   })

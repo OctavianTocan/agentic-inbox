@@ -6,7 +6,10 @@ import {
   ResizablePanel,
   ResizablePanelGroup
 } from '@/design-system/components/ui/resizable';
-import { SidebarProvider } from '@/design-system/components/ui/sidebar';
+import {
+  SidebarInset,
+  SidebarProvider
+} from '@/design-system/components/ui/sidebar';
 import { useShortcut } from '@/design-system/hooks/use-shortcut';
 import type { ShortcutDefinition } from '@/design-system/lib/shortcuts';
 import { bySeverityDesc } from '@/lib/inbox/labels';
@@ -141,10 +144,19 @@ export function InboxShell() {
     [items]
   );
 
-  if (!isLoading && inbox && !hasRun) {
+  if (isLoading || inbox === null || !hasRun) {
     return (
       <SidebarProvider>
-        <RunView items={items} onComplete={() => setHasRun(true)} />
+        <SidebarInset className="h-svh min-w-0 overflow-hidden">
+          <RunView
+            items={items}
+            onComplete={() => {
+              if (!isLoading && inbox !== null) {
+                setHasRun(true);
+              }
+            }}
+          />
+        </SidebarInset>
       </SidebarProvider>
     );
   }
@@ -157,9 +169,12 @@ export function InboxShell() {
         ledger={ledger}
         onFiltersChange={setFilters}
       />
-      <main className="flex h-svh min-w-0 flex-1">
-        <ResizablePanelGroup orientation="horizontal">
-          <ResizablePanel defaultSize={42} minSize={28}>
+      <SidebarInset className="h-svh min-w-0 flex-row overflow-hidden">
+        <ResizablePanelGroup
+          defaultLayout={{ 'inbox-list': 40, 'inbox-detail': 60 }}
+          orientation="horizontal"
+        >
+          <ResizablePanel defaultSize="40%" id="inbox-list" minSize="28%">
             <div className="flex h-full flex-col overflow-hidden">
               <InboxSummaryBlock
                 isLoading={isLoading}
@@ -179,7 +194,7 @@ export function InboxShell() {
             </div>
           </ResizablePanel>
           <ResizableHandle withHandle />
-          <ResizablePanel defaultSize={58} minSize={30}>
+          <ResizablePanel defaultSize="60%" id="inbox-detail" minSize="30%">
             <DetailPane
               item={selectedItem}
               onApprove={approve}
@@ -193,7 +208,7 @@ export function InboxShell() {
           isOpen={isChatOpen}
           onToggle={() => setIsChatOpen((prev) => !prev)}
         />
-      </main>
+      </SidebarInset>
     </SidebarProvider>
   );
 }

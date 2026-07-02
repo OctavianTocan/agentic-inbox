@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@app/api-core": "workspace:*",
+    "@effect/ai-openrouter": "catalog:",
     "@effect/platform-bun": "catalog:",
     "@effect/sql-pg": "catalog:",
     "effect": "catalog:"
