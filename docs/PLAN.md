@@ -116,6 +116,13 @@ From **cloudflare/agentic-inbox**: shared tool-logic module with protocol skins;
 
 ### Phase 3 — Unified agent + endpoints
 
+**Spike constraints (binding — proven against the live API, see docs/SPIKE-NOTES.md):**
+1. Triage `generateObject`: set `strictJsonSchema: true` on the triage model config (without it gpt-5.5 drops required fields). The Decision schema fields stay PLAIN — no `Schema.check` refinements on the structured-output schema or decode fails with "Expected <filter>"; enforce confidence∈[0,1] and whyPreview≤65 in code after decode.
+2. Toolkit: every mutating tool (record_triage, send_reply, archive, flag, undo) must be `.annotate(Tool.Strict, true)` or gpt-5.5 returns 400 ("Tool type is explicitly modeled and must match its strict schema") on the first tool-bearing request. Do NOT rely on the global `strictJsonSchema` config for tools — use two model configs (strict-on for generateObject triage; tools carrying Tool.Strict for generateText) or `OpenRouterLanguageModel.withConfigOverride` per call.
+3. Approval persistence: the conversations table stores the encoded `Prompt.Prompt` JSON (`Schema.encode(Prompt.Prompt)`) plus pending `{approvalId, toolCallId}`. Resume = decode → append a tool-approval-response part (approved true/false, optional reason) in a tool message → re-run the loop. The Effect AI core (`collectToolApprovals`/`executeApprovedToolCalls` inside `generateText`) owns pause/resume — no bespoke state machine. Tool-call params (draft body, triage fields) live in the assistant tool-call part, not the tool-approval-request part.
+
+The `spike/` directory is throwaway reference; the real implementation lives in packages/api-core + apps/api.
+
 *What:* toolkit definitions wrapping ActionService (with `needsApproval` = policy), agent loop (recursive `Effect.gen` over `generateText` until no tool calls / cap), batch orchestrator (concurrency 8, per-email isolation, retry with exponential backoff on 429/5xx via Effect Schedule so transient rate limits never surface as "triage failed", decision + ledger writes, approval pausing), chat entry point; endpoints `POST /triage/run` (stream), `GET /inbox`, `POST /approvals/:id`, `POST /actions/:id/undo`, `POST /chat` (stream), `GET /ledger`. **Verify:** curl the full loop — run stream completes on all 80, approvals pause, approve/deny resumes, undo appends to ledger; agent-loop unit test with stubbed model.
 
 ### Phase 4 — Inbox UI (sidebar + list + detail pane)
