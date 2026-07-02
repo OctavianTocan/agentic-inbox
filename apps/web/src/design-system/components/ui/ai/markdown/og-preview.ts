@@ -5,10 +5,10 @@ import { useEffect, useState } from "react";
 const MICROLINK_ENDPOINT = "https://api.microlink.io/";
 
 export type OgPreview = {
-  image?: string;
-  logo?: string;
-  title?: string;
-  description?: string;
+  image?: string | undefined;
+  logo?: string | undefined;
+  title?: string | undefined;
+  description?: string | undefined;
 };
 
 type MicrolinkResponse = {
@@ -55,10 +55,10 @@ export function fetchOgPreview(url: string): Promise<OgPreview | null> {
       const title = json.data?.title;
       const description = json.data?.description;
       return {
-        image: typeof image === "string" ? image : undefined,
-        logo: typeof logo === "string" ? logo : undefined,
-        title: typeof title === "string" ? title : undefined,
-        description: typeof description === "string" ? description : undefined,
+        ...(typeof image === "string" && { image }),
+        ...(typeof logo === "string" && { logo }),
+        ...(typeof title === "string" && { title }),
+        ...(typeof description === "string" && { description }),
       };
     } catch {
       cache.delete(url);

@@ -11,6 +11,7 @@ function trimTrailingSlash(value: string): string {
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ['127.0.0.1', 'openclaw-vps.tailb0501a.ts.net'],
+  devIndicators: false,
   /** Proxies same-origin browser API calls to the Effect backend. */
   async rewrites() {
     return [

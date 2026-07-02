@@ -134,15 +134,16 @@ export function useComposerAttachments({
 
         if (!adapter) {
           readAsDataURL(file)
-            .then((dataUrl) =>
-              addAttachment({
+            .then((dataUrl) => {
+              const attachment: Omit<Attachment, "id"> = {
                 name: file.name,
                 type: file.type,
                 size: file.size,
                 content: dataUrlToBase64(dataUrl),
-                preview: isImage ? dataUrl : undefined,
-              }),
-            )
+                ...(isImage && { preview: dataUrl }),
+              };
+              addAttachment(attachment);
+            })
             .catch(() => undefined);
           continue;
         }

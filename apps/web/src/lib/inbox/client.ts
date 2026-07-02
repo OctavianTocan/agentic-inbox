@@ -1,4 +1,4 @@
-import type { ApprovalVerdict, Inbox } from './types';
+import type { ApprovalVerdict, Inbox, TriageRunEvent } from './types';
 
 /** Inputs for resolving a pending approval on a sensitive email. */
 export type ResolveApprovalInput = {
@@ -11,6 +11,8 @@ export type ResolveApprovalInput = {
 export type InboxClient = {
   /** Fetch the current inbox snapshot: summary plus joined items. */
   getInbox: () => Promise<Inbox>;
+  /** Run the batch triage agent and stream progress events. */
+  runTriage: () => AsyncIterable<TriageRunEvent>;
   /** Approve or deny a pending sensitive action and return the updated inbox. */
   resolveApproval: (
     approvalId: string,
@@ -21,6 +23,29 @@ export type InboxClient = {
 };
 
 const API_PREFIX = '/api/v1';
+
+/** Object-like value that can be safely indexed by string keys. */
+function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/** Reads a string property from an unknown payload. */
+function stringField(
+  record: Readonly<Record<string, unknown>>,
+  key: string
+): string | null {
+  const value = record[key];
+  return typeof value === 'string' ? value : null;
+}
+
+/** Reads a number property from an unknown payload. */
+function numberField(
+  record: Readonly<Record<string, unknown>>,
+  key: string
+): number | null {
+  const value = record[key];
+  return typeof value === 'number' ? value : null;
+}
 
 /** Reads an HTTP response body when possible, falling back to status text. */
 async function responseMessage(response: Response): Promise<string> {
@@ -57,10 +82,177 @@ async function postJson(path: string, body?: unknown): Promise<void> {
   await assertOk(response);
 }
 
+/** Extracts the email id from a nested backend event object. */
+function emailIdFromNested(
+  payload: Readonly<Record<string, unknown>>,
+  key: string
+): string | null {
+  const nested = payload[key];
+  if (!isRecord(nested)) {
+    return null;
+  }
+  return stringField(nested, 'emailId');
+}
+
+/** Extracts a summary from a nested backend event object. */
+function summaryFromNested(
+  payload: Readonly<Record<string, unknown>>,
+  key: string
+): string | null {
+  const nested = payload[key];
+  if (!isRecord(nested)) {
+    return null;
+  }
+  return stringField(nested, 'summary');
+}
+
+/** Converts one backend triage payload to the lightweight UI event shape. */
+function triageEventFromPayload(
+  payload: Readonly<Record<string, unknown>>
+): TriageRunEvent | null {
+  const type = stringField(payload, 'type');
+  if (type === 'started') {
+    const emailId = stringField(payload, 'emailId');
+    return emailId === null ? null : { type, emailId };
+  }
+  if (type === 'decision') {
+    const emailId = emailIdFromNested(payload, 'decision');
+    return emailId === null ? null : { type, emailId };
+  }
+  if (type === 'action') {
+    const emailId = emailIdFromNested(payload, 'entry');
+    const summary = summaryFromNested(payload, 'entry') ?? 'Agent action';
+    return emailId === null ? null : { type, emailId, summary };
+  }
+  if (type === 'approval_pending') {
+    const emailId = emailIdFromNested(payload, 'approval');
+    const summary = summaryFromNested(payload, 'approval') ?? 'Needs approval';
+    return emailId === null ? null : { type, emailId, summary };
+  }
+  if (type === 'failed') {
+    const emailId = stringField(payload, 'emailId');
+    const reason = stringField(payload, 'reason') ?? 'Triage failed';
+    return emailId === null ? null : { type, emailId, reason };
+  }
+  if (type === 'done') {
+    const processed = numberField(payload, 'processed');
+    return processed === null ? null : { type, processed };
+  }
+  return null;
+}
+
+type SseBlock = {
+  readonly event: string | null;
+  readonly data: string;
+};
+
+/** Reads the SSE event name and data payload from a raw message block. */
+function parseSseBlock(block: string): SseBlock {
+  let event: string | null = null;
+  const dataLines: string[] = [];
+  for (const line of block.split('\n')) {
+    if (line.startsWith('event:')) {
+      event = line.slice('event:'.length).trim();
+    }
+    if (line.startsWith('data:')) {
+      dataLines.push(line.slice('data:'.length).trimStart());
+    }
+  }
+  return { event, data: dataLines.join('\n') };
+}
+
+/** Builds a readable error message from an SSE error payload. */
+function triageStreamErrorMessage(payload: unknown): string {
+  if (!isRecord(payload)) {
+    return 'Triage run failed';
+  }
+  return (
+    stringField(payload, 'detail') ??
+    stringField(payload, 'message') ??
+    stringField(payload, 'reason') ??
+    stringField(payload, 'error') ??
+    stringField(payload, '_tag') ??
+    'Triage run failed'
+  );
+}
+
+/** Parses one SSE block from the triage run endpoint. */
+function triageEventFromSseBlock(block: string): TriageRunEvent | null {
+  const { event: sseEvent, data } = parseSseBlock(block);
+  if (data.length === 0 || data === '[DONE]') {
+    return null;
+  }
+  const parsed: unknown = JSON.parse(data);
+  if (sseEvent === 'error') {
+    throw new Error(triageStreamErrorMessage(parsed));
+  }
+  if (isRecord(parsed) && stringField(parsed, 'type') === 'error') {
+    throw new Error(triageStreamErrorMessage(parsed));
+  }
+  return isRecord(parsed) ? triageEventFromPayload(parsed) : null;
+}
+
+/** Streams the triage SSE response as typed UI events. */
+async function* triageEventsFromResponse(
+  response: Response
+): AsyncIterable<TriageRunEvent> {
+  if (response.body === null) {
+    throw new Error('Triage run response had no body');
+  }
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let sawDone = false;
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        break;
+      }
+      buffer += decoder.decode(value, { stream: true });
+      const blocks = buffer.split('\n\n');
+      buffer = blocks.pop() ?? '';
+      for (const block of blocks) {
+        const event = triageEventFromSseBlock(block);
+        if (event !== null) {
+          if (event.type === 'done') {
+            sawDone = true;
+          }
+          yield event;
+        }
+      }
+    }
+    buffer += decoder.decode();
+    if (buffer.trim().length > 0) {
+      const event = triageEventFromSseBlock(buffer);
+      if (event !== null) {
+        if (event.type === 'done') {
+          sawDone = true;
+        }
+        yield event;
+      }
+    }
+    if (!sawDone) {
+      throw new Error('Triage run ended before completion');
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}
+
+/** Opens the backend triage stream. */
+async function* runTriage(): AsyncIterable<TriageRunEvent> {
+  const response = await fetch(`${API_PREFIX}/triage/run`, { method: 'POST' });
+  await assertOk(response);
+  yield* triageEventsFromResponse(response);
+}
+
 /** HTTP client backed by the Effect API. */
 function createHttpInboxClient(): InboxClient {
   return {
     getInbox: fetchInbox,
+    runTriage,
     resolveApproval: async (approvalId, input) => {
       await postJson(`/approvals/${encodeURIComponent(approvalId)}`, input);
       return fetchInbox();

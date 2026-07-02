@@ -1,5 +1,5 @@
-import { TracePage } from '@/components/traces/trace-page';
+import { redirect } from 'next/navigation';
 
 export default function AgentTracesPage() {
-  return <TracePage />;
+  redirect('/audit');
 }

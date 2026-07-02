@@ -60,7 +60,9 @@ function toToolStatus(state: string, errorText?: string): ToolStatus {
     case "output-available":
       return { type: "complete" };
     case "output-error":
-      return { type: "error", message: errorText };
+      return errorText === undefined
+        ? { type: "error" }
+        : { type: "error", message: errorText };
     default:
       return { type: "awaiting-result" };
   }
@@ -91,7 +93,7 @@ export function PartProvider<
           toolCallId: part.toolCallId,
           input: part.input,
           output: part.output,
-          errorText: part.errorText,
+          ...(part.errorText !== undefined && { errorText: part.errorText }),
           status: toToolStatus(part.state, part.errorText),
           submitResult: async (output: unknown) => {
             await thread.addToolOutput({

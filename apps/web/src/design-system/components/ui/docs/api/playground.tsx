@@ -337,7 +337,7 @@ export function Playground({
 type PlaygroundFieldProps = {
   readonly fieldId: string;
   readonly label: string;
-  readonly required?: boolean;
+  readonly required?: boolean | undefined;
   readonly children: ReactNode;
 };
 

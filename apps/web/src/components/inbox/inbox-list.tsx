@@ -27,7 +27,7 @@ type SectionLabelProps = {
 /** Sticky section heading within the list. */
 function SectionLabel({ children }: SectionLabelProps) {
   return (
-    <div className="sticky top-0 z-10 bg-background/95 px-6 pt-4 pb-2 font-medium text-muted-foreground text-xs uppercase tracking-wide backdrop-blur">
+    <div className="sticky top-0 z-10 bg-background/95 px-4 pt-4 pb-2 font-medium text-muted-foreground text-xs uppercase tracking-wide backdrop-blur sm:px-6">
       {children}
     </div>
   );
@@ -97,7 +97,7 @@ export function InboxList({
       {pending.length > 0 ? (
         <>
           <SectionLabel>Awaiting your approval</SectionLabel>
-          <ItemGroup className="gap-0 divide-y px-0">
+          <ItemGroup className="gap-0 divide-y divide-border/70 px-0">
             {visiblePending.map((item) => (
               <EmailRow
                 isSelected={selectedEmailId === item.email.id}
@@ -110,7 +110,7 @@ export function InboxList({
             ))}
           </ItemGroup>
           {hiddenCount > 0 || isExpanded ? (
-            <div className="px-6 pt-2">
+            <div className="px-4 pt-2 sm:px-6">
               <Button
                 onClick={() => setIsExpanded((prev) => !prev)}
                 size="sm"
@@ -125,7 +125,7 @@ export function InboxList({
       {rest.length > 0 ? (
         <>
           <SectionLabel>Inbox</SectionLabel>
-          <ItemGroup className="gap-0 divide-y px-0">
+          <ItemGroup className="gap-0 divide-y divide-border/70 px-0">
             {rest.map((item) => (
               <EmailRow
                 isSelected={selectedEmailId === item.email.id}

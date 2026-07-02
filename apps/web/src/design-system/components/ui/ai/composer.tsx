@@ -167,7 +167,7 @@ const ComposerAttachments = ({
   >
     <ComposerAttachmentsPrimitive
       attachments={attachments}
-      onRemove={onRemove}
+      {...(onRemove !== undefined && { onRemove })}
     />
   </div>
 );

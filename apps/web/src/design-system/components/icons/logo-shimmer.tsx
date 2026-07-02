@@ -1,7 +1,12 @@
 "use client";
 
-import { animate, m, useMotionValue, useReducedMotion } from "motion/react";
-import type { CSSProperties } from "react";
+import {
+  animate,
+  m,
+  type MotionStyle,
+  useMotionValue,
+  useReducedMotion,
+} from "motion/react";
 import { useEffect } from "react";
 import { cn } from "../../lib/utils";
 import { LogoIcon } from "./logo-icon";
@@ -9,7 +14,7 @@ import { LogoIcon } from "./logo-icon";
 const SWEEP_GRADIENT =
   "linear-gradient(90deg, transparent 0%, black 50%, transparent 100%)";
 
-const SWEEP_BASE_STYLE: CSSProperties = {
+const SWEEP_BASE_STYLE: MotionStyle = {
   maskImage: SWEEP_GRADIENT,
   WebkitMaskImage: SWEEP_GRADIENT,
   maskSize: "200% 100%",

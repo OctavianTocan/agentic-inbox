@@ -178,7 +178,7 @@ function FieldError({
   errors,
   ...props
 }: React.ComponentProps<"div"> & {
-  errors?: Array<{ message?: string } | undefined>;
+  errors?: Array<{ message?: string } | undefined> | undefined;
 }) {
   if (!children && !errors?.length) {
     return null;
@@ -200,7 +200,7 @@ function FieldError({
 function FieldErrorContent({
   errors,
 }: {
-  errors?: Array<{ message?: string } | undefined>;
+  errors?: Array<{ message?: string } | undefined> | undefined;
 }) {
   if (!errors?.length) {
     return null;

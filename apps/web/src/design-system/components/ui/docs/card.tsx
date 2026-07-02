@@ -1,9 +1,9 @@
-import Link from "next/link";
+import NextLink from "next/link";
 import type { ComponentProps, ReactNode } from "react";
 
 import { cn } from "../../../lib/utils";
 
-type CardProps = Omit<ComponentProps<"a">, "title"> & {
+type CardProps = Omit<ComponentProps<typeof NextLink>, "href" | "title"> & {
   readonly title: ReactNode;
   readonly description?: ReactNode;
   readonly icon?: ReactNode;
@@ -30,7 +30,7 @@ export function Card({
   ...props
 }: CardProps) {
   return (
-    <Link
+    <NextLink
       className={cn(
         "group not-prose flex flex-col gap-2 rounded-lg border bg-card p-4 text-card-foreground transition-colors hover:bg-accent/50",
         className,
@@ -58,6 +58,6 @@ export function Card({
           {description}
         </span>
       )}
-    </Link>
+    </NextLink>
   );
 }

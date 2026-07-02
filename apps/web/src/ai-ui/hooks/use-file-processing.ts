@@ -24,13 +24,14 @@ export function useFileProcessing(
           const content = await readAsDataURL(file);
           const isImage = file.type.startsWith("image/");
 
-          addAttachment({
+          const attachment: Omit<Attachment, "id"> = {
             name: file.name,
             type: file.type,
             size: file.size,
             content,
-            preview: isImage ? content : undefined,
-          });
+            ...(isImage && { preview: content }),
+          };
+          addAttachment(attachment);
         }),
       );
     },

@@ -4,6 +4,7 @@ import {
   type FileContents,
   type FileDiffMetadata,
   registerCustomTheme,
+  type SupportedLanguages,
 } from "@pierre/diffs";
 import {
   File as PierreFile,
@@ -83,7 +84,7 @@ const noLineNumbersCSS = `[data-line] { padding-inline: 0.75rem !important; }`;
 
 export interface CodeViewProps {
   code: string;
-  language?: string;
+  language?: SupportedLanguages;
   lineNumbers?: boolean;
   copyButton?: boolean;
   className?: string;
@@ -116,7 +117,7 @@ export function CodeView({
             themeType,
             disableFileHeader: true,
             disableLineNumbers: !lineNumbers,
-            unsafeCSS: lineNumbers ? undefined : noLineNumbersCSS,
+            ...(lineNumbers ? {} : { unsafeCSS: noLineNumbersCSS }),
           }}
         />
       </WorkerPoolContextProvider>
@@ -135,7 +136,7 @@ export function CodeView({
 export interface FileViewProps {
   name: string;
   code: string;
-  language?: string;
+  language?: SupportedLanguages;
   lineNumbers?: boolean;
   copyButton?: boolean;
   className?: string;
@@ -164,13 +165,17 @@ export function FileView({
       <FileHeader code={code} copyButton={copyButton} name={name} />
       <WorkerPoolContextProvider {...workerPoolProps}>
         <PierreFile
-          file={{ name, contents: code, lang: language }}
+          file={{
+            name,
+            contents: code,
+            ...(language ? { lang: language } : {}),
+          }}
           options={{
             theme: defaultTheme,
             themeType,
             disableFileHeader: true,
             disableLineNumbers: !lineNumbers,
-            unsafeCSS: lineNumbers ? undefined : noLineNumbersCSS,
+            ...(lineNumbers ? {} : { unsafeCSS: noLineNumbersCSS }),
           }}
         />
       </WorkerPoolContextProvider>
@@ -264,7 +269,7 @@ export function DiffView({
             diffStyle,
             disableLineNumbers: !lineNumbers,
           }}
-          renderHeaderMetadata={renderHeaderMetadata}
+          {...(renderHeaderMetadata ? { renderHeaderMetadata } : {})}
         />
       </WorkerPoolContextProvider>
     </div>

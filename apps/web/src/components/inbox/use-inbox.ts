@@ -7,12 +7,14 @@ import {
   inboxClient,
   type ResolveApprovalInput
 } from '@/lib/inbox/client';
-import type { Inbox } from '@/lib/inbox/types';
+import type { Inbox, TriageRunEvent } from '@/lib/inbox/types';
 
 /** Inbox state plus the action handlers the panels call. */
 export type UseInbox = {
   readonly inbox: Inbox | null;
   readonly isLoading: boolean;
+  readonly refresh: () => Promise<void>;
+  readonly runTriage: () => AsyncIterable<TriageRunEvent>;
   readonly approve: (approvalId: string, editedBody?: string) => Promise<void>;
   readonly deny: (approvalId: string) => Promise<void>;
   readonly undo: (ledgerEntryId: string, emailId: string) => Promise<void>;
@@ -30,8 +32,15 @@ export function useInbox(client: InboxClient = inboxClient): UseInbox {
   const [inbox, setInbox] = useState<Inbox | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const refresh = useCallback(async () => {
+    const next = await client.getInbox();
+    setInbox(next);
+    setIsLoading(false);
+  }, [client]);
+
   useEffect(() => {
     let isActive = true;
+    setIsLoading(true);
     void client.getInbox().then((next) => {
       if (isActive) {
         setInbox(next);
@@ -85,5 +94,7 @@ export function useInbox(client: InboxClient = inboxClient): UseInbox {
     [client]
   );
 
-  return { inbox, isLoading, approve, deny, undo };
+  const runTriage = useCallback(() => client.runTriage(), [client]);
+
+  return { inbox, isLoading, refresh, runTriage, approve, deny, undo };
 }

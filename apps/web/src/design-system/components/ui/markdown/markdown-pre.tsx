@@ -6,8 +6,8 @@ import { extractTextContent } from "./extract-text-content";
 import { PlainCodeBlock } from "./markdown-code-block";
 
 type MarkdownPreProps = {
-  node?: HastElement;
-  children?: ReactNode;
+  node?: HastElement | undefined;
+  children?: ReactNode | undefined;
 };
 
 const TRAILING_NEWLINE_RE = /\n$/;

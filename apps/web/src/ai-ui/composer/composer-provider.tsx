@@ -262,13 +262,11 @@ export function ComposerProvider({
       store.setText(id, "");
 
       try {
-        await handler({
-          content,
-          attachments:
-            currentDraft.attachments.length > 0
-              ? currentDraft.attachments
-              : undefined,
-        });
+        const message: CreateMessage =
+          currentDraft.attachments.length > 0
+            ? { content, attachments: currentDraft.attachments }
+            : { content };
+        await handler(message);
         // Attachments added mid-send belong to the next message.
         useComposerStore.getState().removeAttachments(
           id,

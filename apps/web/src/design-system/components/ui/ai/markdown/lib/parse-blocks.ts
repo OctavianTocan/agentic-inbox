@@ -41,7 +41,12 @@ function updateHtmlStack(token: Token, stack: string[]): string[] {
   let match: RegExpExecArray | null = TAG_RE.exec(token.raw);
   while (match !== null) {
     const isClosing = match[1] === "/";
-    const tagName = match[2].toLowerCase();
+    const matchedTagName = match[2];
+    if (matchedTagName === undefined) {
+      match = TAG_RE.exec(token.raw);
+      continue;
+    }
+    const tagName = matchedTagName.toLowerCase();
     const isSelfClosing = match[3] === "/";
     if (!(VOID_TAGS.has(tagName) || isSelfClosing)) {
       if (isClosing) {
@@ -85,6 +90,9 @@ export function parseMarkdownIntoBlocksWithOffsets(
   let cursor = 0;
   for (let i = 0; i < tokens.length; i += 1) {
     const startToken = tokens[i];
+    if (startToken === undefined) {
+      continue;
+    }
     const startOffset = cursor;
     let stack = updateHtmlStack(startToken, []);
     if (stack.length === 0) {
@@ -96,9 +104,13 @@ export function parseMarkdownIntoBlocksWithOffsets(
     cursor += startToken.raw.length;
     let j = i + 1;
     while (j < tokens.length && stack.length > 0) {
-      merged += tokens[j].raw;
-      cursor += tokens[j].raw.length;
-      stack = updateHtmlStack(tokens[j], stack);
+      const token = tokens[j];
+      if (token === undefined) {
+        break;
+      }
+      merged += token.raw;
+      cursor += token.raw.length;
+      stack = updateHtmlStack(token, stack);
       j += 1;
     }
     pushBlock(blocks, merged, startOffset);

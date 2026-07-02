@@ -74,11 +74,9 @@ function tryMatchResolved(
   resolvedParts: readonly ResolvedPart[],
   resolvedIdx: number,
 ): ResolvedPart | null {
-  if (
-    resolvedIdx < resolvedParts.length &&
-    resolvedParts[resolvedIdx].part === rawPart
-  ) {
-    return resolvedParts[resolvedIdx];
+  const resolvedPart = resolvedParts[resolvedIdx];
+  if (resolvedPart !== undefined && resolvedPart.part === rawPart) {
+    return resolvedPart;
   }
   return null;
 }
@@ -195,25 +193,24 @@ export function useSegments<TBoundary = unknown>(
     skipTypes,
   } = config;
 
-  return useMemo(
-    () =>
-      buildSegments({
-        rawParts,
-        resolvedParts,
-        fallback,
-        boundaryType,
-        extractBoundary,
-        skipTypes,
-      }),
-    [
+  return useMemo(() => {
+    const nextConfig: SegmentsConfig<TBoundary> = {
       rawParts,
       resolvedParts,
-      fallback,
       boundaryType,
-      extractBoundary,
-      skipTypes,
-    ],
-  );
+      ...(fallback !== undefined && { fallback }),
+      ...(extractBoundary !== undefined && { extractBoundary }),
+      ...(skipTypes !== undefined && { skipTypes }),
+    };
+    return buildSegments(nextConfig);
+  }, [
+    rawParts,
+    resolvedParts,
+    fallback,
+    boundaryType,
+    extractBoundary,
+    skipTypes,
+  ]);
 }
 
 /**
@@ -237,7 +234,8 @@ export function useSegmentTimings<TBoundary>(
     const timestamps = timestampsRef.current;
 
     for (let i = 0; i < segments.length; i++) {
-      if (hasBoundary(segments[i]) && !timestamps.has(i)) {
+      const segment = segments[i];
+      if (segment !== undefined && hasBoundary(segment) && !timestamps.has(i)) {
         timestamps.set(i, now);
       }
     }

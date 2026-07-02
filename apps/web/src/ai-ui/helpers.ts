@@ -100,7 +100,11 @@ export function readMessageUsageMetadata(
   ) {
     return;
   }
-  return { inputTokens, outputTokens, totalTokens };
+  return {
+    ...(inputTokens !== undefined && { inputTokens }),
+    ...(outputTokens !== undefined && { outputTokens }),
+    ...(totalTokens !== undefined && { totalTokens }),
+  };
 }
 
 /** Reads output tokens from assistant usage metadata. */

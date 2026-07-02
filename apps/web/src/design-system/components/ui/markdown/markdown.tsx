@@ -34,14 +34,14 @@ const DEFAULT_REHYPE_PLUGINS: Options["rehypePlugins"] = [
 
 const BASE_COMPONENTS: Partial<Components> = {
   code: (props) => <MarkdownCodeBlock {...props} />,
-  pre: MarkdownPre,
+  pre: (props) => <MarkdownPre {...props} />,
   a: ({ className, children, href, ...props }) => (
     <a className={cn("underline-offset-2", className)} href={href} {...props}>
       {children}
     </a>
   ),
   img: (props) => <MarkdownImage {...props} />,
-  details: MarkdownDetails,
+  details: (props) => <MarkdownDetails {...props} />,
   summary: MarkdownSummary,
   table: MarkdownTable,
 };

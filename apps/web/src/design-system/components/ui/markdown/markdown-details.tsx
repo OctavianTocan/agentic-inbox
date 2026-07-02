@@ -13,7 +13,7 @@ import { cn } from "../../../lib/utils";
 type MarkdownSummaryProps = HTMLAttributes<HTMLElement> & {
   // react-markdown passes the hast `node` as a prop; drop it from forwarded
   // DOM attributes.
-  node?: unknown;
+  node?: unknown | undefined;
 };
 
 /**
@@ -29,10 +29,10 @@ export function MarkdownSummary({ children }: MarkdownSummaryProps) {
 }
 
 type MarkdownDetailsProps = HTMLAttributes<HTMLElement> & {
-  open?: boolean;
+  open?: boolean | undefined;
   // react-markdown passes the hast `node` as a prop; drop it from forwarded
   // DOM attributes.
-  node?: unknown;
+  node?: unknown | undefined;
 };
 
 /**

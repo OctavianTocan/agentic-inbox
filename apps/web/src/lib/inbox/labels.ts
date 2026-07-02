@@ -46,9 +46,9 @@ const SEVERITY_RANK: Readonly<Record<Severity, number>> = {
 /** Badge variant that renders a severity at the right visual weight. */
 export function severityBadgeVariant(
   severity: Severity
-): 'destructive' | 'secondary' | 'outline' {
+): 'attention' | 'secondary' | 'outline' {
   if (severity === 'critical' || severity === 'high') {
-    return 'destructive';
+    return 'attention';
   }
   if (severity === 'medium') {
     return 'secondary';
@@ -59,9 +59,9 @@ export function severityBadgeVariant(
 /** Badge variant for a review status. */
 export function statusBadgeVariant(
   status: EmailStatus
-): 'destructive' | 'success' | 'outline' {
+): 'attention' | 'success' | 'outline' {
   if (status === 'needs_attention') {
-    return 'destructive';
+    return 'attention';
   }
   if (status === 'done_for_you') {
     return 'success';

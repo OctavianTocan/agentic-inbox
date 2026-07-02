@@ -4,10 +4,16 @@ import { AgentSpinner } from '@/design-system/components/ui/agent-spinner';
 import { Badge } from '@/design-system/components/ui/badge';
 import {
   bySeverityDesc,
+  CATEGORY_LABELS,
   projectOf,
   severityBadgeVariant
 } from '@/lib/inbox/labels';
-import type { InboxItem, InboxSummary, Severity } from '@/lib/inbox/types';
+import type {
+  Category,
+  InboxItem,
+  InboxSummary,
+  Severity
+} from '@/lib/inbox/types';
 
 const SEVERITIES: readonly Severity[] = ['critical', 'high', 'medium', 'low'];
 
@@ -54,16 +60,59 @@ type StatProps = {
   readonly value: number;
 };
 
-/** Single labelled count in the summary stat row. */
+/** Inline labelled count in the summary metadata row. */
 function Stat({ label, value }: StatProps) {
   return (
-    <div className="flex flex-col gap-0.5">
-      <span className="font-semibold text-2xl tabular-nums">{value}</span>
-      <span className="text-muted-foreground text-xs uppercase tracking-wide">
-        {label}
-      </span>
-    </div>
+    <span className="inline-flex items-baseline gap-1.5 text-sm">
+      <span className="font-semibold tabular-nums">{value}</span>
+      <span className="text-muted-foreground">{label}</span>
+    </span>
   );
+}
+
+/** Counts decisions by category. */
+function categoryCounts(
+  items: readonly InboxItem[]
+): ReadonlyMap<Category, number> {
+  const counts = new Map<Category, number>();
+  for (const item of items) {
+    if (item.decision) {
+      counts.set(
+        item.decision.category,
+        (counts.get(item.decision.category) ?? 0) + 1
+      );
+    }
+  }
+  return counts;
+}
+
+/** Finds the busiest category in the current triage result. */
+function topCategory(items: readonly InboxItem[]): Category | null {
+  let leader: Category | null = null;
+  let leaderCount = 0;
+  for (const [category, count] of categoryCounts(items)) {
+    if (count > leaderCount) {
+      leader = category;
+      leaderCount = count;
+    }
+  }
+  return leader;
+}
+
+/** Builds the human-readable agent summary copy above the inbox list. */
+function summaryText(
+  summary: InboxSummary,
+  items: readonly InboxItem[]
+): string {
+  if (summary.processed === 0) {
+    return `The agent has not triaged this inbox yet. The current view shows all ${summary.needsAttention} emails waiting for review; run the batch agent to generate handled, filed, and traceable action results.`;
+  }
+  const busiestProject = projectChips(items)[0]?.name ?? 'the projects';
+  const category = topCategory(items);
+  const categoryText = category
+    ? CATEGORY_LABELS[category].toLowerCase()
+    : 'work';
+  return `The agent reviewed ${summary.processed} emails across ${busiestProject}, handled ${summary.handled} routine items, filed ${summary.filed}, and left ${summary.needsAttention} for your review. Most of the remaining attention is ${categoryText}; sensitive or low-confidence items stayed in your queue.`;
 }
 
 /**
@@ -94,14 +143,19 @@ export function InboxSummaryBlock({
   const sorted = [...items].sort(bySeverityDesc);
 
   return (
-    <div className="flex flex-col gap-4 border-b bg-card px-6 py-5">
-      <div className="flex flex-wrap items-end gap-x-10 gap-y-4">
+    <div className="flex flex-col gap-3 border-b bg-card/70 px-4 py-3 sm:px-6 sm:py-4">
+      <div className="max-w-3xl">
+        <p className="text-sm leading-6 max-md:line-clamp-3">
+          {summaryText(summary, items)}
+        </p>
+      </div>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
         <Stat label="Processed" value={summary.processed} />
         <Stat label="Handled" value={summary.handled} />
         <Stat label="Need attention" value={summary.needsAttention} />
         <Stat label="Filed" value={summary.filed} />
       </div>
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2 max-md:flex-nowrap max-md:overflow-x-auto max-md:pb-0.5">
         {chips.map((chip) => (
           <Badge key={chip.name} variant="outline">
             {chip.name}

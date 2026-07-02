@@ -184,7 +184,10 @@ export const formatKeyBinding = (
           .map((key) => formatSingleKey(key, platform, convertCtrlToCmd))
           .join(" ");
       }
-      return formatSingleKey(sequence.keys[0], platform, convertCtrlToCmd);
+      const firstKey = sequence.keys[0];
+      return firstKey === undefined
+        ? ""
+        : formatSingleKey(firstKey, platform, convertCtrlToCmd);
     })
     .join(" or ");
 };
@@ -250,6 +253,9 @@ export const useKeyBinding = (
       }
 
       const expectedKey = binding.keys[currentKeyIndex];
+      if (expectedKey === undefined) {
+        return false;
+      }
 
       if (!matchesSingleKey(event, expectedKey, convertCtrlToCmd)) {
         sequenceKeysRef.current = [];
@@ -277,7 +283,11 @@ export const useKeyBinding = (
       event: KeyboardEvent,
       binding: KeySequence,
     ): boolean => {
-      if (!matchesSingleKey(event, binding.keys[0], convertCtrlToCmd)) {
+      const firstKey = binding.keys[0];
+      if (
+        firstKey === undefined ||
+        !matchesSingleKey(event, firstKey, convertCtrlToCmd)
+      ) {
         return false;
       }
       sequenceKeysRef.current = [];
@@ -396,9 +406,11 @@ export const createKeyBindingProps = (config: UseKeyBindingConfig) => {
       let matched = false;
 
       for (const binding of parsedBindings) {
+        const firstKey = binding.keys[0];
         if (
           !binding.isSequence &&
-          matchesSingleKey(event.nativeEvent, binding.keys[0], convertCtrlToCmd)
+          firstKey !== undefined &&
+          matchesSingleKey(event.nativeEvent, firstKey, convertCtrlToCmd)
         ) {
           matched = true;
           break;

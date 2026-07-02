@@ -35,15 +35,15 @@ export type { MarkdownMediaContentSize } from "./use-markdown-media-transform";
 
 export type MarkdownMediaViewerProps = {
   children: ReactNode;
-  contentSize?: MarkdownMediaContentSize;
-  copyLabel?: string;
-  copyValue?: string;
+  contentSize?: MarkdownMediaContentSize | undefined;
+  copyLabel?: string | undefined;
+  copyValue?: string | undefined;
   /**
    * Cap for the auto-computed fit scale. Default unbounded (correct for
    * vector media); raster callers pass `1` to keep small images sharp.
    */
-  maxFitScale?: number;
-  mediaClassName?: string;
+  maxFitScale?: number | undefined;
+  mediaClassName?: string | undefined;
   onOpenChange: (open: boolean) => void;
   open: boolean;
   title: string;

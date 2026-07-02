@@ -124,6 +124,7 @@ export function ActiveFiltersMobileContainer({
         resizeObserver.disconnect();
       };
     }
+    return undefined;
   }, []);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>

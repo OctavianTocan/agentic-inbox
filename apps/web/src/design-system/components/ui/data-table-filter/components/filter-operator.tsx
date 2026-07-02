@@ -114,6 +114,22 @@ interface FilterOperatorControllerProps<TData, TType extends ColumnDataType> {
   locale?: Locale;
 }
 
+/** Narrows a generic column by its runtime data type. */
+function isColumnType<TData, TType extends ColumnDataType>(
+  column: Column<TData>,
+  type: TType,
+): column is Column<TData, TType> {
+  return column.type === type;
+}
+
+/** Narrows a generic filter by its runtime data type. */
+function isFilterType<TType extends ColumnDataType>(
+  filter: FilterModel,
+  type: TType,
+): filter is FilterModel<TType> {
+  return filter.type === type;
+}
+
 /*
  *
  * TODO: Reduce into a single component. Each data type does not need it's own controller.
@@ -128,56 +144,79 @@ export function FilterOperatorController<TData, TType extends ColumnDataType>({
   locale = "en",
 }: FilterOperatorControllerProps<TData, TType>) {
   switch (column.type) {
-    case "option":
+    case "option": {
+      if (!isColumnType(column, "option") || !isFilterType(filter, "option")) {
+        return null;
+      }
       return (
-        <FilterOperatorOptionController
-          filter={filter as FilterModel<"option">}
-          column={column as Column<TData, "option">}
+        <FilterOperatorOptionController<TData>
+          filter={filter}
+          column={column}
           actions={actions}
           closeController={closeController}
           locale={locale}
         />
       );
-    case "multiOption":
+    }
+    case "multiOption": {
+      if (
+        !isColumnType(column, "multiOption") ||
+        !isFilterType(filter, "multiOption")
+      ) {
+        return null;
+      }
       return (
-        <FilterOperatorMultiOptionController
-          filter={filter as FilterModel<"multiOption">}
-          column={column as Column<TData, "multiOption">}
+        <FilterOperatorMultiOptionController<TData>
+          filter={filter}
+          column={column}
           actions={actions}
           closeController={closeController}
           locale={locale}
         />
       );
-    case "date":
+    }
+    case "date": {
+      if (!isColumnType(column, "date") || !isFilterType(filter, "date")) {
+        return null;
+      }
       return (
-        <FilterOperatorDateController
-          filter={filter as FilterModel<"date">}
-          column={column as Column<TData, "date">}
+        <FilterOperatorDateController<TData>
+          filter={filter}
+          column={column}
           actions={actions}
           closeController={closeController}
           locale={locale}
         />
       );
-    case "text":
+    }
+    case "text": {
+      if (!isColumnType(column, "text") || !isFilterType(filter, "text")) {
+        return null;
+      }
       return (
-        <FilterOperatorTextController
-          filter={filter as FilterModel<"text">}
-          column={column as Column<TData, "text">}
+        <FilterOperatorTextController<TData>
+          filter={filter}
+          column={column}
           actions={actions}
           closeController={closeController}
           locale={locale}
         />
       );
-    case "number":
+    }
+    case "number": {
+      if (!isColumnType(column, "number") || !isFilterType(filter, "number")) {
+        return null;
+      }
       return (
-        <FilterOperatorNumberController
-          filter={filter as FilterModel<"number">}
-          column={column as Column<TData, "number">}
+        <FilterOperatorNumberController<TData>
+          filter={filter}
+          column={column}
           actions={actions}
           closeController={closeController}
           locale={locale}
         />
       );
+    }
     default:
       return null;
   }

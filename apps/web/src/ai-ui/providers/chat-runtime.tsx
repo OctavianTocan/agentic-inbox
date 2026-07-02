@@ -75,15 +75,22 @@ export function ChatRuntime<
   }
 
   return (
-    <ThreadProvider adapter={adapter} suggestions={suggestions}>
+    <ThreadProvider
+      adapter={adapter}
+      {...(suggestions !== undefined && { suggestions })}
+    >
       <ComposerProvider
-        attachments={adapter.attachments}
         focusAfterSubmit={focusAfterSubmit}
         id={composerId}
-        onSteer={adapter.steerMessage}
         onStop={() => adapter.stop()}
         onSubmit={adapter.sendMessage}
         threadStatus={adapter.status}
+        {...(adapter.attachments !== undefined && {
+          attachments: adapter.attachments,
+        })}
+        {...(adapter.steerMessage !== undefined && {
+          onSteer: adapter.steerMessage,
+        })}
         {...composerConfig}
       >
         {content}

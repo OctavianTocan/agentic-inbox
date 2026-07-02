@@ -52,40 +52,39 @@ export function EmailRow({
     <Item
       aria-current={isSelected}
       className={cn(
-        'cursor-pointer rounded-none border-0 px-6 py-3',
-        isSelected && 'bg-muted'
+        'cursor-pointer rounded-none border-0 px-4 py-3.5 sm:px-6',
+        'hover:bg-muted/60',
+        isSelected && 'bg-primary/5'
       )}
       data-email-id={email.id}
       onClick={() => onSelect(email.id)}
     >
-      <ItemContent>
+      <ItemContent className="min-w-0">
         <ItemTitle className="w-full justify-between gap-3">
-          <span className="flex min-w-0 items-center gap-2">
-            {decision ? (
-              <Badge variant={severityBadgeVariant(decision.severity)}>
-                {decision.severity}
-              </Badge>
-            ) : null}
-            <span className="truncate">{email.subject}</span>
-          </span>
+          <span className="min-w-0 truncate">{senderName(email.from)}</span>
           <span className="shrink-0 text-muted-foreground text-xs tabular-nums">
             {formatTimestamp(email.timestamp)}
           </span>
         </ItemTitle>
-        <ItemDescription className="line-clamp-1">
-          {decision?.whyPreview ?? `From ${senderName(email.from)}`}
+        <div className="min-w-0 truncate font-medium text-sm">
+          {email.subject}
+        </div>
+        <ItemDescription className="line-clamp-2">
+          {decision?.whyPreview ?? email.body}
         </ItemDescription>
-        <div className="mt-1 flex items-center gap-2">
+        <div className="mt-1 flex flex-wrap items-center gap-1.5">
           <Badge variant={statusBadgeVariant(status)}>
             {STATUS_LABELS[status]}
           </Badge>
-          <span className="text-muted-foreground text-xs">
-            {senderName(email.from)}
-          </span>
+          {decision ? (
+            <Badge variant={severityBadgeVariant(decision.severity)}>
+              {decision.severity}
+            </Badge>
+          ) : null}
         </div>
       </ItemContent>
       {pendingApproval ? (
-        <ItemActions>
+        <ItemActions className="max-sm:basis-full max-sm:justify-end max-sm:pl-5">
           <Button
             onClick={(event) => {
               event.stopPropagation();

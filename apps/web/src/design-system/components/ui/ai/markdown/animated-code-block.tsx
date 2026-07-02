@@ -9,9 +9,9 @@ import { extractTextContent } from "../../markdown/extract-text-content";
 import { MermaidDiagram } from "../../markdown/markdown-mermaid";
 
 type AnimatedMarkdownCodeBlockProps = React.HTMLAttributes<HTMLElement> & {
-  children?: React.ReactNode;
-  className?: string;
-  node?: HastElement;
+  children?: React.ReactNode | undefined;
+  className?: string | undefined;
+  node?: HastElement | undefined;
 };
 
 const LANGUAGE_RE = /language-(\w+)/;

@@ -72,8 +72,11 @@ function deepEqual(a: unknown, b: unknown): boolean {
     const bKeys = Object.keys(bRecord).sort();
     if (aKeys.length !== bKeys.length) return false;
     for (let i = 0; i < aKeys.length; i++) {
-      if (aKeys[i] !== bKeys[i]) return false;
-      if (!deepEqual(aRecord[aKeys[i]], bRecord[bKeys[i]])) return false;
+      const aKey = aKeys[i];
+      const bKey = bKeys[i];
+      if (aKey === undefined || bKey === undefined) return false;
+      if (aKey !== bKey) return false;
+      if (!deepEqual(aRecord[aKey], bRecord[bKey])) return false;
     }
     return true;
   }

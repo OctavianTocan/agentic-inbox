@@ -12,7 +12,11 @@ import { Spinner } from "./spinner";
 
 /** Theme-aware toast viewport preconfigured with status icons. */
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme();
+  const { theme } = useTheme();
+  const resolvedTheme: ToasterProps["theme"] =
+    theme === "light" || theme === "dark" || theme === "system"
+      ? theme
+      : "system";
 
   return (
     <Sonner
@@ -33,7 +37,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
           "--border-radius": "var(--radius)",
         } as React.CSSProperties
       }
-      theme={theme as ToasterProps["theme"]}
+      theme={resolvedTheme}
       toastOptions={{
         classNames: {
           toast: "cn-toast",

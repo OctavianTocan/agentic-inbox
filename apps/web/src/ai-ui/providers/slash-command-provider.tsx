@@ -159,7 +159,11 @@ function parseSlashCommand(
   if (!match) {
     return null;
   }
-  return { commandId: match[1], args: (match[2] ?? "").trim() };
+  const commandId = match[1];
+  if (commandId === undefined) {
+    return null;
+  }
+  return { commandId, args: (match[2] ?? "").trim() };
 }
 
 /** Filters commands by query using label, id, and keywords. */

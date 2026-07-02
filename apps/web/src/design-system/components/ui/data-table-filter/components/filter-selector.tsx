@@ -302,7 +302,7 @@ export const QuickSearchFilters = memo(function QuickSearchFilters<TData>({
   filters,
   columns,
   actions,
-  locale = "en",
+  locale: _locale = "en",
 }: QuickSearchFiltersProps<TData>) {
   const cols = useMemo(() => columns.filter(isOptionLikeColumn), [columns]);
 

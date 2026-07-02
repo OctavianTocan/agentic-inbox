@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { InboxShell } from '@/components/inbox/inbox-shell';
 import { DesignSystemProvider } from '@/design-system/providers';
@@ -9,6 +9,9 @@ vi.mock('@/lib/inbox/client', async () => {
   return {
     inboxClient: {
       getInbox: () => Promise.resolve(inbox),
+      runTriage: async function* () {
+        yield { type: 'done', processed: inbox.items.length };
+      },
       resolveApproval: () => Promise.resolve(inbox),
       undoAction: () => Promise.resolve(inbox)
     }
@@ -21,15 +24,15 @@ vi.mock('@/components/inbox/run-view', () => ({
     onComplete
   }: {
     readonly items: readonly { readonly email: { readonly subject: string } }[];
-    readonly onComplete: () => void;
+    readonly onComplete: () => Promise<void> | void;
   }) => (
     <section>
-      <h1>Triaging your inbox</h1>
+      <h1>Run the agent across the inbox?</h1>
       {items.map((item) => (
         <p key={item.email.subject}>{item.email.subject}</p>
       ))}
-      <button onClick={onComplete} type="button">
-        Finish run
+      <button onClick={() => void onComplete()} type="button">
+        Open current inbox
       </button>
     </section>
   )
@@ -48,7 +51,7 @@ describe('InboxShell', () => {
   it('shows the run view first, then the populated inbox with resizable list/detail/chat panels', async () => {
     const { container } = renderInboxShell();
 
-    expect(screen.getByText('Triaging your inbox')).toBeDefined();
+    expect(screen.getByText('Run the agent across the inbox?')).toBeDefined();
     expect(screen.queryByText('No emails match these filters.')).toBeNull();
 
     expect(
@@ -57,10 +60,14 @@ describe('InboxShell', () => {
       )
     ).toBeDefined();
 
-    fireEvent.click(screen.getByText('Finish run'));
+    fireEvent.click(screen.getByText('Open current inbox'));
 
-    expect(screen.queryByText('Triaging your inbox')).toBeNull();
-    expect(screen.getByText('Awaiting your approval')).toBeDefined();
+    await waitFor(() => {
+      expect(screen.queryByText('Run the agent across the inbox?')).toBeNull();
+    });
+    expect(
+      screen.getAllByText('Awaiting your approval').length
+    ).toBeGreaterThan(0);
     expect(
       screen.getAllByText(/RFI-187: Lobby east wall finish at Riverside Tower/)
         .length

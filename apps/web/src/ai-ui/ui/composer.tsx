@@ -279,9 +279,9 @@ const ComposerTextArea = ({
   useAutosizeTextarea({
     ref: textareaRef,
     value: text,
-    minHeight,
     maxHeight,
     enabled: autoResize,
+    ...(minHeight !== undefined && { minHeight }),
   });
 
   const sizingStyle: React.CSSProperties | undefined = autoResize

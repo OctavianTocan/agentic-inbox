@@ -14,8 +14,12 @@ export function ImageOptimiserProvider({
   quality,
   children,
 }: ImageOptimiserConfig & { children: ReactNode }) {
-  const value = useMemo(
-    () => ({ endpoint, hosts, quality }),
+  const value = useMemo<ImageOptimiserConfig>(
+    () => ({
+      endpoint,
+      hosts,
+      ...(quality !== undefined && { quality }),
+    }),
     [endpoint, hosts, quality],
   );
   return (

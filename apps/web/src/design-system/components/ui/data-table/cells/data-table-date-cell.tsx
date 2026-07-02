@@ -40,7 +40,11 @@ function Inner({
   className,
   title,
   ...props
-}: { text: string; className?: string; title?: string } & Omit<
+}: {
+  text: string;
+  className?: string | undefined;
+  title?: string | undefined;
+} & Omit<
   React.ComponentProps<"span">,
   "children"
 >) {

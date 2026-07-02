@@ -97,3 +97,33 @@ export type Inbox = {
   readonly summary: InboxSummary;
   readonly items: readonly InboxItem[];
 };
+
+/** Browser-facing subset of events emitted while the batch triage agent runs. */
+export type TriageRunEvent =
+  | {
+      readonly type: 'started';
+      readonly emailId: string;
+    }
+  | {
+      readonly type: 'decision';
+      readonly emailId: string;
+    }
+  | {
+      readonly type: 'action';
+      readonly emailId: string;
+      readonly summary: string;
+    }
+  | {
+      readonly type: 'approval_pending';
+      readonly emailId: string;
+      readonly summary: string;
+    }
+  | {
+      readonly type: 'failed';
+      readonly emailId: string;
+      readonly reason: string;
+    }
+  | {
+      readonly type: 'done';
+      readonly processed: number;
+    };

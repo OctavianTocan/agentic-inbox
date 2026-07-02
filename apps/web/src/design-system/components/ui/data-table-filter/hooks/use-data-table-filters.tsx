@@ -441,8 +441,11 @@ function setOptionLikeFilterValue(
 /** Coerces an array of dates to the [Date, Date] | [Date] | [] tuple shape. */
 function toDateInput(values: readonly Date[]): [Date, Date] | [Date] | [] {
   if (values.length === 0) return [];
-  if (values.length === 1) return [values[0]];
-  return [values[0], values[1]];
+  const first = values[0];
+  if (!first) return [];
+  if (values.length === 1) return [first];
+  const second = values[1];
+  return second ? [first, second] : [first];
 }
 
 /** Type-guard for the number-column operator union. */

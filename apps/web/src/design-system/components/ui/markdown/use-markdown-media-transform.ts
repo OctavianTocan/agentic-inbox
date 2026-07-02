@@ -36,7 +36,7 @@ export type MarkdownMediaContentSize = {
 };
 
 type UseMarkdownMediaTransformOptions = {
-  contentSize?: MarkdownMediaContentSize;
+  contentSize?: MarkdownMediaContentSize | undefined;
   open: boolean;
   /**
    * Upper bound on the auto-computed fit scale. Defaults to unbounded (caps
@@ -44,7 +44,7 @@ type UseMarkdownMediaTransformOptions = {
    * media (SVG/mermaid). Pass `1` for raster media so small images aren't
    * upscaled into a pixelated blob.
    */
-  maxFitScale?: number;
+  maxFitScale?: number | undefined;
 };
 
 type MarkdownMediaTransformControls = {

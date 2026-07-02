@@ -16,6 +16,8 @@ export function DataTableToolbar<TData>({
   table,
 }: DataTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0;
+  const statusColumn = table.getColumn("status");
+  const tagsColumn = table.getColumn("tags");
 
   return (
     <div className="flex items-center justify-between">
@@ -28,16 +30,16 @@ export function DataTableToolbar<TData>({
           placeholder="Filter entries..."
           value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
         />
-        {table.getColumn("status") && (
+        {statusColumn && (
           <DataTableFacetedFilter
-            column={table.getColumn("status")}
+            column={statusColumn}
             options={[]}
             title="Status"
           />
         )}
-        {table.getColumn("tags") && (
+        {tagsColumn && (
           <DataTableFacetedFilter
-            column={table.getColumn("tags")}
+            column={tagsColumn}
             options={[]}
             title="Tags"
           />

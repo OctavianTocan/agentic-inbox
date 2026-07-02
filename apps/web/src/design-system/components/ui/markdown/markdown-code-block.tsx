@@ -8,9 +8,9 @@ import { MermaidDiagram } from "./markdown-mermaid";
 
 export interface MarkdownCodeBlockProps
   extends React.HTMLAttributes<HTMLElement> {
-  children?: React.ReactNode;
-  className?: string;
-  node?: unknown;
+  children?: React.ReactNode | undefined;
+  className?: string | undefined;
+  node?: unknown | undefined;
 }
 
 const LANGUAGE_RE = /language-(\w+)/;

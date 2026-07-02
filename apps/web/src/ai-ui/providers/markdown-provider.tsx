@@ -17,7 +17,7 @@ import {
 import { useTokens } from "../hooks/use-tokens";
 
 export interface MarkdownContextValue {
-  animation?: AnimationConfig | null | AnimationType | false;
+  animation?: AnimationConfig | null | AnimationType | false | undefined;
   isAnimating: boolean;
   effectiveAnimation: AnimationConfig | null;
 }
@@ -36,7 +36,7 @@ export function useMarkdown() {
 export interface MarkdownProviderProps {
   children: ReactNode;
   content: ReactNode;
-  animation?: AnimationConfig | null | AnimationType | false;
+  animation?: AnimationConfig | null | AnimationType | false | undefined;
   waitForAnimation: boolean;
 }
 

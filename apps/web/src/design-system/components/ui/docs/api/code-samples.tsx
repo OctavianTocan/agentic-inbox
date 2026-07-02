@@ -15,7 +15,7 @@ type CodeSamplesProps = {
   readonly baseUrl: string;
   readonly hasAuth: boolean;
   readonly parameters: readonly OpenAPIV3_1.ParameterObject[];
-  readonly requestBody?: OpenAPIV3_1.RequestBodyObject;
+  readonly requestBody?: OpenAPIV3_1.RequestBodyObject | undefined;
   readonly resolveSchema: ResolveSchema;
 };
 
@@ -162,8 +162,9 @@ function sampleFromSchema(
     return obj;
   }
   const variants = schema.oneOf ?? schema.anyOf;
-  if (variants && variants.length > 0) {
-    return sampleFromSchema(resolve(variants[0]), resolve, depth + 1);
+  const firstVariant = variants?.[0];
+  if (firstVariant) {
+    return sampleFromSchema(resolve(firstVariant), resolve, depth + 1);
   }
   if (schema.type === "string") {
     return "string";

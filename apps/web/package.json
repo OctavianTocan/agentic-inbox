@@ -44,6 +44,7 @@
     "react": "catalog:",
     "react-day-picker": "catalog:",
     "react-dom": "catalog:",
+    "react-grab": "^0.1.47",
     "react-hook-form": "catalog:",
     "react-markdown": "catalog:",
     "react-resizable-panels": "catalog:",

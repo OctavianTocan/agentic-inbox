@@ -25,9 +25,9 @@ type StreamingSpanProps = ComponentProps<"span"> & {
 };
 
 type MarkdownCodeBlockProps = HTMLAttributes<HTMLElement> & {
-  readonly children?: ReactNode;
-  readonly className?: string;
-  readonly node?: HastElement;
+  readonly children?: ReactNode | undefined;
+  readonly className?: string | undefined;
+  readonly node?: HastElement | undefined;
 };
 
 const LANGUAGE_RE = /language-(\w+)/;

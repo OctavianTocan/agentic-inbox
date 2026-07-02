@@ -30,9 +30,12 @@ export function createNumberFilterValue(
   values: number[] | undefined,
 ): number[] {
   if (!values || values.length === 0) return [];
-  if (values.length === 1) return [values[0]];
+  const first = values[0];
+  if (first === undefined) return [];
+  if (values.length === 1) return [first];
   if (values.length === 2) return createNumberRange(values);
-  return [values[0], values[1]];
+  const second = values[1];
+  return second === undefined ? [first] : [first, second];
 }
 
 /**
@@ -75,11 +78,13 @@ export function createNumberRange(values: number[] | undefined) {
   let b = 0;
 
   if (!values || values.length === 0) return [a, b];
+  const first = values[0];
+  if (first === undefined) return [a, b];
   if (values.length === 1) {
-    a = values[0];
+    a = first;
   } else {
-    a = values[0];
-    b = values[1];
+    a = first;
+    b = values[1] ?? 0;
   }
 
   const [min, max] = a < b ? [a, b] : [b, a];

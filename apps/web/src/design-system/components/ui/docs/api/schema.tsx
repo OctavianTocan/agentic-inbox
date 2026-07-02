@@ -10,7 +10,7 @@ type ResolveSchema = (
 type SchemaProps = {
   readonly schema: OpenAPIV3_1.SchemaObject;
   readonly resolve: ResolveSchema;
-  readonly required?: boolean;
+  readonly required?: boolean | undefined;
   readonly className?: string;
 };
 
@@ -48,7 +48,7 @@ type SchemaNodeProps = {
   readonly schema: OpenAPIV3_1.SchemaObject;
   readonly resolve: ResolveSchema;
   readonly depth: number;
-  readonly required?: boolean;
+  readonly required?: boolean | undefined;
 };
 
 /** Recursively renders one schema node and its children. */
@@ -71,7 +71,7 @@ function SchemaNode({ schema, resolve, depth, required }: SchemaNodeProps) {
 
 type SchemaSummaryProps = {
   readonly schema: OpenAPIV3_1.SchemaObject;
-  readonly required?: boolean;
+  readonly required?: boolean | undefined;
 };
 
 /** Renders the type/format/required summary line for a schema. */

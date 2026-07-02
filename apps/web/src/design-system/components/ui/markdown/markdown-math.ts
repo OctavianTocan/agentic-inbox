@@ -557,10 +557,14 @@ function hasClosingBackticksInLaterLines(
     lineIndex < lines.length;
     lineIndex += 1
   ) {
-    if (isInlineCodeSpanBoundaryLine(lines[lineIndex])) {
+    const line = lines[lineIndex];
+    if (line === undefined) {
+      continue;
+    }
+    if (isInlineCodeSpanBoundaryLine(line)) {
       return false;
     }
-    if (findMatchingBackticks(lines[lineIndex], 0, markerLength) >= 0) {
+    if (findMatchingBackticks(line, 0, markerLength) >= 0) {
       return true;
     }
   }

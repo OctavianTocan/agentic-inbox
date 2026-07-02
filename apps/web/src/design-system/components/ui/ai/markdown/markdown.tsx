@@ -118,10 +118,10 @@ function MarkdownInner({
       >
         {blocks.map((block) => (
           <MemoizedMarkdownBlock
-            key={block.key}
             {...restOptions}
             components={mergedComponents}
             content={block.content}
+            key={block.key}
             rehypePlugins={rehypePlugins}
             remarkPlugins={remarkPlugins}
           />

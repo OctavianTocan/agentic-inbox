@@ -78,7 +78,11 @@ function getPersistedWidth(cookieName: string, defaultWidth: number): number {
   if (!match) {
     return defaultWidth;
   }
-  const val = Number.parseInt(match[1], 10);
+  const persistedWidth = match[1];
+  if (persistedWidth === undefined) {
+    return defaultWidth;
+  }
+  const val = Number.parseInt(persistedWidth, 10);
   return Number.isNaN(val) ? defaultWidth : val;
 }
 

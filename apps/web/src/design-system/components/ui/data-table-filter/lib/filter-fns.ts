@@ -107,6 +107,9 @@ export function dateFilterFn(
   const filterVals = filterValue.values;
   const d1 = filterVals[0];
   const d2 = filterVals[1];
+  if (!d1) {
+    return true;
+  }
 
   switch (filterValue.operator) {
     case "is":
@@ -122,14 +125,20 @@ export function dateFilterFn(
     case "is on or before":
       return isSameDay(inputData, d1) || isBefore(inputData, startOfDay(d1));
     case "is between":
+      if (!d2) {
+        return true;
+      }
       return isWithinInterval(inputData, {
         start: startOfDay(d1),
         end: endOfDay(d2),
       });
     case "is not between":
+      if (!d2) {
+        return true;
+      }
       return !isWithinInterval(inputData, {
-        start: startOfDay(filterValue.values[0]),
-        end: endOfDay(filterValue.values[1]),
+        start: startOfDay(d1),
+        end: endOfDay(d2),
       });
   }
 }
@@ -148,7 +157,10 @@ export function textFilterFn(
   if (!filterValue || filterValue.values.length === 0) return true;
 
   const value = inputData.toLowerCase().trim();
-  const filterStr = filterValue.values[0].toLowerCase().trim();
+  const firstValue = filterValue.values[0];
+  if (firstValue === undefined) return true;
+
+  const filterStr = firstValue.toLowerCase().trim();
 
   if (filterStr === "") return true;
 
@@ -178,6 +190,9 @@ export function numberFilterFn(
   }
 
   const filterVal = filterValue.values[0];
+  if (filterVal === undefined) {
+    return true;
+  }
 
   switch (filterValue.operator) {
     case "is":
@@ -195,11 +210,17 @@ export function numberFilterFn(
     case "is between": {
       const lowerBound = filterValue.values[0];
       const upperBound = filterValue.values[1];
+      if (lowerBound === undefined || upperBound === undefined) {
+        return true;
+      }
       return inputData >= lowerBound && inputData <= upperBound;
     }
     case "is not between": {
       const lowerBound = filterValue.values[0];
       const upperBound = filterValue.values[1];
+      if (lowerBound === undefined || upperBound === undefined) {
+        return true;
+      }
       return inputData < lowerBound || inputData > upperBound;
     }
     default:

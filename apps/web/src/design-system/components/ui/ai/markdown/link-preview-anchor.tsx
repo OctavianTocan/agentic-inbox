@@ -45,9 +45,9 @@ function PreviewMeta({
   description,
 }: {
   url: string;
-  logo?: string;
-  title?: string;
-  description?: string;
+  logo?: string | undefined;
+  title?: string | undefined;
+  description?: string | undefined;
 }) {
   const hostname = getHostname(url);
   const fallback = getFaviconUrl(url);

@@ -40,19 +40,30 @@ export function useContextUsage(
   const contextWindow = options?.contextWindow ?? DEFAULT_CONTEXT_WINDOW;
 
   return useMemo(() => {
-    const source = messages.findLast(
-      (m: UIMessage) =>
-        m.role === "assistant" &&
-        readMessageTotalTokens(m.metadata) !== undefined,
-    );
+    let source: UIMessage | undefined;
+    for (let index = messages.length - 1; index >= 0; index -= 1) {
+      const message = messages[index];
+      if (
+        message !== undefined &&
+        message.role === "assistant" &&
+        readMessageTotalTokens(message.metadata) !== undefined
+      ) {
+        source = message;
+        break;
+      }
+    }
+
     const totalTokens = readMessageTotalTokens(source?.metadata);
     if (totalTokens === undefined) {
       return null;
     }
 
+    const inputTokens = readMessageInputTokens(source?.metadata);
+    const outputTokens = readMessageOutputTokens(source?.metadata);
+
     return {
-      inputTokens: readMessageInputTokens(source?.metadata),
-      outputTokens: readMessageOutputTokens(source?.metadata),
+      ...(inputTokens !== undefined && { inputTokens }),
+      ...(outputTokens !== undefined && { outputTokens }),
       totalTokens,
       contextWindow,
       ratio: totalTokens / contextWindow,

@@ -3,16 +3,28 @@
 import Link from 'next/link';
 import { useMemo } from 'react';
 import {
+  CheckIcon,
+  ChevronDownIcon,
   FilterXIcon,
   HistoryIcon,
-  InboxIcon
+  InboxIcon,
+  ListFilterIcon
 } from '@/design-system/components/icons';
+import { Button } from '@/design-system/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger
+} from '@/design-system/components/ui/dropdown-menu';
 import {
   Sidebar,
   SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuBadge,
@@ -20,6 +32,7 @@ import {
   SidebarMenuItem,
   SidebarResizeHandle
 } from '@/design-system/components/ui/sidebar';
+import { cn } from '@/design-system/lib/utils';
 import { CATEGORY_LABELS, projectOf, STATUS_LABELS } from '@/lib/inbox/labels';
 import type {
   Category,
@@ -44,7 +57,18 @@ type InboxSidebarProps = {
   readonly onFiltersChange: (filters: InboxFilters) => void;
 };
 
-type FacetRowProps<T extends string> = {
+type FilterMeta = {
+  readonly projects: readonly string[];
+  readonly categories: readonly Category[];
+  readonly activeCount: number;
+};
+
+type SidebarMetric = {
+  readonly label: string;
+  readonly value: number;
+};
+
+type FacetMenuProps<T extends string> = {
   readonly label: string;
   readonly values: readonly T[];
   readonly active: T | null;
@@ -52,37 +76,6 @@ type FacetRowProps<T extends string> = {
   readonly count: (value: T) => number;
   readonly onToggle: (value: T | null) => void;
 };
-
-/** One filter facet rendered as a toggle group of sidebar menu buttons. */
-function FacetRow<T extends string>({
-  label,
-  values,
-  active,
-  display,
-  count,
-  onToggle
-}: FacetRowProps<T>) {
-  return (
-    <SidebarGroup>
-      <SidebarGroupLabel>{label}</SidebarGroupLabel>
-      <SidebarGroupContent>
-        <SidebarMenu>
-          {values.map((value) => (
-            <SidebarMenuItem key={value}>
-              <SidebarMenuButton
-                isActive={active === value}
-                onClick={() => onToggle(active === value ? null : value)}
-              >
-                <span>{display(value)}</span>
-              </SidebarMenuButton>
-              <SidebarMenuBadge>{count(value)}</SidebarMenuBadge>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-      </SidebarGroupContent>
-    </SidebarGroup>
-  );
-}
 
 /** Count rows matching a facet value. */
 function countBy<T extends string>(
@@ -93,11 +86,324 @@ function countBy<T extends string>(
   return items.filter((item) => getValue(item) === value).length;
 }
 
+/** Number of filter facets currently applied. */
+function activeFilterCount(filters: InboxFilters): number {
+  return [
+    filters.status,
+    filters.severity,
+    filters.project,
+    filters.category
+  ].filter(Boolean).length;
+}
+
+/** Derived filter options from the currently loaded inbox data. */
+function filterMeta(
+  items: readonly InboxItem[],
+  filters: InboxFilters
+): FilterMeta {
+  const projects = new Set(items.map((item) => projectOf(item.email.subject)));
+  const categories = new Set<Category>();
+  for (const item of items) {
+    if (item.decision) {
+      categories.add(item.decision.category);
+    }
+  }
+  return {
+    projects: [...projects].sort(),
+    categories: [...categories],
+    activeCount: activeFilterCount(filters)
+  };
+}
+
+/** Compact queue status rows for the desktop sidebar. */
+function queueMetrics(items: readonly InboxItem[]): readonly SidebarMetric[] {
+  return STATUSES.map((status) => ({
+    label: STATUS_LABELS[status],
+    value: countBy(items, status, (item) => item.status)
+  }));
+}
+
+/** Busiest projects for the desktop sidebar summary. */
+function projectMetrics(items: readonly InboxItem[]): readonly SidebarMetric[] {
+  const counts = new Map<string, number>();
+  for (const item of items) {
+    const project = projectOf(item.email.subject);
+    counts.set(project, (counts.get(project) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, 4)
+    .map(([label, value]) => ({ label, value }));
+}
+
+type SidebarMetricSectionProps = {
+  readonly label: string;
+  readonly metrics: readonly SidebarMetric[];
+};
+
+/** Short labelled metric list inside the desktop mailbox rail. */
+function SidebarMetricSection({ label, metrics }: SidebarMetricSectionProps) {
+  return (
+    <section className="flex flex-col gap-1">
+      <h3 className="px-2 font-medium text-muted-foreground text-xs uppercase tracking-wide">
+        {label}
+      </h3>
+      <div className="grid gap-0.5">
+        {metrics.map((metric) => (
+          <div
+            className="flex min-h-7 items-center justify-between gap-3 rounded-md px-2 text-sm"
+            key={metric.label}
+          >
+            <span className="min-w-0 truncate">{metric.label}</span>
+            <span className="shrink-0 text-muted-foreground text-xs tabular-nums">
+              {metric.value}
+            </span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/** One dropdown submenu for a filter facet. */
+function FacetMenu<T extends string>({
+  label,
+  values,
+  active,
+  display,
+  count,
+  onToggle
+}: FacetMenuProps<T>) {
+  return (
+    <DropdownMenuSub>
+      <DropdownMenuSubTrigger>
+        <span>{label}</span>
+        {active ? (
+          <span className="ml-auto max-w-24 truncate text-muted-foreground text-xs">
+            {display(active)}
+          </span>
+        ) : null}
+      </DropdownMenuSubTrigger>
+      <DropdownMenuSubContent className="w-52">
+        {values.map((value) => (
+          <DropdownMenuItem
+            key={value}
+            onClick={() => onToggle(active === value ? null : value)}
+          >
+            <span>{display(value)}</span>
+            <span className="ml-auto text-muted-foreground text-xs tabular-nums">
+              {count(value)}
+            </span>
+            {active === value ? <CheckIcon className="size-4" /> : null}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuSubContent>
+    </DropdownMenuSub>
+  );
+}
+
+/** Compact desktop filter menu used from the left navigation rail. */
+export function InboxFilterMenu({
+  items,
+  filters,
+  onFiltersChange
+}: Omit<InboxSidebarProps, 'ledger'>) {
+  const meta = useMemo(() => filterMeta(items, filters), [items, filters]);
+  const hasActiveFilter = meta.activeCount > 0;
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            className="h-9 w-full justify-between px-2.5"
+            size="sm"
+            variant="outline"
+          />
+        }
+      >
+        <span className="flex items-center gap-2">
+          <ListFilterIcon className="size-4" />
+          Filters
+        </span>
+        <span className="flex items-center gap-1 text-muted-foreground">
+          {hasActiveFilter ? (
+            <span className="tabular-nums">{meta.activeCount}</span>
+          ) : null}
+          <ChevronDownIcon className="size-3.5" />
+        </span>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-64">
+        <DropdownMenuLabel>Filter inbox</DropdownMenuLabel>
+        <DropdownMenuItem
+          onClick={() => {
+            onFiltersChange(EMPTY_FILTERS);
+          }}
+        >
+          <FilterXIcon className="size-4" />
+          Clear filters
+          {!hasActiveFilter ? <CheckIcon className="ml-auto size-4" /> : null}
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <FacetMenu
+          active={filters.status}
+          count={(status) => countBy(items, status, (item) => item.status)}
+          display={(value) => STATUS_LABELS[value]}
+          label="Status"
+          onToggle={(status) => onFiltersChange({ ...filters, status })}
+          values={STATUSES}
+        />
+        <FacetMenu
+          active={filters.severity}
+          count={(severity) =>
+            countBy(items, severity, (item) => item.decision?.severity ?? null)
+          }
+          display={(value) => value}
+          label="Severity"
+          onToggle={(severity) => onFiltersChange({ ...filters, severity })}
+          values={SEVERITIES}
+        />
+        <FacetMenu
+          active={filters.project}
+          count={(project) =>
+            countBy(items, project, (item) => projectOf(item.email.subject))
+          }
+          display={(value) => value}
+          label="Project"
+          onToggle={(project) => onFiltersChange({ ...filters, project })}
+          values={meta.projects}
+        />
+        {meta.categories.length > 0 ? (
+          <FacetMenu
+            active={filters.category}
+            count={(category) =>
+              countBy(
+                items,
+                category,
+                (item) => item.decision?.category ?? null
+              )
+            }
+            display={(value) => CATEGORY_LABELS[value]}
+            label="Category"
+            onToggle={(category) => onFiltersChange({ ...filters, category })}
+            values={meta.categories}
+          />
+        ) : null}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+/** Large-tap filter controls for the mobile drawer. */
+export function InboxFilterPanel({
+  items,
+  filters,
+  onFiltersChange
+}: Omit<InboxSidebarProps, 'ledger'>) {
+  const meta = useMemo(() => filterMeta(items, filters), [items, filters]);
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="font-medium text-sm">Filters</p>
+          <p className="text-muted-foreground text-xs">
+            {meta.activeCount} active
+          </p>
+        </div>
+        <Button
+          onClick={() => onFiltersChange(EMPTY_FILTERS)}
+          size="sm"
+          variant="outline"
+        >
+          <FilterXIcon />
+          Clear
+        </Button>
+      </div>
+      <FacetButtonGroup
+        active={filters.status}
+        count={(status) => countBy(items, status, (item) => item.status)}
+        display={(value) => STATUS_LABELS[value]}
+        label="Status"
+        onToggle={(status) => onFiltersChange({ ...filters, status })}
+        values={STATUSES}
+      />
+      <FacetButtonGroup
+        active={filters.severity}
+        count={(severity) =>
+          countBy(items, severity, (item) => item.decision?.severity ?? null)
+        }
+        display={(value) => value}
+        label="Severity"
+        onToggle={(severity) => onFiltersChange({ ...filters, severity })}
+        values={SEVERITIES}
+      />
+      <FacetButtonGroup
+        active={filters.project}
+        count={(project) =>
+          countBy(items, project, (item) => projectOf(item.email.subject))
+        }
+        display={(value) => value}
+        label="Project"
+        onToggle={(project) => onFiltersChange({ ...filters, project })}
+        values={meta.projects}
+      />
+      {meta.categories.length > 0 ? (
+        <FacetButtonGroup
+          active={filters.category}
+          count={(category) =>
+            countBy(items, category, (item) => item.decision?.category ?? null)
+          }
+          display={(value) => CATEGORY_LABELS[value]}
+          label="Category"
+          onToggle={(category) => onFiltersChange({ ...filters, category })}
+          values={meta.categories}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+/** Mobile drawer group for one filter facet. */
+function FacetButtonGroup<T extends string>({
+  label,
+  values,
+  active,
+  display,
+  count,
+  onToggle
+}: FacetMenuProps<T>) {
+  return (
+    <section className="flex flex-col gap-2">
+      <h3 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
+        {label}
+      </h3>
+      <div className="grid gap-1.5">
+        {values.map((value) => (
+          <Button
+            className={cn(
+              'h-10 justify-between',
+              active === value && 'bg-muted'
+            )}
+            key={value}
+            onClick={() => onToggle(active === value ? null : value)}
+            variant="ghost"
+          >
+            <span>{display(value)}</span>
+            <span className="text-muted-foreground text-xs tabular-nums">
+              {count(value)}
+            </span>
+          </Button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 /**
- * Left mailbox rail: status/project/category/severity filters over the inbox
- * plus one navigation row for the full agent trace view.
+ * Left mailbox rail: navigation, compact filter menu, and resize handle.
  *
- * @param items - Triaged items, used to derive the project facet.
+ * @param items - Triaged items, used to derive filter facets and counts.
  * @param ledger - Ledger entries used for the trace count.
  * @param filters - Active filter facets.
  * @param onFiltersChange - Called with the next filter set on any toggle.
@@ -109,30 +415,13 @@ export function InboxSidebar({
   filters,
   onFiltersChange
 }: InboxSidebarProps) {
-  const projects = useMemo(() => {
-    const names = new Set(items.map((item) => projectOf(item.email.subject)));
-    return [...names].sort();
-  }, [items]);
-
-  const categories = useMemo(() => {
-    const present = new Set<Category>();
-    for (const item of items) {
-      if (item.decision) {
-        present.add(item.decision.category);
-      }
-    }
-    return [...present];
-  }, [items]);
-
-  const hasActiveFilter =
-    filters.status !== null ||
-    filters.project !== null ||
-    filters.category !== null ||
-    filters.severity !== null;
+  const meta = useMemo(() => filterMeta(items, filters), [items, filters]);
+  const queue = useMemo(() => queueMetrics(items), [items]);
+  const projects = useMemo(() => projectMetrics(items), [items]);
 
   return (
     <Sidebar collapsible="offcanvas" className="border-r">
-      <SidebarHeader className="gap-2 px-3 py-3">
+      <SidebarHeader className="gap-3 px-3 py-3">
         <div className="flex items-center gap-2 font-semibold text-sm">
           <InboxIcon className="size-4" />
           Agentic Inbox
@@ -146,68 +435,27 @@ export function InboxSidebar({
             <SidebarMenuBadge>{items.length}</SidebarMenuBadge>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton render={<Link href="/traces" />}>
+            <SidebarMenuButton render={<Link href="/audit" />}>
               <HistoryIcon className="size-4" />
-              <span>Agent traces</span>
+              <span>Audit</span>
             </SidebarMenuButton>
             <SidebarMenuBadge>{ledger.length}</SidebarMenuBadge>
           </SidebarMenuItem>
         </SidebarMenu>
-        {hasActiveFilter ? (
-          <SidebarMenuButton
-            className="mt-1 h-7 text-muted-foreground text-xs"
-            onClick={() => onFiltersChange(EMPTY_FILTERS)}
-          >
-            <FilterXIcon className="size-3.5" />
-            Clear filters
-          </SidebarMenuButton>
-        ) : null}
+        <InboxFilterMenu
+          filters={filters}
+          items={items}
+          onFiltersChange={onFiltersChange}
+        />
       </SidebarHeader>
-      <SidebarContent>
-        <FacetRow
-          active={filters.status}
-          count={(status) => countBy(items, status, (item) => item.status)}
-          display={(value) => STATUS_LABELS[value]}
-          label="Status"
-          onToggle={(status) => onFiltersChange({ ...filters, status })}
-          values={STATUSES}
-        />
-        <FacetRow
-          active={filters.severity}
-          count={(severity) =>
-            countBy(items, severity, (item) => item.decision?.severity ?? null)
-          }
-          display={(value) => value}
-          label="Severity"
-          onToggle={(severity) => onFiltersChange({ ...filters, severity })}
-          values={SEVERITIES}
-        />
-        <FacetRow
-          active={filters.project}
-          count={(project) =>
-            countBy(items, project, (item) => projectOf(item.email.subject))
-          }
-          display={(value) => value}
-          label="Project"
-          onToggle={(project) => onFiltersChange({ ...filters, project })}
-          values={projects}
-        />
-        {categories.length > 0 ? (
-          <FacetRow
-            active={filters.category}
-            count={(category) =>
-              countBy(
-                items,
-                category,
-                (item) => item.decision?.category ?? null
-              )
-            }
-            display={(value) => CATEGORY_LABELS[value]}
-            label="Category"
-            onToggle={(category) => onFiltersChange({ ...filters, category })}
-            values={categories}
-          />
-        ) : null}
+      <SidebarContent className="gap-5 px-3 py-3">
+        <SidebarMetricSection label="Queue" metrics={queue} />
+        <SidebarMetricSection label="Projects" metrics={projects} />
+        <div className="px-2 text-muted-foreground text-xs leading-5">
+          {meta.activeCount > 0
+            ? `${meta.activeCount} filter${meta.activeCount === 1 ? '' : 's'} applied`
+            : 'No filters applied'}
+        </div>
       </SidebarContent>
       <SidebarResizeHandle />
     </Sidebar>
