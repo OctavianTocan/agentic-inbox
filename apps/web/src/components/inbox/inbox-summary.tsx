@@ -55,21 +55,6 @@ function projectChips(
     .sort((a, b) => b.count - a.count);
 }
 
-type StatProps = {
-  readonly label: string;
-  readonly value: number;
-};
-
-/** Inline labelled count in the summary metadata row. */
-function Stat({ label, value }: StatProps) {
-  return (
-    <span className="inline-flex items-baseline gap-1.5 text-sm">
-      <span className="font-semibold tabular-nums">{value}</span>
-      <span className="text-muted-foreground">{label}</span>
-    </span>
-  );
-}
-
 /** Counts decisions by category. */
 function categoryCounts(
   items: readonly InboxItem[]
@@ -148,12 +133,6 @@ export function InboxSummaryBlock({
         <p className="text-sm leading-6 max-md:line-clamp-3">
           {summaryText(summary, items)}
         </p>
-      </div>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-        <Stat label="Processed" value={summary.processed} />
-        <Stat label="Handled" value={summary.handled} />
-        <Stat label="Need attention" value={summary.needsAttention} />
-        <Stat label="Filed" value={summary.filed} />
       </div>
       <div className="flex flex-wrap items-center gap-2 max-md:flex-nowrap max-md:overflow-x-auto max-md:pb-0.5">
         {chips.map((chip) => (

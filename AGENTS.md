@@ -31,7 +31,6 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **Tests verify intent, not behavior:** Every test must encode WHY the behavior matters, not just WHAT it does. `expect(getUserName()).toBe('John')` is worthless if the function takes a hardcoded ID. If a test wouldn't fail when business logic changes, the function is wrong.
 - **Bug fixes require regression tests:** Every bug fix must add or update tests that fail for the bug and pass for the fix. If an automated regression test is impossible, explain why and document the manual verification used.
 - **Fail loud:** Surface uncertainty rather than hiding it. "Migration completed" is wrong if records were silently skipped. "Tests pass" is wrong if you skipped any. "Feature works" is wrong if you didn't verify the edge case asked about.
-- **No browser review:** Don't spin up a dev server or browser agent to verify UI. Typecheck + lint is sufficient; user reviews UI. Run `bun run ci` (repo-policy + lint + typecheck + tests + arch:sentrux + effect:check-skill-drift + knip) before claiming work complete.
 
 ## Purpose
 
