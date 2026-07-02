@@ -5,8 +5,8 @@ import type { EmailIdType } from '@/Lib/Ids';
 
 /** Lifecycle of a stored agent conversation. */
 export const ConversationStatus: Schema.Literals<
-  readonly ['active', 'paused', 'complete']
-> = Schema.Literals(['active', 'paused', 'complete']);
+  readonly ['active', 'awaiting_approval', 'complete']
+> = Schema.Literals(['active', 'awaiting_approval', 'complete']);
 
 /** The tool approval a paused conversation is blocked on, if any. */
 export type PendingApproval = {
@@ -60,7 +60,12 @@ export class ConversationsRepo extends Context.Service<
       input: SaveConversation
     ) => Effect.Effect<ConversationRecord>;
     readonly get: (id: string) => Effect.Effect<ConversationRecord | null>;
-    readonly listPaused: () => Effect.Effect<ReadonlyArray<ConversationRecord>>;
+    readonly listAwaitingApproval: () => Effect.Effect<
+      ReadonlyArray<ConversationRecord>
+    >;
+    readonly claimApproval: (
+      approvalId: string
+    ) => Effect.Effect<ConversationRecord | null>;
   }
 >()('@apps/api/Chat/ConversationsRepo') {}
 
@@ -110,9 +115,11 @@ export const ConversationsRepoBody: Layer.Layer<
         : null;
     });
 
-    const listPaused = Effect.fn('ConversationsRepo.listPaused')(function* () {
+    const listAwaitingApproval = Effect.fn(
+      'ConversationsRepo.listAwaitingApproval'
+    )(function* () {
       const rows =
-        yield* sql`SELECT ${sql.literal(conversationColumns)} FROM conversations WHERE status = 'paused' ORDER BY created_at ASC`.pipe(
+        yield* sql`SELECT ${sql.literal(conversationColumns)} FROM conversations WHERE status = 'awaiting_approval' ORDER BY created_at ASC`.pipe(
           Effect.orDie
         );
       return rows.map((row) =>
@@ -120,7 +127,45 @@ export const ConversationsRepoBody: Layer.Layer<
       );
     });
 
-    return { save, get, listPaused } as const;
+    const claimApproval = Effect.fn('ConversationsRepo.claimApproval')(
+      function* (approvalId: string) {
+        const now = yield* DateTime.now;
+        const ts = DateTime.formatIso(now);
+        const rows = yield* sql`
+          WITH target AS (
+            SELECT ${sql.literal(conversationColumns)}
+            FROM conversations
+            WHERE status = 'awaiting_approval'
+              AND pending ->> 'approvalId' = ${approvalId}
+            FOR UPDATE
+          ),
+          updated AS (
+            UPDATE conversations
+            SET status = 'active',
+                pending = NULL,
+                updated_at = ${ts}
+            WHERE id IN (SELECT id FROM target)
+            RETURNING id, status, prompt, pending, email_id, created_at, updated_at
+          )
+          SELECT
+            updated.id,
+            updated.status,
+            target.prompt,
+            target.pending,
+            updated.email_id,
+            updated.created_at,
+            updated.updated_at
+          FROM updated
+          JOIN target ON target.id = updated.id
+        `.pipe(sql.withTransaction, Effect.orDie);
+
+        return rows[0]
+          ? decodeConversation(rows[0] as Record<string, unknown>)
+          : null;
+      }
+    );
+
+    return { save, get, listAwaitingApproval, claimApproval } as const;
   })
 );
 

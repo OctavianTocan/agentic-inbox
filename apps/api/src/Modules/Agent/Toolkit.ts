@@ -1,100 +1,126 @@
-import type { Email } from '@app/api-core/Modules/Emails/Domain';
-import { type Context, Effect, type Layer, Schema } from 'effect';
+import {
+  ActionKind,
+  LedgerEntryId
+} from '@app/api-core/Modules/Actions/Domain';
+import {
+  ActionNotFound,
+  ActionNotUndoable
+} from '@app/api-core/Modules/Actions/Errors';
+import { EmailId } from '@app/api-core/Modules/Emails/Domain';
+import { Category, Severity } from '@app/api-core/Modules/Triage/Domain';
+import { type Context, Effect, Schema } from 'effect';
 import { Tool, Toolkit } from 'effect/unstable/ai';
-import type { ActorType, EmailIdType } from '@/Lib/Ids';
-import { ActionService } from '@/Modules/Actions/Service';
-import { EmailsService } from '@/Modules/Emails/Service';
+import type { ActorType, CategoryType, LedgerEntryIdType } from '@/Lib/Ids';
+import type { ActionService } from '@/Modules/Actions/Service';
+import type { EmailsService } from '@/Modules/Emails/Service';
 
-const EmailIdParam = Schema.String.annotate({
-  description: 'Target email id such as `e-001`.'
+const ToolEntryResult = Schema.Struct({ entryId: LedgerEntryId });
+const ToolDecisionResult = Schema.Struct({ recorded: Schema.Boolean });
+
+const RecordTriageParams = Schema.Struct({
+  emailId: EmailId,
+  category: Category,
+  severity: Severity,
+  confidence: Schema.Number,
+  whyPreview: Schema.String,
+  rationale: Schema.String,
+  keyFacts: Schema.Array(Schema.String),
+  isSensitive: Schema.Boolean
 });
 
-/**
- * Builds the `send_reply` tool. `needsApproval` is set at construction so the
- * batch agent can gate it on the deterministic policy verdict while chat always
- * gates it; there is no ungated send variant by design.
- */
-const makeSendReply = (needsApproval: boolean) =>
-  Tool.make('send_reply', {
-    description:
-      'Draft and send a plain-text reply to the sender. Sensitive emails require human approval before this executes.',
-    parameters: Schema.Struct({
-      emailId: EmailIdParam,
-      body: Schema.String.annotate({
-        description: 'The full plain-text reply body to send.'
-      })
-    }),
-    success: Schema.Struct({ sent: Schema.Boolean, entryId: Schema.String }),
-    needsApproval
-  }).annotate(Tool.Strict, true);
+const SendReplyParams = Schema.Struct({
+  emailId: EmailId,
+  body: Schema.String,
+  summary: Schema.optional(Schema.String)
+});
 
-/** Builds the `archive` tool, gated on approval when the email is sensitive. */
-const makeArchive = (needsApproval: boolean) =>
-  Tool.make('archive', {
-    description:
-      'File an email away as handled with no reply needed (e.g. an FYI or daily report).',
-    parameters: Schema.Struct({
-      emailId: EmailIdParam,
-      summary: Schema.String.annotate({
-        description: 'One-line note on why this was filed.'
-      })
-    }),
-    success: Schema.Struct({
-      archived: Schema.Boolean,
-      entryId: Schema.String
-    }),
-    needsApproval
-  }).annotate(Tool.Strict, true);
+const FileParams = Schema.Struct({
+  emailId: EmailId,
+  summary: Schema.String
+});
 
-const FlagForReview = Tool.make('flag_for_review', {
+const UndoParams = Schema.Struct({
+  entryId: LedgerEntryId
+});
+
+/** Records the model's triage verdict for one email. */
+export const RecordTriage = Tool.make('record_triage', {
   description:
-    'Leave an email for the human to handle, without sending anything. Use for sensitive matters you must not act on.',
-  parameters: Schema.Struct({
-    emailId: EmailIdParam,
-    summary: Schema.String.annotate({
-      description: 'One-line note on what the human needs to decide.'
-    })
-  }),
-  success: Schema.Struct({ flagged: Schema.Boolean, entryId: Schema.String })
+    'Record the triage decision before taking any other action on an email.',
+  parameters: RecordTriageParams,
+  success: ToolDecisionResult
 }).annotate(Tool.Strict, true);
 
-const SearchEmails = Tool.make('search_emails', {
+/** Sends a simulated plain-text email reply. */
+export const SendReply = Tool.make('send_reply', {
   description:
-    'Search the inbox by a case-insensitive keyword over subject and body.',
-  parameters: Schema.Struct({
-    query: Schema.String.annotate({
-      description: 'Keyword to match against subject and body.'
-    })
-  }),
+    'Send a concise plain-text reply. Do not use for sensitive commitments unless approval has been granted.',
+  parameters: SendReplyParams,
+  success: ToolEntryResult,
+  needsApproval: true
+}).annotate(Tool.Strict, true);
+
+/** Files an email as handled with no reply. */
+export const Archive = Tool.make('archive', {
+  description: 'Archive an email that needs no human action and no reply.',
+  parameters: FileParams,
+  success: ToolEntryResult,
+  needsApproval: true
+}).annotate(Tool.Strict, true);
+
+/** Leaves an email for human review without sending or committing anything. */
+export const FlagForReview = Tool.make('flag_for_review', {
+  description:
+    'Flag an email for human review. Use this for sensitive, disputed, safety, owner, or low-confidence work.',
+  parameters: FileParams,
+  success: ToolEntryResult
+}).annotate(Tool.Strict, true);
+
+/** Reverses a previous simulated action. */
+export const Undo = Tool.make('undo', {
+  description:
+    'Undo a previous send_reply, archive, or flag_for_review action.',
+  parameters: UndoParams,
+  success: ToolEntryResult,
+  failure: Schema.Union([ActionNotFound, ActionNotUndoable]),
+  needsApproval: true
+}).annotate(Tool.Strict, true);
+
+/** Searches the fixed inbox by subject and body keyword. */
+export const SearchEmails = Tool.make('search_emails', {
+  description: 'Search emails by a case-insensitive keyword.',
+  parameters: Schema.Struct({ query: Schema.String }),
   success: Schema.Array(
     Schema.Struct({
-      id: Schema.String,
+      id: EmailId,
       from: Schema.String,
       subject: Schema.String
     })
   )
 }).annotate(Tool.Strict, true);
 
-const GetEmail = Tool.make('get_email', {
-  description: 'Fetch one email in full by its id.',
-  parameters: Schema.Struct({ emailId: EmailIdParam }),
-  success: Schema.Struct({
-    id: Schema.String,
-    from: Schema.String,
-    subject: Schema.String,
-    body: Schema.String,
-    timestamp: Schema.String
-  }),
-  failure: Schema.Struct({ notFound: Schema.Boolean })
+/** Fetches a full email by id. */
+export const GetEmail = Tool.make('get_email', {
+  description: 'Fetch one email by id.',
+  parameters: Schema.Struct({ emailId: EmailId }),
+  success: Schema.NullOr(
+    Schema.Struct({
+      id: EmailId,
+      from: Schema.String,
+      subject: Schema.String,
+      body: Schema.String,
+      timestamp: Schema.String
+    })
+  )
 }).annotate(Tool.Strict, true);
 
-const GetThread = Tool.make('get_thread', {
-  description:
-    'Fetch an email and every reply in its thread, oldest first, by any id in the thread.',
-  parameters: Schema.Struct({ emailId: EmailIdParam }),
+/** Fetches an email thread by any email id in the thread. */
+export const GetThread = Tool.make('get_thread', {
+  description: 'Fetch an email and its replies, oldest first.',
+  parameters: Schema.Struct({ emailId: EmailId }),
   success: Schema.Array(
     Schema.Struct({
-      id: Schema.String,
+      id: EmailId,
       from: Schema.String,
       subject: Schema.String,
       body: Schema.String
@@ -102,185 +128,160 @@ const GetThread = Tool.make('get_thread', {
   )
 }).annotate(Tool.Strict, true);
 
-const ListLedger = Tool.make('list_ledger', {
-  description:
-    'List recent actions the agents and user have taken, newest first, for context.',
-  parameters: Schema.Struct({ emailId: Schema.optional(EmailIdParam) }),
+/** Lists ledger entries, optionally for one email. */
+export const ListLedger = Tool.make('list_ledger', {
+  description: 'List recent action ledger entries.',
+  parameters: Schema.Struct({ emailId: Schema.optional(EmailId) }),
   success: Schema.Array(
     Schema.Struct({
-      id: Schema.String,
-      emailId: Schema.String,
-      action: Schema.String,
+      id: LedgerEntryId,
+      emailId: EmailId,
+      action: ActionKind,
       summary: Schema.String,
       createdAt: Schema.String
     })
   )
 }).annotate(Tool.Strict, true);
 
-/** The three mutating tools every agent shares, gated per the caller's policy verdict. */
-type MutatingTools = {
-  readonly send_reply: ReturnType<typeof makeSendReply>;
-  readonly archive: ReturnType<typeof makeArchive>;
-  readonly flag_for_review: typeof FlagForReview;
-};
+/** The batch agent toolset. */
+export const TriageToolkit = Toolkit.make(
+  RecordTriage,
+  SendReply,
+  Archive,
+  FlagForReview
+);
 
-/** The chat agent's tools: the mutating three plus read-only inbox lookups. */
-type ChatTools = MutatingTools & {
-  readonly search_emails: typeof SearchEmails;
-  readonly get_email: typeof GetEmail;
-  readonly get_thread: typeof GetThread;
-  readonly list_ledger: typeof ListLedger;
-};
-
-/**
- * Mutating toolkit for the batch triage agent, gated on the deterministic
- * policy verdict. A sensitive email can never auto-execute a send: no ungated
- * send tool exists.
- *
- * @param isSensitive - Whether the policy classified this email as sensitive.
- * @returns A toolkit whose send/archive require approval iff sensitive.
- */
-export const makeTriageToolkit = (
-  isSensitive: boolean
-): Toolkit.Toolkit<MutatingTools> =>
-  Toolkit.make(
-    makeSendReply(isSensitive),
-    makeArchive(isSensitive),
-    FlagForReview
-  );
-
-/** Read + mutating tools for the interactive chat agent; every mutation gates on approval. */
-export const ChatToolkit: Toolkit.Toolkit<ChatTools> = Toolkit.make(
-  makeSendReply(true),
-  makeArchive(true),
+/** The chat agent toolset. */
+export const ChatToolkit = Toolkit.make(
+  RecordTriage,
+  SendReply,
+  Archive,
   FlagForReview,
+  Undo,
   SearchEmails,
   GetEmail,
   GetThread,
   ListLedger
 );
 
-const projectFull = (email: Email) => ({
-  id: email.id,
-  from: email.from,
-  subject: email.subject,
-  body: email.body,
-  timestamp: email.timestamp
-});
+/** Builds handlers for the batch agent's mutating tools. */
+export const makeTriageHandlers = (
+  actions: Context.Service.Shape<typeof ActionService>,
+  actor: ActorType
+): Toolkit.HandlersFrom<typeof TriageToolkit.tools> =>
+  TriageToolkit.of({
+    record_triage: (params) =>
+      actions
+        .recordTriage({
+          emailId: params.emailId,
+          category: params.category,
+          severity: params.severity,
+          confidence: params.confidence,
+          whyPreview: params.whyPreview,
+          rationale: params.rationale,
+          keyFacts: params.keyFacts,
+          isSensitive: params.isSensitive
+        })
+        .pipe(Effect.as({ recorded: true })),
+    send_reply: (params) =>
+      actions
+        .sendReply({
+          emailId: params.emailId,
+          actor,
+          body: params.body,
+          summary: params.summary
+        })
+        .pipe(Effect.map((entry) => ({ entryId: entry.id }))),
+    archive: (params) =>
+      actions
+        .archive({
+          emailId: params.emailId,
+          actor,
+          summary: params.summary
+        })
+        .pipe(Effect.map((entry) => ({ entryId: entry.id }))),
+    flag_for_review: (params) =>
+      actions
+        .flagForReview({
+          emailId: params.emailId,
+          actor,
+          summary: params.summary
+        })
+        .pipe(Effect.map((entry) => ({ entryId: entry.id })))
+  });
 
-/** Mutating-tool handlers bound to one actor; reused by both toolkits. */
-const mutatingHandlers = (
-  actor: ActorType,
-  actions: Context.Service.Shape<typeof ActionService>
-) => ({
-  send_reply: (params: { readonly emailId: string; readonly body: string }) =>
-    actions
-      .sendReply({
-        emailId: params.emailId as EmailIdType,
-        actor,
-        body: params.body
-      })
-      .pipe(Effect.map((entry) => ({ sent: true, entryId: entry.id }))),
-  archive: (params: { readonly emailId: string; readonly summary: string }) =>
-    actions
-      .archive({
-        emailId: params.emailId as EmailIdType,
-        actor,
-        summary: params.summary
-      })
-      .pipe(Effect.map((entry) => ({ archived: true, entryId: entry.id }))),
-  flag_for_review: (params: {
-    readonly emailId: string;
-    readonly summary: string;
-  }) =>
-    actions
-      .flagForReview({
-        emailId: params.emailId as EmailIdType,
-        actor,
-        summary: params.summary
-      })
-      .pipe(Effect.map((entry) => ({ flagged: true, entryId: entry.id })))
-});
-
-/** Handler layer for a triage toolkit; every mutation is attributed to the batch agent. */
-export const TriageToolkitLayer = (
-  isSensitive: boolean
-): Layer.Layer<Tool.HandlersFor<MutatingTools>, never, ActionService> =>
-  makeTriageToolkit(isSensitive).toLayer(
-    Effect.gen(function* () {
-      const actions = yield* ActionService;
-      return mutatingHandlers('batch_agent', actions);
-    })
-  );
-
-/** Handler layer for the chat toolkit, wiring reads to the dataset and mutations to the chat agent. */
-export const ChatToolkitLayer: Layer.Layer<
-  Tool.HandlersFor<ChatTools>,
-  never,
-  ActionService | EmailsService
-> = ChatToolkit.toLayer(
-  Effect.gen(function* () {
-    const emails = yield* EmailsService;
-    const actions = yield* ActionService;
-
-    return {
-      ...mutatingHandlers('chat_agent', actions),
-      search_emails: (params: { readonly query: string }) =>
-        emails.list().pipe(
-          Effect.map((all) => {
-            const needle = params.query.toLowerCase();
-            return all
-              .filter(
-                (email) =>
-                  email.subject.toLowerCase().includes(needle) ||
-                  email.body.toLowerCase().includes(needle)
-              )
-              .map((email) => ({
-                id: email.id,
-                from: email.from,
-                subject: email.subject
-              }));
-          })
-        ),
-      get_email: (params: { readonly emailId: string }) =>
-        emails
-          .get(params.emailId as EmailIdType)
-          .pipe(
-            Effect.flatMap((email) =>
-              email === null
-                ? Effect.fail({ notFound: true })
-                : Effect.succeed(projectFull(email))
+/** Builds handlers for the chat agent's read and mutating tools. */
+export const makeChatHandlers = (
+  actions: Context.Service.Shape<typeof ActionService>,
+  emails: Context.Service.Shape<typeof EmailsService>,
+  actor: ActorType
+): Toolkit.HandlersFrom<typeof ChatToolkit.tools> =>
+  ChatToolkit.of({
+    ...makeTriageHandlers(actions, actor),
+    undo: (params) =>
+      actions
+        .undoAction(params.entryId, actor)
+        .pipe(Effect.map((entry) => ({ entryId: entry.id }))),
+    search_emails: (params) =>
+      emails.list().pipe(
+        Effect.map((all) => {
+          const query = params.query.toLowerCase();
+          return all
+            .filter(
+              (email) =>
+                email.subject.toLowerCase().includes(query) ||
+                email.body.toLowerCase().includes(query)
             )
-          ),
-      get_thread: (params: { readonly emailId: string }) =>
-        emails.thread(params.emailId as EmailIdType).pipe(
-          Effect.map((thread) =>
-            thread.map((email) => ({
+            .map((email) => ({
               id: email.id,
               from: email.from,
-              subject: email.subject,
-              body: email.body
-            }))
-          )
-        ),
-      list_ledger: (params: { readonly emailId?: string | undefined }) =>
-        actions
-          .listLedger(
-            params.emailId === undefined
-              ? undefined
-              : (params.emailId as EmailIdType)
-          )
-          .pipe(
-            Effect.map((entries) =>
-              entries.map((entry) => ({
-                id: entry.id,
-                emailId: entry.emailId,
-                action: entry.action,
-                summary: entry.summary,
-                createdAt: entry.createdAt
-              }))
-            )
-          )
-    };
-  })
-);
+              subject: email.subject
+            }));
+        })
+      ),
+    get_email: (params) =>
+      emails.get(params.emailId).pipe(
+        Effect.map((email) =>
+          email === null
+            ? null
+            : {
+                id: email.id,
+                from: email.from,
+                subject: email.subject,
+                body: email.body,
+                timestamp: email.timestamp
+              }
+        )
+      ),
+    get_thread: (params) =>
+      emails.thread(params.emailId).pipe(
+        Effect.map((thread) =>
+          thread.map((email) => ({
+            id: email.id,
+            from: email.from,
+            subject: email.subject,
+            body: email.body
+          }))
+        )
+      ),
+    list_ledger: (params) =>
+      actions.listLedger(params.emailId).pipe(
+        Effect.map((entries) =>
+          entries.map((entry) => ({
+            id: entry.id,
+            emailId: entry.emailId,
+            action: entry.action,
+            summary: entry.summary,
+            createdAt: entry.createdAt
+          }))
+        )
+      )
+  });
+
+/** Converts a category to a typed category value for helper callers. */
+export const categoryValue = (category: CategoryType): CategoryType => category;
+
+/** Converts a ledger id to the shared id type for helper callers. */
+export const ledgerEntryIdValue = (
+  entryId: LedgerEntryIdType
+): LedgerEntryIdType => entryId;

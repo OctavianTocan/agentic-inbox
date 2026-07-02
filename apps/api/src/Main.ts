@@ -6,7 +6,13 @@ import { AppLive } from './App';
 const PORT = Number(Bun.env.PORT ?? '8001');
 
 const HttpServerLive = HttpRouter.serve(AppLive).pipe(
-  Layer.provide(BunHttpServer.layer({ hostname: '127.0.0.1', port: PORT })),
+  Layer.provide(
+    BunHttpServer.layer({
+      hostname: '127.0.0.1',
+      port: PORT,
+      idleTimeout: 0
+    })
+  ),
   Layer.orDie
 );
 

@@ -1,14 +1,16 @@
 import { Api } from '@app/api-core';
 import { Effect } from 'effect';
 import { HttpApiBuilder } from 'effect/unstable/httpapi';
+import { TriageService } from './Service';
 
-/** Placeholder `triage` handlers until the agent orchestrator lands in wave 3. */
+/** Live `triage` handlers. */
 export const HttpTriageLive = HttpApiBuilder.group(
   Api,
   'triage',
   Effect.fn(function* (handlers) {
+    const triage = yield* TriageService;
     return handlers
-      .handle('run', () => Effect.die('triage.run not implemented'))
-      .handle('inbox', () => Effect.die('triage.inbox not implemented'));
+      .handle('run', () => triage.run())
+      .handle('inbox', () => triage.inbox());
   })
 );

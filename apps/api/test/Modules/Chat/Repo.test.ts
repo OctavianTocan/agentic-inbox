@@ -23,7 +23,7 @@ describe('ConversationsRepo', () => {
     const stored = await withConversations((repo) =>
       Effect.gen(function* () {
         const saved = yield* repo.save({
-          status: 'paused',
+          status: 'awaiting_approval',
           prompt,
           pending,
           emailId: null
@@ -32,7 +32,7 @@ describe('ConversationsRepo', () => {
       })
     );
 
-    expect(stored?.status).toBe('paused');
+    expect(stored?.status).toBe('awaiting_approval');
     expect(stored?.prompt).toEqual(prompt);
     expect(stored?.pending).toEqual(pending);
   });
@@ -46,7 +46,7 @@ describe('ConversationsRepo', () => {
           status: 'complete',
           prompt: [{ role: 'assistant', content: 'done' }]
         });
-        const paused = yield* repo.listPaused();
+        const paused = yield* repo.listAwaitingApproval();
         return { first, updated, pausedCount: paused.length };
       })
     );
@@ -56,17 +56,39 @@ describe('ConversationsRepo', () => {
     expect(result.pausedCount).toBe(0);
   });
 
-  it('listPaused returns only paused conversations', async () => {
+  it('listAwaitingApproval returns only paused approval conversations', async () => {
     const paused = await withConversations((repo) =>
       Effect.gen(function* () {
         yield* repo.save({ status: 'active', prompt: [] });
-        yield* repo.save({ status: 'paused', prompt: [] });
+        yield* repo.save({ status: 'awaiting_approval', prompt: [] });
         yield* repo.save({ status: 'complete', prompt: [] });
-        return yield* repo.listPaused();
+        return yield* repo.listAwaitingApproval();
       })
     );
 
     expect(paused).toHaveLength(1);
-    expect(paused[0]?.status).toBe('paused');
+    expect(paused[0]?.status).toBe('awaiting_approval');
+  });
+
+  it('claimApproval atomically removes pending approval state', async () => {
+    const result = await withConversations((repo) =>
+      Effect.gen(function* () {
+        yield* repo.save({
+          status: 'awaiting_approval',
+          prompt: [{ role: 'assistant', content: 'pending' }],
+          pending: { approvalId: 'apr-claim', toolCallId: 'call-claim' }
+        });
+        const claimed = yield* repo.claimApproval('apr-claim');
+        const secondClaim = yield* repo.claimApproval('apr-claim');
+        return { claimed, secondClaim };
+      })
+    );
+
+    expect(result.claimed?.status).toBe('active');
+    expect(result.claimed?.pending).toEqual({
+      approvalId: 'apr-claim',
+      toolCallId: 'call-claim'
+    });
+    expect(result.secondClaim).toBeNull();
   });
 });

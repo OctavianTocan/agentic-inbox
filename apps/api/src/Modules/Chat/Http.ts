@@ -1,14 +1,25 @@
 import { Api } from '@app/api-core';
-import { Effect } from 'effect';
+import { ChatFailed } from '@app/api-core/Modules/Chat/Errors';
+import { Effect, Stream } from 'effect';
 import { HttpApiBuilder } from 'effect/unstable/httpapi';
+import { AgentService } from '@/Modules/Agent/Service';
 
-/** Placeholder `chat` handler until the chat agent lands in wave 3. */
+/** Live `chat` handler. */
 export const HttpChatLive = HttpApiBuilder.group(
   Api,
   'chat',
   Effect.fn(function* (handlers) {
-    return handlers.handle('send', () =>
-      Effect.die('chat.send not implemented')
+    const agent = yield* AgentService;
+    return handlers.handle('send', ({ payload }) =>
+      agent.chat(payload).pipe(
+        Effect.map(Stream.fromIterable),
+        Effect.mapError(
+          (error) =>
+            new ChatFailed({
+              detail: error instanceof Error ? error.message : 'chat failed'
+            })
+        )
+      )
     );
   })
 );
