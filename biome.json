@@ -65,7 +65,10 @@
       "includes": [
         "apps/api/src/App.ts",
         "apps/api/src/Main.ts",
+        "apps/api/src/Infrastructure/**/*.ts",
+        "apps/api/src/Lib/**/*.ts",
         "apps/api/src/Modules/**/*.ts",
+        "apps/api/test/**/*.ts",
         "packages/api-core/src/Api.ts",
         "packages/api-core/src/Modules/**/*.ts"
       ],
@@ -77,6 +80,22 @@
               "options": {
                 "strictCase": false,
                 "filenameCases": ["PascalCase"]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/api/migrations/**/*.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "useFilenamingConvention": {
+              "level": "error",
+              "options": {
+                "strictCase": false,
+                "filenameCases": ["snake_case"]
               }
             }
           }
