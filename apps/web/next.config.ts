@@ -1,7 +1,7 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  allowedDevOrigins: ['openclaw-vps.tailb0501a.ts.net']
 };
 
 export default nextConfig;
