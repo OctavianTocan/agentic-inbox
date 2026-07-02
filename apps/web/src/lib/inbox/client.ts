@@ -1,5 +1,4 @@
-import { buildMockInbox, summarizeInbox } from './mock';
-import type { ApprovalVerdict, Inbox, InboxItem, LedgerEntry } from './types';
+import type { ApprovalVerdict, Inbox } from './types';
 
 /** Inputs for resolving a pending approval on a sensitive email. */
 export type ResolveApprovalInput = {
@@ -8,12 +7,7 @@ export type ResolveApprovalInput = {
   readonly editedBody?: string;
 };
 
-/**
- * Thin data seam between the inbox UI and its backing store. The mock
- * implementation mutates in-memory state; wave 3 swaps in an HTTP client
- * against `/inbox`, `/approvals/:id`, and `/actions/:id/undo` with the same
- * surface.
- */
+/** Thin data seam between the inbox UI and the backend API. */
 export type InboxClient = {
   /** Fetch the current inbox snapshot: summary plus joined items. */
   getInbox: () => Promise<Inbox>;
@@ -26,130 +20,57 @@ export type InboxClient = {
   undoAction: (ledgerEntryId: string, emailId: string) => Promise<Inbox>;
 };
 
-const APPROVE_LATENCY_MS = 220;
+const API_PREFIX = '/api/v1';
 
-/** Simulated network delay so loading affordances are observable in the mock. */
-function delay(): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, APPROVE_LATENCY_MS));
+/** Reads an HTTP response body when possible, falling back to status text. */
+async function responseMessage(response: Response): Promise<string> {
+  const body = await response.text().catch(() => '');
+  return body || response.statusText || `HTTP ${response.status}`;
 }
 
-/** Freshly minted ledger-entry id for a mock user action. */
-function ledgerId(prefix: string): string {
-  return `${prefix}-${Math.random().toString(36).slice(2, 8)}`;
+/** Throws a readable error when an API response failed. */
+async function assertOk(response: Response): Promise<void> {
+  if (response.ok) {
+    return;
+  }
+  throw new Error(await responseMessage(response));
 }
 
-/** Recompute an inbox payload after its item list has changed. */
-function withSummary(items: readonly InboxItem[]): Inbox {
-  return { summary: summarizeInbox(items), items };
+/** Reads the joined inbox snapshot from the API. */
+async function fetchInbox(): Promise<Inbox> {
+  const response = await fetch(`${API_PREFIX}/inbox`);
+  await assertOk(response);
+  return response.json();
 }
 
-/** In-memory `InboxClient` whose mutations persist for the session's lifetime. */
-function createMockInboxClient(): InboxClient {
-  let inbox = buildMockInbox();
+/** Posts JSON to an API endpoint that returns no client-needed body. */
+async function postJson(path: string, body?: unknown): Promise<void> {
+  const init =
+    body === undefined
+      ? { method: 'POST' }
+      : {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        };
+  const response = await fetch(`${API_PREFIX}${path}`, init);
+  await assertOk(response);
+}
 
-  const approve = (item: InboxItem, input: ResolveApprovalInput): InboxItem => {
-    const approval = item.pendingApproval;
-    if (approval === null) {
-      return item;
-    }
-    const body =
-      input.editedBody ??
-      (typeof approval.payload.body === 'string' ? approval.payload.body : '');
-    const entry: LedgerEntry = {
-      id: ledgerId('le-appr'),
-      actor: 'user',
-      emailId: item.email.id,
-      action: approval.action,
-      summary: `Approved: ${approval.summary}`,
-      payload: { ...approval.payload, body },
-      undoneBy: null,
-      undoes: null,
-      createdAt: new Date().toISOString()
-    };
-    return {
-      ...item,
-      status: 'done_for_you',
-      pendingApproval: null,
-      actions: [entry, ...item.actions]
-    };
-  };
-
-  const deny = (item: InboxItem): InboxItem => {
-    const approval = item.pendingApproval;
-    if (approval === null) {
-      return item;
-    }
-    const entry: LedgerEntry = {
-      id: ledgerId('le-deny'),
-      actor: 'user',
-      emailId: item.email.id,
-      action: 'flag_for_review',
-      summary: `Denied: ${approval.summary} — kept for manual handling`,
-      payload: {},
-      undoneBy: null,
-      undoes: null,
-      createdAt: new Date().toISOString()
-    };
-    return {
-      ...item,
-      status: 'needs_attention',
-      pendingApproval: null,
-      actions: [entry, ...item.actions]
-    };
-  };
-
+/** HTTP client backed by the Effect API. */
+function createHttpInboxClient(): InboxClient {
   return {
-    getInbox: async () => {
-      await delay();
-      return inbox;
-    },
+    getInbox: fetchInbox,
     resolveApproval: async (approvalId, input) => {
-      await delay();
-      const items = inbox.items.map((item) => {
-        if (item.pendingApproval?.id !== approvalId) {
-          return item;
-        }
-        return input.verdict === 'approve' ? approve(item, input) : deny(item);
-      });
-      inbox = withSummary(items);
-      return inbox;
+      await postJson(`/approvals/${encodeURIComponent(approvalId)}`, input);
+      return fetchInbox();
     },
-    undoAction: async (ledgerEntryId, emailId) => {
-      await delay();
-      const items = inbox.items.map((item) => {
-        if (item.email.id !== emailId) {
-          return item;
-        }
-        const target = item.actions.find((entry) => entry.id === ledgerEntryId);
-        if (target === undefined || target.undoneBy !== null) {
-          return item;
-        }
-        const undoEntry: LedgerEntry = {
-          id: ledgerId('le-undo'),
-          actor: 'user',
-          emailId,
-          action: 'undo',
-          summary: `Undid: ${target.summary}`,
-          payload: {},
-          undoneBy: null,
-          undoes: target.id,
-          createdAt: new Date().toISOString()
-        };
-        const actions = item.actions.map((entry) =>
-          entry.id === target.id ? { ...entry, undoneBy: undoEntry.id } : entry
-        );
-        const undone: InboxItem = {
-          ...item,
-          status: 'needs_attention',
-          actions: [undoEntry, ...actions]
-        };
-        return undone;
-      });
-      inbox = withSummary(items);
-      return inbox;
+    undoAction: async (ledgerEntryId) => {
+      await postJson(`/actions/${encodeURIComponent(ledgerEntryId)}/undo`);
+      return fetchInbox();
     }
   };
 }
 
-/** Shared mock client instance for the inbox UI. */
-export const inboxClient: InboxClient = createMockInboxClient();
+/** Shared API client instance for the inbox UI. */
+export const inboxClient: InboxClient = createHttpInboxClient();

@@ -1,11 +1,11 @@
 dev:
-  bun run dev
+  export COGRAM_API_ORIGIN_OVERRIDE="${COGRAM_API_ORIGIN:-}"; export WEB_PORT_OVERRIDE="${WEB_PORT:-}"; set -a; . ./.env; set +a; export COGRAM_API_ORIGIN="${COGRAM_API_ORIGIN_OVERRIDE:-${COGRAM_API_ORIGIN:-http://127.0.0.1:8001}}"; PORT="${WEB_PORT_OVERRIDE:-${WEB_PORT:-3003}}" bun run dev
 
 api:
   set -a; . ./.env; set +a; bun run dev:api
 
 web:
-  bun run dev:web
+  export COGRAM_API_ORIGIN_OVERRIDE="${COGRAM_API_ORIGIN:-}"; export WEB_PORT_OVERRIDE="${WEB_PORT:-}"; set -a; . ./.env; set +a; export COGRAM_API_ORIGIN="${COGRAM_API_ORIGIN_OVERRIDE:-${COGRAM_API_ORIGIN:-http://127.0.0.1:8001}}"; PORT="${WEB_PORT_OVERRIDE:-${WEB_PORT:-3003}}" bun run dev:web
 
 build:
   bun run build

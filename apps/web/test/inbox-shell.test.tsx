@@ -3,6 +3,18 @@ import { describe, expect, it, vi } from 'vitest';
 import { InboxShell } from '@/components/inbox/inbox-shell';
 import { DesignSystemProvider } from '@/design-system/providers';
 
+vi.mock('@/lib/inbox/client', async () => {
+  const { buildMockInbox } = await import('@/lib/inbox/mock');
+  const inbox = buildMockInbox();
+  return {
+    inboxClient: {
+      getInbox: () => Promise.resolve(inbox),
+      resolveApproval: () => Promise.resolve(inbox),
+      undoAction: () => Promise.resolve(inbox)
+    }
+  };
+});
+
 vi.mock('@/components/inbox/run-view', () => ({
   RunView: ({
     items,
