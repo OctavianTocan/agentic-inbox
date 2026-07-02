@@ -1,0 +1,21 @@
+{
+  "name": "@ci/skill-gen",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "generate": "bun run src/index.ts generate",
+    "check": "bun run src/index.ts check",
+    "e2e-test": "bun run src/index.ts e2e-test"
+  },
+  "dependencies": {
+    "@effect/platform-bun": "catalog:",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@tooling/typescript-config": "workspace:*",
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
+  }
+}

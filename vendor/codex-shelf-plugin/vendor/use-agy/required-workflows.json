@@ -1,0 +1,8 @@
+[
+  "Check generated artifacts are up-to-date",
+  "Knip",
+  "Lint",
+  "Test",
+  "Typecheck",
+  "Use Agy"
+]

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "exclude": ["exports", "types", "duplicates"],
+  "ignore": ["vendor/**", ".agents/**"],
+  "ignoreWorkspaces": ["packages/tooling/typescript-config"],
+  "workspaces": {
+    "packages/ci/skill-gen": {
+      "project": ["src/**/*.ts", "test/**/*.ts"]
+    },
+    "packages/ci/workflow-gen": {
+      "project": ["src/**/*.ts"]
+    },
+    "packages/ci/actions/knip": {
+      "entry": ["index.ts"]
+    },
+    "packages/ci/actions/lint": {
+      "entry": ["index.ts"]
+    },
+    "packages/ci/actions/test": {
+      "entry": ["index.ts"]
+    },
+    "packages/ci/actions/typecheck": {
+      "entry": ["index.ts"]
+    }
+  }
+}

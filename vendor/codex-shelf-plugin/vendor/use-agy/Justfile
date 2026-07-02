@@ -1,0 +1,77 @@
+set shell := ["bash", "-c"]
+
+default: help
+
+# Show available repository workflows.
+help:
+  @just --list --unsorted
+
+# Install workspace dependencies.
+install:
+  bun install
+
+# Run the full repository gate.
+ci:
+  bun run ci
+
+# Check formatting and lint rules.
+check:
+  bun run check
+
+# Format the repository.
+format:
+  bun run format
+
+# Typecheck all workspace packages.
+typecheck:
+  bun run typecheck
+
+# Run all tests.
+test:
+  bun run test
+
+# Run static dependency analysis.
+knip:
+  bun run knip
+
+# Regenerate all source-generated artifacts.
+generate: skill-gen-generate workflow-gen-generate
+
+# Verify generated artifacts are up to date.
+gen-check: skill-gen-check workflow-gen-check
+
+# Regenerate skills from source fragments.
+skill-gen-generate:
+  bun run skill-gen:generate
+
+# Check generated skills for drift.
+skill-gen-check:
+  bun run skill-gen:check
+
+# Regenerate workflows from source fragments.
+workflow-gen-generate:
+  bun run workflow-gen:generate
+
+# Check generated workflows for drift.
+workflow-gen-check:
+  bun run workflow-gen:check
+
+# Typecheck a single package by workspace name.
+pkg-typecheck package:
+  bun run --filter "{{package}}" typecheck
+
+# Test a single package by workspace name.
+pkg-test package:
+  bun run --filter "{{package}}" test
+
+# Run api-core contract tests.
+api-core-test:
+  bun run vitest run packages/use-agy/api-core/test/Modules/Agy/Contract.test.ts
+
+# Run effect service tests.
+effect-test:
+  bun run vitest run packages/use-agy/effect/test/Agy
+
+# Show concise git state.
+status:
+  git status --short

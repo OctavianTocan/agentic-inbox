@@ -1,0 +1,27 @@
+{
+  "name": "@use-agy/api-core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./Api": "./src/Api.ts",
+    "./RpcProtocol": "./src/RpcProtocol.ts",
+    "./Modules/Agy/Api": "./src/Modules/Agy/Api.ts",
+    "./Modules/Agy/Domain": "./src/Modules/Agy/Domain.ts",
+    "./Modules/Agy/Errors": "./src/Modules/Agy/Errors.ts",
+    "./Modules/Agy/RpcProtocol": "./src/Modules/Agy/RpcProtocol.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@tooling/typescript-config": "workspace:*",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

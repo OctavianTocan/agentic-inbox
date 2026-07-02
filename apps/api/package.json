@@ -1,0 +1,29 @@
+{
+  "name": "@apps/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "dev": "bun --watch run src/Main.ts",
+    "start": "bun run src/Main.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@clients/ai-sdk": "workspace:*",
+    "@app/api-core": "workspace:*",
+    "@effect/platform-bun": "catalog:",
+    "ai": "catalog:",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@tooling/typescript-config": "workspace:*",
+    "@types/bun": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

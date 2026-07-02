@@ -1,0 +1,126 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.0/schema.json",
+  "root": true,
+  "files": {
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!vendor",
+      "!**/dist",
+      "!**/.turbo",
+      // Generated workflows and local composite actions are GitHub metadata.
+      "!.github",
+      // Generated skill bundles are owned by skill-gen / hand-written; not ours to police.
+      "!.agents",
+      // Spec Kit metadata is tool-managed, not project source.
+      "!.specify",
+      // Plan documents are prose, not project source.
+      "!plans",
+      // skill-gen fixtures intentionally carry marker comments and kebab-case names.
+      "!**/e2e-test",
+      "!**/e2e-test-expected"
+    ]
+  },
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "formatter": {
+    "enabled": true,
+    "formatWithErrors": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineEnding": "lf",
+    "lineWidth": 80,
+    "bracketSpacing": true
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "complexity": {
+        "noUselessTypeConstraint": "error"
+      },
+      "correctness": {
+        "noUnusedImports": "error",
+        "noUnusedVariables": "error"
+      },
+      "nursery": {
+        // Type-aware; valuable for an Effect codebase. Revert to "off" if `check` gets slow.
+        "noFloatingPromises": "error"
+      },
+      "style": {
+        "noEnum": "error",
+        "noNamespace": "error",
+        "noNonNullAssertion": "error",
+        "useConst": "error",
+        "useExportType": "error",
+        "useImportType": "error",
+        "useNodejsImportProtocol": "error",
+        "useFilenamingConvention": {
+          "level": "error",
+          "options": {
+            "requireAscii": true,
+            "filenameCases": ["camelCase", "kebab-case"]
+          }
+        }
+      },
+      "suspicious": {
+        "useAwait": "error",
+        "noExplicitAny": "error",
+        "noExtraNonNullAssertion": "error",
+        "noTsIgnore": "error",
+        // CLI tooling: stderr logging (console.error/warn) is allowed; console.log
+        // is gated behind explicit biome-ignore comments for diagnostic output.
+        "noConsole": {
+          "level": "error",
+          "options": { "allow": ["error", "warn"] }
+        }
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "arrowParentheses": "always",
+      "bracketSameLine": false,
+      "quoteProperties": "asNeeded",
+      "quoteStyle": "single",
+      "semicolons": "always",
+      "trailingCommas": "es5"
+    }
+  },
+  "overrides": [
+    {
+      "includes": [
+        "packages/**/src/Modules/**/*.ts",
+        "packages/agent-dev/**/src/**/*.ts",
+        "packages/use-agy/**/src/**/*.ts",
+        "packages/**/test/**/*.test.ts",
+        "apps/api/src/**/*.ts",
+        "apps/**/src/Modules/**/*.ts",
+        "apps/**/test/**/*.test.ts"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "useFilenamingConvention": {
+              "level": "error",
+              "options": {
+                "requireAscii": true,
+                "filenameCases": ["camelCase", "kebab-case", "PascalCase"]
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

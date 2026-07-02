@@ -1,0 +1,13 @@
+# Runtime usage database — local, never packaged or committed.
+data/usage.db
+data/usage.db-*
+
+# Python bytecode cache
+__pycache__/
+*.pyc
+
+# OS / editor
+.DS_Store
+*.log
+.env
+.env.local

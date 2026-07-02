@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "files": [],
+  "references": [
+    {
+      "path": "./apps/web"
+    },
+    {
+      "path": "./apps/api"
+    },
+    {
+      "path": "./packages/api-core"
+    },
+    {
+      "path": "./packages/clients/ai-sdk"
+    }
+  ],
+  "exclude": [
+    "node_modules",
+    ".next",
+    "**/.next",
+    "dist",
+    "build",
+    "coverage",
+    ".agent",
+    "vendor",
+    ".codegraph"
+  ]
+}

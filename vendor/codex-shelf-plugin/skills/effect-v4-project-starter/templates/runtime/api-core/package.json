@@ -1,0 +1,27 @@
+{
+  "name": "@{{SCOPE}}/api-core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./Api": "./src/Api.ts",
+    "./RpcProtocol": "./src/RpcProtocol.ts",
+    "./Modules/Greeter/Api": "./src/Modules/Greeter/Api.ts",
+    "./Modules/Greeter/Domain": "./src/Modules/Greeter/Domain.ts",
+    "./Modules/Greeter/Errors": "./src/Modules/Greeter/Errors.ts",
+    "./Modules/Greeter/RpcProtocol": "./src/Modules/Greeter/RpcProtocol.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@tooling/typescript-config": "workspace:*",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

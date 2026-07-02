@@ -1,0 +1,6 @@
+[submodule "vendor/effect-smol"]
+	path = vendor/effect-smol
+	url = https://github.com/Effect-TS/effect-smol
+[submodule "vendor/codex-shelf-plugin"]
+	path = vendor/codex-shelf-plugin
+	url = https://github.com/OctavianTocan/codex-shelf-plugin.git
