@@ -1,7 +1,0 @@
-{
-  "extends": "@tooling/typescript-config/base",
-  "compilerOptions": {
-    "rootDir": "."
-  },
-  "include": ["src/**/*.ts"]
-}
