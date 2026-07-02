@@ -262,3 +262,11 @@ Final assistant text: ... a short acknowledgment reply was drafted, but the PM d
 - `spike/src/approval-pause.ts` / `approval-resume.ts` — Script B pause/resume.
 - `spike/src/probe-tools.ts` — throwaway diagnostic that captured the `strict: null`
   root cause (logs/rewrites the outgoing tool schema).
+
+## Addendum: learnings from the slice build's full live run (2026-07-02)
+
+A parallel insurance implementation (branch `slice`) ran the complete 80-email triage against the live API. Binding facts for the real implementation:
+
+1. **Bun kills idle SSE streams at ~10s.** A full 80-email triage stream exceeds it. Fix (proven): set `idleTimeout: 0` (or a large value) on the Bun server options in `apps/api/src/Main.ts` — without it `POST /triage/run` dies mid-run.
+2. **Real distribution from the live run:** 80 processed → 37 auto-handled, 30 paused for approval, 13 filed; 0 sensitive auto-executed (ledger-verified). Expect ~30 pending approvals — UI must handle that volume (the plan's pin-cap is load-bearing).
+3. Full-run wall clock is a few minutes at concurrency 8 with gpt-5.5 reasoning-low. Stream progress events per email or the UI looks frozen.
