@@ -1,5 +1,7 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import type { CategoryType } from '@/Lib/Ids';
+import type { CategoryType, EmailIdType } from '@/Lib/Ids';
 import {
   isSensitive,
   LEGAL_KEYWORDS,
@@ -101,4 +103,63 @@ describe('isSensitive — the invariant: sensitive input can never auto-execute'
       ).toBe(false);
     }
   });
+});
+
+type DatasetEmail = {
+  readonly id: EmailIdType;
+  readonly subject: string;
+  readonly body: string;
+};
+
+const DATASET: ReadonlyArray<DatasetEmail> = JSON.parse(
+  readFileSync(
+    fileURLToPath(new URL('../../../../../data/emails.json', import.meta.url)),
+    'utf8'
+  )
+);
+
+const bodyOf = (emailId: EmailIdType): string => {
+  const email = DATASET.find((entry) => entry.id === emailId);
+  if (email === undefined) {
+    throw new Error(`Email ${emailId} missing from dataset`);
+  }
+  // Mirror Agent normalizeDecision: the policy inspects `${subject}\n${body}`.
+  return `${email.subject}\n${email.body}`;
+};
+
+describe('isSensitive — the code gate catches genuinely-sensitive dataset mail', () => {
+  // Each of these reads as sensitive to a human but carries no dollar amount and
+  // no legal keyword, so before the safety/escalation signals were added the ONLY
+  // gate was the model's category. A benign, confident routine label simulates a
+  // model that mislabeled the email; the raw-body signal must still defer it.
+  const CODE_CAUGHT: ReadonlyArray<{
+    readonly id: EmailIdType;
+    readonly why: string;
+  }> = [
+    { id: 'e-016', why: 'Class B fall-arrest incident report' },
+    {
+      id: 'e-017',
+      why: 'daily referencing the fall-arrest incident stand-down'
+    },
+    { id: 'e-050', why: 'Class A injury — orbital fracture, ambulance, OSHA' },
+    { id: 'e-075', why: 'near-miss falling debris, stand-down' },
+    {
+      id: 'e-053',
+      why: 'litigation-hold / preserve-all-correspondence demand'
+    },
+    { id: 'e-038', why: 'owner escalation formally registering concerns' }
+  ];
+
+  for (const { id, why } of CODE_CAUGHT) {
+    it(`defers ${id} on a body signal even if the model labels it routine (${why})`, () => {
+      expect(
+        isSensitive({
+          category: 'daily_report',
+          confidence: 1,
+          emailBody: bodyOf(id)
+        }),
+        `${id} must trip the code gate regardless of the model category`
+      ).toBe(true);
+    });
+  }
 });

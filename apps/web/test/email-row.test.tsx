@@ -105,6 +105,7 @@ type RowHandlers = {
   readonly onApprove?: (approvalId: string) => void;
   readonly onDeny?: (approvalId: string) => void;
   readonly onUndo?: (ledgerEntryId: string, emailId: string) => void;
+  readonly onRetriage?: (emailId: string) => void;
   readonly onFiltersChange?: (filters: InboxFilters) => void;
 };
 
@@ -120,6 +121,7 @@ function renderRow(item: InboxItem, handlers: RowHandlers = {}) {
         onApprove={handlers.onApprove ?? (() => undefined)}
         onDeny={handlers.onDeny ?? (() => undefined)}
         onFiltersChange={handlers.onFiltersChange ?? (() => undefined)}
+        onRetriage={handlers.onRetriage ?? (() => undefined)}
         onSelect={() => undefined}
         onUndo={handlers.onUndo ?? (() => undefined)}
       />
@@ -220,6 +222,27 @@ describe('EmailRow context menu', () => {
 
     await screen.findByRole('menuitem', { name: /Copy subject/ });
     expect(screen.queryByRole('menuitem', { name: /Undo/ })).toBeNull();
+  });
+
+  it('offers Re-triage and calls onRetriage with the email id, so a reviewer can re-run one wrong call from the list', async () => {
+    const onRetriage = vi.fn();
+    const { container } = renderRow(plainItem, { onRetriage });
+    openRowMenu(container);
+
+    fireEvent.click(await screen.findByRole('menuitem', { name: /Re-triage/ }));
+    expect(onRetriage).toHaveBeenCalledWith('e-042');
+  });
+
+  it('hides Re-triage for an untriaged row, so re-running only applies once a decision exists', async () => {
+    const { container } = renderRow({
+      ...plainItem,
+      decision: null,
+      status: 'needs_attention'
+    });
+    openRowMenu(container);
+
+    await screen.findByRole('menuitem', { name: /Copy subject/ });
+    expect(screen.queryByRole('menuitem', { name: /Re-triage/ })).toBeNull();
   });
 
   it('filters by the row severity so a right-click drills the list to matching items', async () => {

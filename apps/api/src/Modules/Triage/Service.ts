@@ -3,6 +3,7 @@ import {
   type LedgerEntry
 } from '@app/api-core/Modules/Actions/Domain';
 import type { EmailStatus } from '@app/api-core/Modules/Emails/Domain';
+import { EmailNotFound } from '@app/api-core/Modules/Emails/Errors';
 import type { Decision } from '@app/api-core/Modules/Triage/Domain';
 import {
   TriageApprovalPending,
@@ -40,6 +41,9 @@ export class TriageService extends Context.Service<
     readonly run: (
       fresh?: boolean
     ) => Effect.Effect<Stream.Stream<TriageEvent, never>, never>;
+    readonly retriage: (
+      emailId: EmailIdType
+    ) => Effect.Effect<Inbox, EmailNotFound>;
     readonly inbox: () => Effect.Effect<Inbox>;
   }
 >()('@apps/api/Triage/TriageService') {}
@@ -153,7 +157,25 @@ export const TriageServiceBody: Layer.Layer<
       });
     });
 
-    return { run, inbox } as const;
+    const retriage = Effect.fn('TriageService.retriage')(function* (
+      emailId: EmailIdType
+    ) {
+      const email = yield* emails.get(emailId);
+      if (email === null) {
+        return yield* Effect.fail(new EmailNotFound({ emailId }));
+      }
+
+      yield* decisions.deleteByEmail(emailId);
+      yield* actions.clearLedgerForEmail(emailId);
+      yield* conversations.deleteByEmail(emailId);
+
+      const { decision } = yield* agent.triageEmail(email).pipe(Effect.orDie);
+      yield* decisions.upsert(decision);
+
+      return yield* inbox();
+    });
+
+    return { run, retriage, inbox } as const;
   })
 );
 

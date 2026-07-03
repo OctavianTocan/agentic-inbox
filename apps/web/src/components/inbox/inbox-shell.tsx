@@ -231,8 +231,16 @@ function MobileTopBar({ ledgerCount, onOpenChat }: MobileTopBarProps) {
  * @returns The inbox application shell.
  */
 export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
-  const { inbox, isLoading, refresh, runTriage, approve, deny, undo } =
-    useInbox();
+  const {
+    inbox,
+    isLoading,
+    refresh,
+    runTriage,
+    approve,
+    deny,
+    undo,
+    retriage
+  } = useInbox();
   const [filters, setFilters] = useState<InboxFilters>(EMPTY_FILTERS);
   const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
   const [viewedEmailIds, setViewedEmailIds] = useState<ReadonlySet<string>>(
@@ -552,6 +560,7 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
                   onClearSelection={clearSelection}
                   onDeny={(id) => void deny(id)}
                   onFiltersChange={setFilters}
+                  onRetriage={(emailId) => void retriage(emailId)}
                   onSelect={selectEmail}
                   onToggleChat={() => setIsMobileChatOpen(true)}
                   onUndo={(entryId, emailId) => void undo(entryId, emailId)}
@@ -661,6 +670,7 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
                               onClearSelection={clearSelection}
                               onDeny={(id) => void deny(id)}
                               onFiltersChange={setFilters}
+                              onRetriage={(emailId) => void retriage(emailId)}
                               onSelect={selectEmail}
                               onSortChange={setSortKey}
                               onToggleChat={() => toggleChat()}

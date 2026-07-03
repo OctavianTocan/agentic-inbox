@@ -53,6 +53,7 @@ export class ActionLedgerRepo extends Context.Service<
       emailId: EmailIdType
     ) => Effect.Effect<ReadonlyArray<LedgerEntry>>;
     readonly list: () => Effect.Effect<ReadonlyArray<LedgerEntry>>;
+    readonly deleteByEmail: (emailId: EmailIdType) => Effect.Effect<void>;
     readonly deleteAll: () => Effect.Effect<void>;
   }
 >()('@apps/api/Actions/ActionLedgerRepo') {}
@@ -121,11 +122,26 @@ export const ActionLedgerRepoBody: Layer.Layer<
       return rows.map((row) => decodeEntry(row as Record<string, unknown>));
     });
 
+    const deleteByEmail = Effect.fn('ActionLedgerRepo.deleteByEmail')(
+      function* (emailId: EmailIdType) {
+        yield* sql`DELETE FROM action_ledger WHERE email_id = ${emailId}`.pipe(
+          Effect.orDie
+        );
+      }
+    );
+
     const deleteAll = Effect.fn('ActionLedgerRepo.deleteAll')(function* () {
       yield* sql`DELETE FROM action_ledger`.pipe(Effect.orDie);
     });
 
-    return { append, get, listByEmail, list, deleteAll } as const;
+    return {
+      append,
+      get,
+      listByEmail,
+      list,
+      deleteByEmail,
+      deleteAll
+    } as const;
   })
 );
 

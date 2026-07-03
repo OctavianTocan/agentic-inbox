@@ -39,6 +39,7 @@ export class ActionService extends Context.Service<
       entryId: LedgerEntryIdType,
       actor: ActorType
     ) => Effect.Effect<LedgerEntry, ActionNotFound | ActionNotUndoable>;
+    readonly clearLedgerForEmail: (emailId: EmailIdType) => Effect.Effect<void>;
     readonly clearLedger: () => Effect.Effect<void>;
   }
 >()('@apps/api/Actions/ActionService') {}
@@ -129,6 +130,10 @@ export const ActionServiceBody: Layer.Layer<
       });
     });
 
+    const clearLedgerForEmail = Effect.fn('ActionService.clearLedgerForEmail')(
+      (emailId: EmailIdType) => ledger.deleteByEmail(emailId)
+    );
+
     const clearLedger = Effect.fn('ActionService.clearLedger')(function* () {
       yield* ledger.deleteAll();
     });
@@ -140,6 +145,7 @@ export const ActionServiceBody: Layer.Layer<
       flagForReview,
       listLedger,
       undoAction,
+      clearLedgerForEmail,
       clearLedger
     } as const;
   })

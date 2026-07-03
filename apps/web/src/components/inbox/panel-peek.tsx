@@ -7,6 +7,7 @@ import {
   HoverCardContent,
   HoverCardTrigger
 } from '@/design-system/components/ui/hover-card';
+import { cn } from '@/design-system/lib/utils';
 
 const HOVER_OPEN_DELAY = 260;
 const HOVER_CLOSE_DELAY = 220;
@@ -25,13 +26,13 @@ type PanelPeekProps = {
  * Top-bar toggle that, while its side panel is collapsed, reveals the panel as
  * a floating hover peek anchored to the toggle. Clicking always performs the
  * permanent open/close; hovering (pointer only, not keyboard focus) opens a
- * usable, non-full-height preview that closes on pointer-out, Escape, or
- * outside press. When the panel is already open the toggle is a plain button
- * with no peek.
+ * usable preview that closes on pointer-out, Escape, or outside press. When the
+ * panel is already open the toggle is a plain button with no peek.
  *
  * @param icon - Glyph rendered inside the toggle button.
  * @param label - Accessible label describing the toggle action.
- * @param side - Which edge the panel lives on; sets the peek anchor side.
+ * @param side - Which edge the panel lives on; sets the peek anchor side and
+ *   its height (right fills the viewport, left sizes to its content).
  * @param isPanelOpen - Whether the underlying panel is expanded.
  * @param onToggle - Permanently toggles the panel open or closed.
  * @param peekWidth - Fixed width of the floating peek, in pixels.
@@ -80,7 +81,10 @@ export function PanelPeek({
       />
       <HoverCardContent
         align={side === 'left' ? 'start' : 'end'}
-        className="flex h-[90svh] flex-col overflow-hidden p-0 shadow-card"
+        className={cn(
+          'flex max-h-[90svh] flex-col overflow-hidden p-0 shadow-card',
+          side === 'right' && 'h-[90svh]'
+        )}
         side="bottom"
         style={{ width: peekWidth }}
       >

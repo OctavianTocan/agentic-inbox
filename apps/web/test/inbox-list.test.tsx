@@ -40,6 +40,7 @@ function renderList(items: readonly InboxItem[], handlers: ListHandlers = {}) {
         onClearSelection={handlers.onClearSelection ?? (() => undefined)}
         onDeny={() => undefined}
         onFiltersChange={() => undefined}
+        onRetriage={() => undefined}
         onSelect={() => undefined}
         onToggleChat={handlers.onToggleChat ?? (() => undefined)}
         onUndo={() => undefined}

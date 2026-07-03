@@ -27,7 +27,12 @@ import { isSensitive } from '@/Modules/Actions/Policy';
 import { ActionService, ActionServiceLive } from '@/Modules/Actions/Service';
 import { ConversationsRepo, ConversationsRepoLive } from '@/Modules/Chat/Repo';
 import { EmailsService, EmailsServiceLive } from '@/Modules/Emails/Service';
-import { ToolModelLive, TriageModelLive } from './Model';
+import {
+  ToolModel,
+  ToolModelLive,
+  TriageModel,
+  TriageModelLive
+} from './Model';
 import {
   CHAT_SYSTEM_PROMPT,
   TRIAGE_SYSTEM_PROMPT,
@@ -101,13 +106,15 @@ export class AgentService extends Context.Service<
 export const AgentServiceBody: Layer.Layer<
   AgentService,
   never,
-  ActionService | ConversationsRepo | EmailsService
+  ActionService | ConversationsRepo | EmailsService | TriageModel | ToolModel
 > = Layer.effect(
   AgentService,
   Effect.gen(function* () {
     const actions = yield* ActionService;
     const conversations = yield* ConversationsRepo;
     const emails = yield* EmailsService;
+    const triageModel = yield* TriageModel;
+    const toolModel = yield* ToolModel;
 
     /** Generates and normalizes the decision for one email. */
     const generateDecision = Effect.fn('AgentService.generateDecision')(
@@ -174,7 +181,7 @@ export const AgentServiceBody: Layer.Layer<
                     makeTriageHandlers(actions, 'batch_agent')
                   )
                 ),
-                Effect.provide(ToolModelLive)
+                Effect.provideService(LanguageModel.LanguageModel, toolModel)
               )
             : yield* LanguageModel.generateText({
                 toolkit: ChatToolkit,
@@ -187,7 +194,7 @@ export const AgentServiceBody: Layer.Layer<
                     makeChatHandlers(actions, emails, 'chat_agent')
                   )
                 ),
-                Effect.provide(ToolModelLive)
+                Effect.provideService(LanguageModel.LanguageModel, toolModel)
               );
         const nextPrompt = Prompt.concat(
           prompt,
@@ -215,7 +222,7 @@ export const AgentServiceBody: Layer.Layer<
     ) {
       const before = yield* actions.listLedger(email.id);
       const decision = yield* generateDecision(email).pipe(
-        Effect.provide(TriageModelLive)
+        Effect.provideService(LanguageModel.LanguageModel, triageModel)
       );
       const prompt = Prompt.make([
         { role: 'system', content: TRIAGE_SYSTEM_PROMPT },
@@ -303,13 +310,13 @@ export const AgentServiceBody: Layer.Layer<
           emailId: record.emailId
         });
 
-        const emailId = emailIdFromPrompt(prompt);
+        const emailId = record.emailId ?? emailIdFromPrompt(prompt);
         if (emailId === null) {
-          return yield* actions.flagForReview({
-            emailId: 'e-001',
-            actor: 'user',
-            summary: `Resolved approval ${approvalId}`
-          });
+          return yield* Effect.die(
+            new Error(
+              `Approval ${approvalId} resolved but its conversation carries no email id; refusing to attribute the outcome to an arbitrary email.`
+            )
+          );
         }
         const latest = yield* actions.listLedger(emailId);
         const entry = latest[0];
@@ -368,7 +375,9 @@ export const AgentServiceBody: Layer.Layer<
 export const AgentServiceLive = Layer.provide(AgentServiceBody, [
   ActionServiceLive,
   ConversationsRepoLive,
-  EmailsServiceLive
+  EmailsServiceLive,
+  TriageModelLive,
+  ToolModelLive
 ]);
 
 /** Clamps model-only constraints and applies deterministic sensitivity policy. */

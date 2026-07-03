@@ -72,15 +72,28 @@ The two riskiest assumptions were de-risked against the live OpenRouter API befo
 - **Tool loop with approval pause persists and resumes across processes** — a gated `send_reply` returns a `tool-approval-request`, the conversation serialises to JSON, and a *fresh process* loads it, appends an approval response, and the built-in core executes (approve) or files-for-manual-handling (deny). No custom pause machinery.
 - **Two strictness knobs, found the hard way** — `strictJsonSchema: true` is mandatory for `generateObject` (without it gpt-5.5 drops required fields), but it must *not* mix with the tool path; every mutating tool needs `.annotate(Tool.Strict, true)` per-tool instead, or gpt-5.5 400s on the first tool-bearing request. Also: no `Schema.check` refinements on the structured-output schema (strict mode drops them from the wire but the decoder still enforces them, so valid output fails to decode) — bounds are validated in code after decode.
 
-## Known gaps / what was built
+## What was built
 
-All core requirements from `docs/TASK.md` are fully implemented and verified via unit/integration tests:
-- **Batch Triage & Actioning**: Auto-handles routine emails and dynamically gates sensitive emails (change orders, claims, disputes, safety, owner escalations) via the deterministic `needsApproval` policy.
-- **Approval Queue**: Pending approvals are pinned at the top of the inbox with inline Approve/Deny controls.
-- **Human-in-the-Loop Drafting**: Reviewers can edit the agent's drafted replies in a live textarea before approving. Swapping the draft body is fully integrated into the resumed conversation flow.
-- **Action Ledger & Undo**: Every action (routine auto-reply, approval, denial) is recorded in an append-only Postgres database. Reviewers can undo any action to retract a simulated send or revert a decision, returning the email to "Needs Attention".
-- **Interactive Chat Sidepanel**: Full-featured chat workspace letting the user query the inbox, review rationales, and command actions (e.g., "undo the reply to Rachel" or "approve the safety draft"). Handled by the same unified agent/toolkit structure to prevent capability drift.
-- **Performance**: Streams live triage run state via SSE with targeted row spinners and trace timelines.
+All core requirements from `docs/TASK.md` are implemented and covered by unit/integration tests:
+
+- **Batch Triage & Actioning**: Auto-handles routine emails and gates sensitive ones (change orders, claims, disputes, safety, owner escalations) via the deterministic `needsApproval` policy.
+- **Approval Queue**: Pending approvals are pinned at the top of the inbox with inline Approve/Deny.
+- **Human-in-the-Loop Drafting**: Reviewers can edit the agent's drafted reply in a live textarea before approving; the edited body is swapped into the resumed conversation and is what ships.
+- **Action Ledger & Undo**: Every action (auto-reply, approval, denial) is recorded in an append-only Postgres ledger. Undo retracts a simulated send or reverts a decision, returning the email to "Needs Attention", and links back to the entry it reversed.
+- **Re-triage**: One email can be re-run from the row context menu (`POST /triage/:id/retriage`); the whole inbox can be re-run fresh (`POST /triage/run` with `fresh: true`), which clears prior triage state first.
+- **Interactive Chat Sidepanel**: Same unified agent/toolkit (no capability drift) for querying the inbox, reviewing rationales, and commanding actions ("undo the reply to Rachel").
+- **Performance**: Live triage run state streamed over SSE with targeted row spinners and trace timelines.
+
+## Known gaps / what's next
+
+Honest about where the edges are:
+
+- **The sensitive-category gate is model-dependent for non-monetary mail.** The policy gate has two halves. The raw-body backstop (money, legal, safety/injury, litigation-hold, escalation signals) runs on the raw email and is injection-resistant — a crafted email cannot talk its way past it. But for genuinely-sensitive emails whose body contains none of those signals, the *only* gate is the model's category label. That half is a heuristic: a different model or temperature that mislabels an injury report as `daily_report` would auto-archive it. The extended code backstop was calibrated over this 80-email dataset to catch injury/near-miss/litigation-hold/escalation language, which shrinks the exposure, but the floor for cleanly-worded sensitive mail is still the LLM, not code. **Next:** broaden the deterministic signal set and/or add a second-model check for anything the first model labels routine but scores near the confidence threshold.
+- **The backstop carries an accepted false-positive budget.** Calibrating the raw-body safety signals wide enough to catch real incidents also flags some benign mail — e.g. a "Daily report — no safety incidents" update trips the safety signal and lands in the approval queue rather than auto-archiving. This is deliberate (a false approval costs one click; a missed injury report costs far more), but it does add reviewable noise.
+- **The approval flow is tested with a scripted model fake, not a live LLM.** The full pause/resume spine (triage → paused approval → approve/deny → resumed send carrying the reviewer's edited body → ledger row) is covered end-to-end through the real `AgentService`/`TriageService` against the test database, driven by a scripted `LanguageModel` fake for determinism. What no automated test covers is live-model behavior drift (a real model choosing different tools) — that risk is bounded by the deterministic policy gate, not by tests.
+- **Re-triage is per-email or whole-inbox, nothing in between.** There is no "re-triage everything flagged" or multi-select re-run; a bulk mistake means either re-running one email at a time or a full fresh run that clears all prior state.
+- **Mobile is a compact review surface, not the full app.** The mobile top bar exposes menu, agent-search, and Audit, but the Audit page has no mobile chat entry point, and the resizable three-pane desktop shell degrades to a single column. Mobile is for skimming and approving, not for the full triage/chat workflow.
+- **Sends are simulated.** Nothing leaves the building — every "send" is a ledger entry, which is what makes undo a one-click revert. The demo shows the shape of sending, not a real SMTP round-trip.
 
 ## How to run
 
@@ -88,9 +101,13 @@ Ensure Docker is running on your machine, then run:
 
 ```bash
 cp .env.example .env      # Set your OPENROUTER_API_KEY
-bun install               # Install dependencies (Node/Bun workspace)
+bun install               # Install dependencies (also applies patches/)
 just up                   # Spin up Postgres 17 in Docker and verify health
 just db-migrate           # Run database migrations
-bun run dev:api           # Launch the Effect API server on port 8001
-bun run dev               # Launch the Next.js frontend on port 3000
+just api                  # Launch the Effect API server on :8001
+just web                  # Launch the Next.js frontend on :3003
 ```
+
+Use the `just` recipes rather than bare `bun run` — they source `.env` so
+`DATABASE_URL` and `OPENROUTER_API_KEY` load; a bare `bun run` does not.
+See the README for ports, the test database, and troubleshooting.

@@ -34,7 +34,8 @@ vi.mock('@/lib/inbox/client', async () => {
         yield { type: 'done', processed: inbox.items.length };
       },
       resolveApproval: () => Promise.resolve(inbox),
-      undoAction: () => Promise.resolve(inbox)
+      undoAction: () => Promise.resolve(inbox),
+      retriage: () => Promise.resolve(inbox)
     }
   };
 });

@@ -6,8 +6,9 @@ import {
   type Email,
   Email as EmailSchema
 } from '@app/api-core/Modules/Emails/Domain';
+import { EmailNotFound } from '@app/api-core/Modules/Emails/Errors';
 import { Decision } from '@app/api-core/Modules/Triage/Domain';
-import { Effect, Layer, Stream } from 'effect';
+import { type Cause, Effect, Exit, Layer, Stream } from 'effect';
 import { describe, expect, it } from 'vitest';
 import type { ActorType, EmailIdType, LedgerEntryIdType } from '@/Lib/Ids';
 import { ActionLedgerRepo, ActionLedgerRepoBody } from '@/Modules/Actions/Repo';
@@ -73,6 +74,8 @@ const ActionsLayer = Layer.succeed(ActionService, {
   listLedger: (_emailId?: EmailIdType) => Effect.succeed(emptyLedger),
   undoAction: (_entryId: LedgerEntryIdType, _actor: ActorType) =>
     Effect.die(new Error('undoAction is not used in this test')),
+  clearLedgerForEmail: (_emailId: EmailIdType) =>
+    Effect.die(new Error('clearLedgerForEmail is not used in this test')),
   clearLedger: () =>
     Effect.die(new Error('clearLedger is not used in this test'))
 });
@@ -82,6 +85,8 @@ const ConversationsLayer = Layer.succeed(ConversationsRepo, {
   get: () => Effect.succeed(null),
   listAwaitingApproval: () => Effect.succeed([]),
   claimApproval: () => Effect.succeed(null),
+  deleteByEmail: (_emailId: EmailIdType) =>
+    Effect.die(new Error('deleteByEmail is not used in this test')),
   deleteTriage: () =>
     Effect.die(new Error('deleteTriage is not used in this test'))
 });
@@ -267,6 +272,8 @@ const inboxWithLedger = (
     listLedger: (_emailId?: EmailIdType) => Effect.succeed(ledger),
     undoAction: (_entryId: LedgerEntryIdType, _actor: ActorType) =>
       Effect.die(new Error('undoAction is not used in this test')),
+    clearLedgerForEmail: (_emailId: EmailIdType) =>
+      Effect.die(new Error('clearLedgerForEmail is not used in this test')),
     clearLedger: () =>
       Effect.die(new Error('clearLedger is not used in this test'))
   });
@@ -429,5 +436,183 @@ describe('TriageService fresh re-run', () => {
     expect(decidedIds).toEqual(['e-fresh-1', 'e-fresh-2', 'e-fresh-3']);
     // The stale ledger row is gone; a fresh run with no auto-actions leaves it empty.
     expect(result.ledgerAfter).toHaveLength(0);
+  });
+});
+
+describe('TriageService per-email re-triage', () => {
+  it('clears one email’s stale decision and ledger, then writes a fresh decision', async () => {
+    const targetId: EmailIdType = 'e-retriage-1';
+    const otherId: EmailIdType = 'e-retriage-2';
+    const target = emailFor(targetId);
+    const other = emailFor(otherId);
+
+    // The agent regenerates a distinct decision so the test can prove the row
+    // was actually re-derived, not left untouched.
+    const freshDecision = new Decision({
+      emailId: targetId,
+      category: 'status_update',
+      severity: 'low',
+      confidence: 0.99,
+      whyPreview: 're-triaged fresh',
+      rationale: 'A second pass reclassified this email.',
+      keyFacts: ['re-triaged'],
+      isSensitive: false
+    });
+    const RetriageEmailsLayer = Layer.succeed(EmailsService, {
+      list: () => Effect.succeed([target, other]),
+      get: (id: EmailIdType) =>
+        Effect.succeed(
+          [target, other].find((email) => email.id === id) ?? null
+        ),
+      thread: (id: EmailIdType) =>
+        Effect.succeed([target, other].filter((email) => email.id === id))
+    });
+    const RetriageAgentLayer = Layer.succeed(AgentService, {
+      triageEmail: (_email: Email) =>
+        Effect.succeed({
+          decision: freshDecision,
+          actions: [],
+          approval: null
+        }),
+      resolveApproval: (
+        _approvalId: string,
+        _input: ApprovalDecisionRequest
+      ): Effect.Effect<LedgerEntry, never> =>
+        Effect.die(new Error('resolveApproval is not used in this test')),
+      chat: () => Effect.die(new Error('chat is not used in this test'))
+    });
+    const RetriageServiceLayer = TriageServiceBody.pipe(
+      Layer.provideMerge(
+        Layer.mergeAll(
+          RetriageAgentLayer,
+          RetriageEmailsLayer,
+          DecisionsRepoBody,
+          ActionServiceBody.pipe(
+            Layer.provideMerge(
+              Layer.mergeAll(ActionLedgerRepoBody, DecisionsRepoBody)
+            )
+          ),
+          ConversationsRepoBody
+        )
+      )
+    );
+
+    const result = await runDb(
+      Effect.gen(function* () {
+        const triage = yield* TriageService;
+        const decisions = yield* DecisionsRepo;
+        const ledger = yield* ActionLedgerRepo;
+        const conversations = yield* ConversationsRepo;
+
+        // Seed the target as already decided with a stale category, an executed
+        // ledger row, and a triage conversation. Also seed an unrelated email so
+        // the test proves re-triage is scoped to one email, not the whole inbox.
+        yield* decisions.upsert(sensitiveDecisionFor(targetId));
+        yield* decisions.upsert(decisionFor(otherId));
+        const staleEntry = yield* ledger.append({
+          actor: 'batch_agent',
+          emailId: targetId,
+          action: 'flag_for_review',
+          summary: 'stale flag',
+          payload: {}
+        });
+        const otherEntry = yield* ledger.append({
+          actor: 'batch_agent',
+          emailId: otherId,
+          action: 'send_reply',
+          summary: 'other reply',
+          payload: {}
+        });
+        yield* conversations.save({
+          status: 'awaiting_approval',
+          prompt: { content: [] },
+          pending: { approvalId: 'ap-1', toolCallId: 'tc-1' },
+          emailId: targetId
+        });
+
+        const inbox = yield* triage.retriage(targetId);
+        const targetDecision = yield* decisions.get(targetId);
+        const targetLedger = yield* ledger.listByEmail(targetId);
+        const otherLedger = yield* ledger.listByEmail(otherId);
+        const awaiting = yield* conversations.listAwaitingApproval();
+        return {
+          inbox,
+          targetDecision,
+          targetLedger,
+          otherLedger,
+          awaiting,
+          staleEntryId: staleEntry.id,
+          otherEntryId: otherEntry.id
+        };
+      }).pipe(Effect.provide(RetriageServiceLayer))
+    );
+
+    // The stale sensitive decision was replaced by the agent's fresh one.
+    expect(result.targetDecision?.category).toBe('status_update');
+    expect(result.targetDecision?.whyPreview).toBe('re-triaged fresh');
+    // The target's prior ledger row and awaiting approval are gone.
+    expect(result.targetLedger).toHaveLength(0);
+    expect(result.awaiting).toHaveLength(0);
+    // The unrelated email is untouched: its decision, ledger, and status remain.
+    expect(result.otherLedger.map((entry) => entry.id)).toEqual([
+      result.otherEntryId
+    ]);
+    const otherItem = result.inbox.items.find(
+      (item) => item.email.id === otherId
+    );
+    expect(otherItem?.decision?.category).toBe('rfi');
+  });
+
+  it('fails with EmailNotFound for an id outside the dataset', async () => {
+    const inbox = await inboxWithLedger(decisionFor('e-present'), []);
+    const presentId = inbox.items[0]?.email.id;
+    expect(presentId).toBe('e-present');
+
+    const EmptyAgentLayer = Layer.succeed(AgentService, {
+      triageEmail: () =>
+        Effect.die(new Error('triageEmail must not run for a missing email')),
+      resolveApproval: (
+        _approvalId: string,
+        _input: ApprovalDecisionRequest
+      ): Effect.Effect<LedgerEntry, never> =>
+        Effect.die(new Error('resolveApproval is not used in this test')),
+      chat: () => Effect.die(new Error('chat is not used in this test'))
+    });
+    const MissingEmailsLayer = Layer.succeed(EmailsService, {
+      list: () => Effect.succeed([]),
+      get: (_id: EmailIdType) => Effect.succeed(null),
+      thread: (_id: EmailIdType) => Effect.succeed([])
+    });
+    const MissingServiceLayer = TriageServiceBody.pipe(
+      Layer.provideMerge(
+        Layer.mergeAll(
+          EmptyAgentLayer,
+          MissingEmailsLayer,
+          DecisionsRepoBody,
+          ActionServiceBody.pipe(
+            Layer.provideMerge(
+              Layer.mergeAll(ActionLedgerRepoBody, DecisionsRepoBody)
+            )
+          ),
+          ConversationsRepoBody
+        )
+      )
+    );
+
+    const exit = await runDb(
+      Effect.gen(function* () {
+        const triage = yield* TriageService;
+        return yield* Effect.exit(triage.retriage('e-missing'));
+      }).pipe(Effect.provide(MissingServiceLayer))
+    );
+
+    expect(Exit.isFailure(exit)).toBe(true);
+    if (Exit.isFailure(exit)) {
+      const failure = exit.cause.reasons.find(
+        (reason): reason is Cause.Fail<EmailNotFound> =>
+          reason._tag === 'Fail' && reason.error instanceof EmailNotFound
+      );
+      expect(failure?.error.emailId).toBe('e-missing');
+    }
   });
 });

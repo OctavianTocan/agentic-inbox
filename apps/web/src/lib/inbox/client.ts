@@ -20,6 +20,8 @@ export type InboxClient = {
   ) => Promise<Inbox>;
   /** Undo a previously executed action and return the updated inbox. */
   undoAction: (ledgerEntryId: string, emailId: string) => Promise<Inbox>;
+  /** Re-run the agent on one email and return the updated inbox. */
+  retriage: (emailId: string) => Promise<Inbox>;
 };
 
 const API_PREFIX = '/api/v1';
@@ -270,6 +272,10 @@ function createHttpInboxClient(): InboxClient {
     },
     undoAction: async (ledgerEntryId) => {
       await postJson(`/actions/${encodeURIComponent(ledgerEntryId)}/undo`);
+      return fetchInbox();
+    },
+    retriage: async (emailId) => {
+      await postJson(`/triage/${encodeURIComponent(emailId)}/retriage`);
       return fetchInbox();
     }
   };

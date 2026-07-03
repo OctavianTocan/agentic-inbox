@@ -63,7 +63,8 @@ vi.mock('@/components/inbox/use-inbox', () => ({
     runTriage: vi.fn(),
     approve: vi.fn(),
     deny: vi.fn(),
-    undo: vi.fn()
+    undo: vi.fn(),
+    retriage: vi.fn()
   })
 }));
 

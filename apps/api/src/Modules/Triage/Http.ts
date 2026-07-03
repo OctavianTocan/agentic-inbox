@@ -11,6 +11,7 @@ export const HttpTriageLive = HttpApiBuilder.group(
     const triage = yield* TriageService;
     return handlers
       .handle('run', ({ payload }) => triage.run(payload.fresh ?? false))
+      .handle('retriage', ({ params }) => triage.retriage(params.id))
       .handle('inbox', () => triage.inbox());
   })
 );

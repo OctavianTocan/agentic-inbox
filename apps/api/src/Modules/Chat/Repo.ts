@@ -66,6 +66,7 @@ export class ConversationsRepo extends Context.Service<
     readonly claimApproval: (
       approvalId: string
     ) => Effect.Effect<ConversationRecord | null>;
+    readonly deleteByEmail: (emailId: EmailIdType) => Effect.Effect<void>;
     readonly deleteTriage: () => Effect.Effect<void>;
   }
 >()('@apps/api/Chat/ConversationsRepo') {}
@@ -166,6 +167,14 @@ export const ConversationsRepoBody: Layer.Layer<
       }
     );
 
+    const deleteByEmail = Effect.fn('ConversationsRepo.deleteByEmail')(
+      function* (emailId: EmailIdType) {
+        yield* sql`DELETE FROM conversations WHERE email_id = ${emailId}`.pipe(
+          Effect.orDie
+        );
+      }
+    );
+
     const deleteTriage = Effect.fn('ConversationsRepo.deleteTriage')(
       function* () {
         yield* sql`DELETE FROM conversations WHERE email_id IS NOT NULL`.pipe(
@@ -179,6 +188,7 @@ export const ConversationsRepoBody: Layer.Layer<
       get,
       listAwaitingApproval,
       claimApproval,
+      deleteByEmail,
       deleteTriage
     } as const;
   })

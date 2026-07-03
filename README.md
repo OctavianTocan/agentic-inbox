@@ -8,6 +8,26 @@ disputes, safety incidents, owner escalations) to the human, and surfaces what
 it did, what needs attention, and why — with easy recovery from wrong calls.
 See `docs/TASK.md` for the full task brief.
 
+## What the agent does
+
+- **Batch triage.** On a triage run the agent decides an action for each of the
+  80 emails and either auto-executes it (routine) or pauses for approval
+  (sensitive). Progress streams live over SSE with per-row spinners.
+- **Sensitive mail is never auto-actioned.** A deterministic policy gate (not a
+  model call) forces approval for sensitive categories, low-confidence
+  decisions, and raw-body danger signals (money, legal, safety/injury,
+  litigation-hold, escalation). Sensitive mail is drafted and paused, not sent.
+- **Approvals.** Pending approvals are pinned at the top of the inbox with
+  inline Approve / Deny. Reviewers can edit the drafted reply before approving;
+  the edited body is what ships (simulated).
+- **Undo.** Every action is an append-only ledger entry; undo retracts a
+  simulated send and drops the email back to Needs Attention.
+- **Re-triage.** Re-run one email from the row context menu
+  (`POST /triage/:id/retriage`), or re-run the whole inbox fresh
+  (`POST /triage/run` with `fresh: true`, which clears prior triage state first).
+- **Chat sidepanel.** The same agent/toolkit answers questions and runs
+  commands (e.g. "undo the reply to Rachel").
+
 ## Stack
 
 Inherited from the `cogram-ai-app-template` base:
@@ -27,19 +47,58 @@ Inherited from the `cogram-ai-app-template` base:
 
 ## Install & run
 
+Docker must be running (for Postgres). From a clean checkout:
+
 ```bash
 cp .env.example .env      # then fill in OPENROUTER_API_KEY
-bun install
+bun install               # also applies the next-themes patch (see below)
 just up                   # start Postgres (docker) and wait until healthy
 just db-migrate           # apply DB migrations
 just api                  # apps/api Effect backend on :8001
-bun run dev               # apps/web on the Next.js dev server (:3003)
+just web                  # apps/web on the Next.js dev server (:3003)
 ```
 
+Run `just api` and `just web` in separate terminals. Use these `just` recipes
+rather than bare `bun run dev:api` / `bun run dev`: the recipes `set -a; . ./.env`
+so `DATABASE_URL`, `COGRAM_API_ORIGIN`, `WEB_PORT`, and `OPENROUTER_API_KEY`
+load from `.env`; a bare `bun run` does not source `.env` and will miss them.
+
 The database runs in Docker; the api and web apps run on the host via Bun.
-`DATABASE_URL` in `.env` matches the compose Postgres service. The `just api`
-and `just db-migrate` recipes source `.env` before starting the API so stale
-shell exports do not override the local database URL.
+`DATABASE_URL` in `.env` matches the compose Postgres service.
+
+**Ports.** API is `:8001` (override with `PORT` in `.env`); web is `:3003`
+(override with `WEB_PORT`). `COGRAM_API_ORIGIN` points web at the API origin;
+Next rewrites add the `/api/v1` prefix.
+
+**Patches.** `patches/next-themes@0.4.6.patch` is registered in `package.json`
+under `patchedDependencies`; Bun applies it during `bun install`. A fresh
+checkout must run `bun install` for the patch to take effect.
+
+**Health check.** `curl http://127.0.0.1:8001/api/v1/health` returns `204` once
+the API is up. If it 404s, the API process is serving a stale contract — the
+`bun --watch` dev runner has been observed to go stale on contract changes;
+restart `just api` to pick them up.
+
+### Test database
+
+The api test suite truncates every table between cases, so it runs against a
+dedicated `cogram_test` database (`TEST_DATABASE_URL` in `.env.example`), never
+the live `cogram`. On a fresh Docker volume the `docker/postgres-init` script
+creates `cogram_test` automatically on first boot. If you already have a
+Postgres volume from before this script existed, create it once:
+
+```bash
+docker compose exec db createdb -U cogram cogram_test
+```
+
+Then run migrations and tests:
+
+```bash
+just db-migrate           # migrates the live DB; the test suite migrates cogram_test itself
+just test                 # bun run test (vitest across the workspace)
+just typecheck            # bun run typecheck
+just lint                 # biome check .
+```
 
 ### Database (docker-compose)
 

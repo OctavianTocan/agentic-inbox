@@ -103,6 +103,8 @@ const emptyActions: Context.Service.Shape<typeof ActionService> = {
   flagForReview: () => Effect.die(new Error('flagForReview not used')),
   listLedger: () => Effect.die(new Error('listLedger not used')),
   undoAction: () => Effect.die(new Error('undoAction not used')),
+  clearLedgerForEmail: () =>
+    Effect.die(new Error('clearLedgerForEmail not used')),
   clearLedger: () => Effect.die(new Error('clearLedger not used'))
 };
 

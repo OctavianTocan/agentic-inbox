@@ -55,6 +55,7 @@ type InboxListProps = {
   readonly onApprove: (approvalId: string) => void;
   readonly onDeny: (approvalId: string) => void;
   readonly onUndo: (ledgerEntryId: string, emailId: string) => void;
+  readonly onRetriage: (emailId: string) => void;
   readonly onFiltersChange: (filters: InboxFilters) => void;
   readonly onClearSelection: () => void;
   readonly onToggleChat: () => void;
@@ -140,6 +141,7 @@ function CollapsibleSection({ label, children }: CollapsibleSectionProps) {
  * @param onApprove - Called with an approval id to approve inline.
  * @param onDeny - Called with an approval id to deny inline.
  * @param onUndo - Called with a ledger entry id and email id to undo a row's in-effect action.
+ * @param onRetriage - Called with an email id to re-run the agent on just that email.
  * @param onFiltersChange - Called with the next filters from a row's "Filter by" submenu.
  * @param onClearSelection - Called to clear the current selection from the background menu.
  * @param onToggleChat - Called to toggle the chat panel from the background menu.
@@ -157,6 +159,7 @@ export function InboxList({
   onApprove,
   onDeny,
   onUndo,
+  onRetriage,
   onFiltersChange,
   onClearSelection,
   onToggleChat,
@@ -190,6 +193,7 @@ export function InboxList({
       onApprove={onApprove}
       onDeny={onDeny}
       onFiltersChange={onFiltersChange}
+      onRetriage={onRetriage}
       onSelect={onSelect}
       onUndo={onUndo}
     />

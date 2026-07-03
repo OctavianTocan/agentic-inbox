@@ -9,6 +9,7 @@ import {
   CopyIcon,
   ExternalLinkIcon,
   ListFilterIcon,
+  RefreshCwIcon,
   RotateCcwIcon
 } from '@/design-system/components/icons';
 import { Badge } from '@/design-system/components/ui/badge';
@@ -109,6 +110,7 @@ type EmailRowProps = {
   readonly onApprove: (approvalId: string) => void;
   readonly onDeny: (approvalId: string) => void;
   readonly onUndo: (ledgerEntryId: string, emailId: string) => void;
+  readonly onRetriage: (emailId: string) => void;
   readonly onFiltersChange: (filters: InboxFilters) => void;
 };
 
@@ -125,6 +127,7 @@ type EmailRowProps = {
  * @param onApprove - Called with the approval id to approve inline.
  * @param onDeny - Called with the approval id to deny inline.
  * @param onUndo - Called with the ledger entry id and email id to undo an in-effect action.
+ * @param onRetriage - Called with the email id to re-run the agent on just this email.
  * @param onFiltersChange - Called with the next filters when a "Filter by" choice is made.
  * @returns The list row.
  */
@@ -137,6 +140,7 @@ export function EmailRow({
   onApprove,
   onDeny,
   onUndo,
+  onRetriage,
   onFiltersChange
 }: EmailRowProps) {
   const { email, decision, status, pendingApproval } = item;
@@ -260,6 +264,15 @@ export function EmailRow({
               <ContextMenuShortcut>
                 <Kbd variant="ghost">U</Kbd>
               </ContextMenuShortcut>
+            </ContextMenuItem>
+            <ContextMenuSeparator />
+          </>
+        ) : null}
+        {decision ? (
+          <>
+            <ContextMenuItem onClick={() => onRetriage(email.id)}>
+              <RefreshCwIcon />
+              Re-triage
             </ContextMenuItem>
             <ContextMenuSeparator />
           </>

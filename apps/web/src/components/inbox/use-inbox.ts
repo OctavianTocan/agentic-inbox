@@ -18,6 +18,7 @@ export type UseInbox = {
   readonly approve: (approvalId: string, editedBody?: string) => Promise<void>;
   readonly deny: (approvalId: string) => Promise<void>;
   readonly undo: (ledgerEntryId: string, emailId: string) => Promise<void>;
+  readonly retriage: (emailId: string) => Promise<void>;
 };
 
 /**
@@ -25,7 +26,7 @@ export type UseInbox = {
  * mutation handlers. Undo surfaces a sonner toast; approve/deny replace the
  * snapshot in place.
  *
- * @param client - Data seam to read and mutate; defaults to the shared mock client.
+ * @param client - Data seam to read and mutate; defaults to the shared HTTP client.
  * @returns The inbox snapshot, loading flag, and action handlers.
  */
 export function useInbox(client: InboxClient = inboxClient): UseInbox {
@@ -94,10 +95,30 @@ export function useInbox(client: InboxClient = inboxClient): UseInbox {
     [client]
   );
 
+  const retriage = useCallback(
+    async (emailId: string) => {
+      const next = await client.retriage(emailId);
+      setInbox(next);
+      toast('Email re-triaged', {
+        description: 'The agent re-processed this email.'
+      });
+    },
+    [client]
+  );
+
   const runTriage = useCallback(
     (fresh?: boolean) => client.runTriage(fresh),
     [client]
   );
 
-  return { inbox, isLoading, refresh, runTriage, approve, deny, undo };
+  return {
+    inbox,
+    isLoading,
+    refresh,
+    runTriage,
+    approve,
+    deny,
+    undo,
+    retriage
+  };
 }

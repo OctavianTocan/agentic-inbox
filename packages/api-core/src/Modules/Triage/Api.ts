@@ -1,9 +1,11 @@
+import { Schema } from 'effect';
 import {
   HttpApiEndpoint,
   HttpApiGroup,
   HttpApiSchema,
   OpenApi
 } from 'effect/unstable/httpapi';
+import { EmailNotFound } from '../Emails/Errors';
 import { TriageRunRequest } from './Domain';
 import { TriageRunFailed } from './Errors';
 import { TriageStreamEvent } from './Events';
@@ -34,5 +36,17 @@ export class TriageApi extends HttpApiGroup.make('triage')
       .annotate(
         OpenApi.Description,
         'Return the summary roll-up and every email joined with its decision, status, pending approval, and actions.'
+      )
+  )
+  .add(
+    HttpApiEndpoint.post('retriage', '/triage/:id/retriage', {
+      params: { id: Schema.String },
+      success: Inbox,
+      error: EmailNotFound
+    })
+      .annotate(OpenApi.Summary, 'Re-triage one email')
+      .annotate(
+        OpenApi.Description,
+        "Clear one email's decision, active ledger entries, and triage conversation, re-run the agent on just that email, and return the refreshed inbox."
       )
   ) {}
