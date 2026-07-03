@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   type KeyboardEvent,
   useCallback,
@@ -13,7 +14,10 @@ import { EMPTY_FILTERS } from '@/components/inbox/filters';
 import { ChatPeek, SidebarPeek } from '@/components/inbox/inbox-shell';
 import { InboxSidebar } from '@/components/inbox/inbox-sidebar';
 import { PanelLoading } from '@/components/inbox/panel-loading';
-import { useSharedChatOpen } from '@/components/inbox/session-state';
+import {
+  requestRunView,
+  useSharedChatOpen
+} from '@/components/inbox/session-state';
 import {
   ChatHeaderSlice,
   CollapsedSidebarTrigger
@@ -273,6 +277,12 @@ export function AuditPage({ persistedWidth }: { persistedWidth?: number }) {
   const [chatKey, setChatKey] = useState(0);
   const [isChatEmpty, setIsChatEmpty] = useState(true);
   const isMobile = useIsMobile();
+  const router = useRouter();
+
+  const requestRerun = useCallback(() => {
+    requestRunView();
+    router.push('/');
+  }, [router]);
 
   const items = inbox?.items ?? [];
 
@@ -323,6 +333,7 @@ export function AuditPage({ persistedWidth }: { persistedWidth?: number }) {
               items={items}
               ledgerCount={ledger.length}
               onFiltersChange={() => undefined}
+              onRunAgent={requestRerun}
               showFilters={false}
             />
           }
@@ -345,12 +356,14 @@ export function AuditPage({ persistedWidth }: { persistedWidth?: number }) {
               items={items}
               ledgerCount={ledger.length}
               onFiltersChange={() => undefined}
+              onRunAgent={requestRerun}
               showFilters={false}
             />
           }
           items={items}
           ledger={ledger}
           onFiltersChange={() => undefined}
+          onRunAgent={requestRerun}
           showFilters={false}
           title="Audit"
         />

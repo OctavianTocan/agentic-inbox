@@ -8,7 +8,8 @@ import {
   FilterXIcon,
   HistoryIcon,
   InboxIcon,
-  ListFilterIcon
+  ListFilterIcon,
+  RefreshCwIcon
 } from '@/design-system/components/icons';
 import { Button } from '@/design-system/components/ui/button';
 import {
@@ -69,6 +70,7 @@ type InboxSidebarProps = {
   readonly showFilters?: boolean;
   readonly title?: string;
   readonly headerPeek?: ReactNode;
+  readonly onRunAgent?: () => void;
 };
 
 type FilterMeta = {
@@ -495,6 +497,7 @@ function FacetButtonGroup<T extends string>({
  * @param ledger - Ledger entries used for the trace count.
  * @param filters - Active filter facets.
  * @param onFiltersChange - Called with the next filter set on any toggle.
+ * @param onRunAgent - Called to open the run screen; omit to hide the action.
  * @returns The sidebar.
  */
 export function InboxSidebar({
@@ -505,7 +508,8 @@ export function InboxSidebar({
   activeSection = 'inbox',
   showFilters = true,
   title,
-  headerPeek
+  headerPeek,
+  onRunAgent
 }: InboxSidebarProps) {
   const queue = useMemo(() => queueMetrics(items, filters), [items, filters]);
   const projects = useMemo(
@@ -544,6 +548,19 @@ export function InboxSidebar({
             </SidebarMenuButton>
             <SidebarMenuBadge>{ledger.length}</SidebarMenuBadge>
           </SidebarMenuItem>
+          {onRunAgent ? (
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={() => {
+                  setOpenMobile(false);
+                  onRunAgent();
+                }}
+              >
+                <RefreshCwIcon className="size-4" />
+                <span>Re-run triage</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ) : null}
         </SidebarMenu>
         {showFilters ? (
           isMobile ? (

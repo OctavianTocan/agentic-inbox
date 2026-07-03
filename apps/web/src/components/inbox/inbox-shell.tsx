@@ -7,6 +7,7 @@ import {
   HistoryIcon,
   InboxIcon,
   MenuIcon,
+  RefreshCwIcon,
   SearchIcon,
   SquarePenIcon
 } from '@/design-system/components/icons';
@@ -44,7 +45,9 @@ import { orderedItems } from './ordering';
 import { PanelLoading } from './panel-loading';
 import { RunView } from './run-view';
 import {
+  clearRunViewRequest,
   hasSeenInbox,
+  isRunViewRequested,
   markInboxSeen,
   useSharedChatOpen
 } from './session-state';
@@ -118,17 +121,20 @@ type SidebarPeekProps = {
   readonly onFiltersChange: (filters: InboxFilters) => void;
   readonly ledgerCount: number;
   readonly showFilters?: boolean;
+  readonly onRunAgent?: () => void;
 };
 
 /**
  * Left-side hover peek that mirrors the docked desktop rail: Inbox/Audit
- * navigation and, when enabled, the same compact desktop filter menu.
+ * navigation, the re-run action, and, when enabled, the same compact desktop
+ * filter menu.
  *
  * @param items - Triaged items, used for counts and filter facets.
  * @param filters - Active filter facets.
  * @param onFiltersChange - Called with the next filter set on any toggle.
  * @param ledgerCount - Audit event count shown against the Audit link.
  * @param showFilters - Whether to render the filter menu below the nav.
+ * @param onRunAgent - Called to open the run screen; omit to hide the action.
  * @returns The sidebar peek body.
  */
 export function SidebarPeek({
@@ -136,7 +142,8 @@ export function SidebarPeek({
   filters,
   onFiltersChange,
   ledgerCount,
-  showFilters = true
+  showFilters = true,
+  onRunAgent
 }: SidebarPeekProps) {
   return (
     <div className="flex min-h-0 flex-col gap-3 overflow-y-auto p-3">
@@ -165,6 +172,17 @@ export function SidebarPeek({
             {ledgerCount}
           </span>
         </Button>
+        {onRunAgent ? (
+          <Button
+            className="h-9 w-full justify-start gap-2 px-2.5"
+            onClick={onRunAgent}
+            size="sm"
+            variant="ghost"
+          >
+            <RefreshCwIcon className="size-4" />
+            <span className="flex-1 text-left">Re-run triage</span>
+          </Button>
+        ) : null}
       </nav>
       {showFilters ? (
         <InboxFilterMenu
@@ -257,8 +275,17 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
   const [isMobileChatEmpty, setIsMobileChatEmpty] = useState(true);
   const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(false);
   const [hasRun, setHasRun] = useState(false);
+  // Seeded from a pending cross-page request so a click on the audit sidebar's
+  // "Re-run triage" lands on the run screen after navigating back to the inbox.
+  const [runViewRequested, setRunViewRequested] = useState(isRunViewRequested);
   const mobileChatRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
+
+  // The cross-page request is captured into local state on mount; clear the
+  // module flag so a later reload or re-navigation does not re-trigger it.
+  useEffect(() => {
+    clearRunViewRequest();
+  }, []);
 
   const toggleChat = useCallback(() => {
     setIsChatOpen(!isChatOpen);
@@ -434,10 +461,13 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
   );
 
   const isUntriaged = inbox !== null && inbox.summary.processed === 0;
-  // The run screen only appears on a fresh page load of an untriaged inbox:
-  // never while a refetch is in flight, and never once the user has already
-  // passed it in this JS session (so Audit -> Inbox lands straight in the shell).
-  const showRunView = !isLoading && isUntriaged && !hasRun && !hasSeenInbox();
+  // The run screen appears either on a fresh page load of an untriaged inbox
+  // (never while a refetch is in flight, and never once the user has already
+  // passed it this JS session) or when the user deliberately asks to re-run
+  // triage from the sidebar, which forces it regardless of triage state.
+  const showRunView =
+    !isLoading &&
+    (runViewRequested || (isUntriaged && !hasRun && !hasSeenInbox()));
   // On a hard reload the shell would otherwise render (and flash the sidebar)
   // during the first load before data can reveal an untriaged inbox and swap to
   // the run screen. A fresh, still-loading session shows a neutral spinner
@@ -486,6 +516,7 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
                 await refresh();
                 markInboxSeen();
                 setHasRun(true);
+                setRunViewRequested(false);
               }}
               onRun={runTriage}
             />
@@ -512,6 +543,7 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
               items={items}
               ledgerCount={ledger.length}
               onFiltersChange={setFilters}
+              onRunAgent={() => setRunViewRequested(true)}
             />
           }
         />
@@ -532,11 +564,13 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
               items={items}
               ledgerCount={ledger.length}
               onFiltersChange={setFilters}
+              onRunAgent={() => setRunViewRequested(true)}
             />
           }
           items={items}
           ledger={ledger}
           onFiltersChange={setFilters}
+          onRunAgent={() => setRunViewRequested(true)}
           title="Agentic Inbox"
         />
         <SidebarInset className="min-h-0 min-w-0 overflow-hidden">

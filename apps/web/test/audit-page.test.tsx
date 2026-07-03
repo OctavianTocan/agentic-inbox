@@ -1,9 +1,16 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import * as sessionState from '@/components/inbox/session-state';
 import type { UseInbox } from '@/components/inbox/use-inbox';
 import { AuditPage } from '@/components/traces/trace-page';
 import { DesignSystemProvider } from '@/design-system/providers';
 import type { Inbox, InboxItem } from '@/lib/inbox/types';
+
+const routerPush = vi.hoisted(() => vi.fn());
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: routerPush })
+}));
 
 const fakeItem: InboxItem = {
   email: {
@@ -174,5 +181,21 @@ describe('AuditPage', () => {
     );
 
     expect(screen.getByText('0 audit events')).not.toBeNull();
+  });
+
+  it('signals a cross-page run-screen request and navigates to the inbox on Re-run triage', () => {
+    const request = vi.spyOn(sessionState, 'requestRunView');
+    render(
+      <DesignSystemProvider>
+        <AuditPage />
+      </DesignSystemProvider>
+    );
+
+    fireEvent.click(screen.getByText('Re-run triage'));
+
+    expect(request).toHaveBeenCalledTimes(1);
+    expect(routerPush).toHaveBeenCalledWith('/');
+    request.mockRestore();
+    sessionState.clearRunViewRequest();
   });
 });

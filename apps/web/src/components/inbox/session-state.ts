@@ -8,6 +8,7 @@ import { useCallback, useState } from 'react';
 // which would survive reloads.
 let chatOpen = true;
 let hasPassedRunScreen = false;
+let runViewRequested = false;
 
 /**
  * Chat-panel open state shared across the inbox and audit pages so the panel
@@ -35,4 +36,23 @@ export function hasSeenInbox(): boolean {
 /** Mark the run screen as passed for the remainder of this JS session. */
 export function markInboxSeen(): void {
   hasPassedRunScreen = true;
+}
+
+/**
+ * Ask the inbox shell to open the run screen. Used to signal the request across
+ * a client-side navigation from the audit page, where the shell is not mounted
+ * yet; the shell consumes and clears the flag on its next mount.
+ */
+export function requestRunView(): void {
+  runViewRequested = true;
+}
+
+/** Whether a cross-page run-screen request is pending. */
+export function isRunViewRequested(): boolean {
+  return runViewRequested;
+}
+
+/** Clear any pending cross-page run-screen request. */
+export function clearRunViewRequest(): void {
+  runViewRequested = false;
 }
