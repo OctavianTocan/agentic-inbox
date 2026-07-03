@@ -1,21 +1,14 @@
 'use client';
 
+import { ChevronDownIcon } from '@/design-system/components/icons';
 import { AgentSpinner } from '@/design-system/components/ui/agent-spinner';
-import { Badge } from '@/design-system/components/ui/badge';
 import {
-  bySeverityDesc,
-  CATEGORY_LABELS,
-  projectOf,
-  severityBadgeVariant
-} from '@/lib/inbox/labels';
-import type {
-  Category,
-  InboxItem,
-  InboxSummary,
-  Severity
-} from '@/lib/inbox/types';
-
-const SEVERITIES: readonly Severity[] = ['critical', 'high', 'medium', 'low'];
+  Collapsible,
+  CollapsibleAnimatedContent,
+  CollapsibleTrigger
+} from '@/design-system/components/ui/collapsible';
+import { CATEGORY_LABELS, projectOf } from '@/lib/inbox/labels';
+import type { Category, InboxItem, InboxSummary } from '@/lib/inbox/types';
 
 type InboxSummaryBlockProps = {
   readonly summary: InboxSummary | null;
@@ -23,25 +16,7 @@ type InboxSummaryBlockProps = {
   readonly isLoading: boolean;
 };
 
-/** Count of items per severity across triaged emails. */
-function severityCounts(
-  items: readonly InboxItem[]
-): Readonly<Record<Severity, number>> {
-  const counts: Record<Severity, number> = {
-    critical: 0,
-    high: 0,
-    medium: 0,
-    low: 0
-  };
-  for (const item of items) {
-    if (item.decision) {
-      counts[item.decision.severity] += 1;
-    }
-  }
-  return counts;
-}
-
-/** Distinct project chips with their item counts, busiest first. */
+/** Distinct projects with their item counts, busiest first. */
 function projectChips(
   items: readonly InboxItem[]
 ): readonly { readonly name: string; readonly count: number }[] {
@@ -101,11 +76,11 @@ function summaryText(
 }
 
 /**
- * At-a-glance inbox roll-up: counts, project chips, and a severity breakdown.
- * Shows a spinner while the inbox is still computing.
+ * At-a-glance inbox roll-up: a collapsible prose summary of the agent's work,
+ * open by default. Shows a spinner while the inbox is still computing.
  *
  * @param summary - Roll-up counts, or null before the first load.
- * @param items - Triaged items used for chips and the severity breakdown.
+ * @param items - Triaged items used to phrase the summary.
  * @param isLoading - Whether the inbox is still loading.
  * @returns The summary band.
  */
@@ -123,38 +98,21 @@ export function InboxSummaryBlock({
     );
   }
 
-  const severities = severityCounts(items);
-  const chips = projectChips(items);
-  const sorted = [...items].sort(bySeverityDesc);
-
   return (
-    <div className="flex flex-col gap-3 border-b bg-card/70 px-4 py-3 sm:px-6 sm:py-4">
-      <div className="max-w-3xl">
-        <p className="text-sm leading-6 max-md:line-clamp-3">
-          {summaryText(summary, items)}
-        </p>
-      </div>
-      <div className="flex flex-wrap items-center gap-2 max-md:flex-nowrap max-md:overflow-x-auto max-md:pb-0.5">
-        {chips.map((chip) => (
-          <Badge key={chip.name} variant="outline">
-            {chip.name}
-            <span className="ml-1 text-muted-foreground tabular-nums">
-              {chip.count}
-            </span>
-          </Badge>
-        ))}
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        {SEVERITIES.filter((severity) => severities[severity] > 0).map(
-          (severity) => (
-            <Badge key={severity} variant={severityBadgeVariant(severity)}>
-              {severity}
-              <span className="ml-1 tabular-nums">{severities[severity]}</span>
-            </Badge>
-          )
-        )}
-        <span className="sr-only">{sorted.length} triaged emails</span>
-      </div>
-    </div>
+    <Collapsible className="flex flex-col border-b bg-card/70" defaultOpen>
+      <CollapsibleTrigger className="group flex w-full items-center gap-1.5 px-4 py-3 text-left font-medium text-muted-foreground text-xs uppercase tracking-wide outline-none transition-colors hover:text-foreground focus-visible:text-foreground sm:px-6 sm:py-4">
+        <ChevronDownIcon className="-rotate-90 size-3.5 shrink-0 transition-transform group-data-[panel-open]:rotate-0" />
+        At a glance
+      </CollapsibleTrigger>
+      <CollapsibleAnimatedContent>
+        <div className="flex flex-col gap-3 px-4 pb-3 sm:px-6 sm:pb-4">
+          <div className="max-w-3xl">
+            <p className="text-sm leading-6 max-md:line-clamp-3">
+              {summaryText(summary, items)}
+            </p>
+          </div>
+        </div>
+      </CollapsibleAnimatedContent>
+    </Collapsible>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo } from 'react';
+import { type ReactNode, useMemo, useState } from 'react';
 import {
   CheckIcon,
   ChevronDownIcon,
@@ -11,6 +11,13 @@ import {
   ListFilterIcon
 } from '@/design-system/components/icons';
 import { Button } from '@/design-system/components/ui/button';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger
+} from '@/design-system/components/ui/drawer';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,8 +37,10 @@ import {
   SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarResizeHandle
+  SidebarResizeHandle,
+  useSidebar
 } from '@/design-system/components/ui/sidebar';
+import { useIsMobile } from '@/design-system/hooks/use-mobile';
 import { cn } from '@/design-system/lib/utils';
 import { CATEGORY_LABELS, projectOf, STATUS_LABELS } from '@/lib/inbox/labels';
 import type {
@@ -42,6 +51,7 @@ import type {
   Severity
 } from '@/lib/inbox/types';
 import { EMPTY_FILTERS, type InboxFilters } from './filters';
+import { SidebarHeaderSlice } from './top-bar';
 
 const STATUSES: readonly EmailStatus[] = [
   'needs_attention',
@@ -57,6 +67,8 @@ type InboxSidebarProps = {
   readonly onFiltersChange: (filters: InboxFilters) => void;
   readonly activeSection?: 'inbox' | 'audit';
   readonly showFilters?: boolean;
+  readonly title?: string;
+  readonly headerPeek?: ReactNode;
 };
 
 type FilterMeta = {
@@ -174,8 +186,8 @@ function SidebarMetricSection({
         {metrics.map((metric) => (
           <Button
             className={cn(
-              'h-7 w-full justify-between px-2',
-              metric.isActive && 'bg-muted'
+              'h-7 w-full justify-between px-2 hover:bg-sidebar-accent-hover hover:text-sidebar-accent-foreground',
+              metric.isActive && 'bg-sidebar-accent-active'
             )}
             key={metric.label}
             onClick={() => onFiltersChange(metric.filters)}
@@ -244,7 +256,7 @@ export function InboxFilterMenu({
       <DropdownMenuTrigger
         render={
           <Button
-            className="h-9 w-full justify-between px-2.5"
+            className="h-9 w-full justify-between px-2.5 hover:bg-sidebar-accent-hover hover:text-sidebar-accent-foreground aria-expanded:bg-sidebar-accent-hover aria-expanded:text-sidebar-accent-foreground"
             size="sm"
             variant="outline"
           />
@@ -392,6 +404,54 @@ export function InboxFilterPanel({
   );
 }
 
+/** Mobile filter affordance: opens a swipe-dismissable bottom sheet of filter controls. */
+function InboxFilterDrawer({
+  items,
+  filters,
+  onFiltersChange
+}: Omit<InboxSidebarProps, 'ledger'>) {
+  const [isOpen, setIsOpen] = useState(false);
+  const meta = useMemo(() => filterMeta(items, filters), [items, filters]);
+  const hasActiveFilter = meta.activeCount > 0;
+
+  return (
+    <Drawer onOpenChange={setIsOpen} open={isOpen}>
+      <DrawerTrigger
+        render={
+          <Button
+            className="h-9 w-full justify-between px-2.5"
+            size="sm"
+            variant="outline"
+          />
+        }
+      >
+        <span className="flex items-center gap-2">
+          <ListFilterIcon className="size-4" />
+          Filters
+        </span>
+        <span className="flex items-center gap-1 text-muted-foreground">
+          {hasActiveFilter ? (
+            <span className="tabular-nums">{meta.activeCount}</span>
+          ) : null}
+          <ChevronDownIcon className="size-3.5" />
+        </span>
+      </DrawerTrigger>
+      <DrawerContent>
+        <DrawerHeader className="sr-only">
+          <DrawerTitle>Filter inbox</DrawerTitle>
+        </DrawerHeader>
+        <div className="min-h-0 overflow-y-auto px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <InboxFilterPanel
+            filters={filters}
+            items={items}
+            onFiltersChange={onFiltersChange}
+          />
+        </div>
+      </DrawerContent>
+    </Drawer>
+  );
+}
+
 /** Mobile drawer group for one filter facet. */
 function FacetButtonGroup<T extends string>({
   label,
@@ -443,26 +503,29 @@ export function InboxSidebar({
   filters,
   onFiltersChange,
   activeSection = 'inbox',
-  showFilters = true
+  showFilters = true,
+  title,
+  headerPeek
 }: InboxSidebarProps) {
-  const meta = useMemo(() => filterMeta(items, filters), [items, filters]);
   const queue = useMemo(() => queueMetrics(items, filters), [items, filters]);
   const projects = useMemo(
     () => projectMetrics(items, filters),
     [items, filters]
   );
+  const isMobile = useIsMobile();
+  const { setOpenMobile } = useSidebar();
 
   return (
     <Sidebar collapsible="offcanvas" className="border-r">
+      {!isMobile && title !== undefined ? (
+        <SidebarHeaderSlice peek={headerPeek} title={title} />
+      ) : null}
       <SidebarHeader className="gap-3 px-3 py-3">
-        <div className="flex items-center gap-2 font-semibold text-sm">
-          <InboxIcon className="size-4" />
-          Agentic Inbox
-        </div>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               isActive={activeSection === 'inbox'}
+              onClick={() => setOpenMobile(false)}
               render={<Link href="/" />}
             >
               <InboxIcon className="size-4" />
@@ -473,6 +536,7 @@ export function InboxSidebar({
           <SidebarMenuItem>
             <SidebarMenuButton
               isActive={activeSection === 'audit'}
+              onClick={() => setOpenMobile(false)}
               render={<Link href="/audit" />}
             >
               <HistoryIcon className="size-4" />
@@ -482,39 +546,34 @@ export function InboxSidebar({
           </SidebarMenuItem>
         </SidebarMenu>
         {showFilters ? (
-          <InboxFilterMenu
-            filters={filters}
-            items={items}
-            onFiltersChange={onFiltersChange}
-          />
+          isMobile ? (
+            <InboxFilterDrawer
+              filters={filters}
+              items={items}
+              onFiltersChange={onFiltersChange}
+            />
+          ) : (
+            <InboxFilterMenu
+              filters={filters}
+              items={items}
+              onFiltersChange={onFiltersChange}
+            />
+          )
         ) : null}
       </SidebarHeader>
       <SidebarContent className="gap-5 px-3 py-3">
+        <SidebarMetricSection
+          label="Queue"
+          metrics={queue}
+          onFiltersChange={onFiltersChange}
+        />
         {showFilters ? (
-          <>
-            <SidebarMetricSection
-              label="Queue"
-              metrics={queue}
-              onFiltersChange={onFiltersChange}
-            />
-            <SidebarMetricSection
-              label="Projects"
-              metrics={projects}
-              onFiltersChange={onFiltersChange}
-            />
-            <div className="px-2 text-muted-foreground text-xs leading-5">
-              {meta.activeCount > 0
-                ? `${meta.activeCount} filter${meta.activeCount === 1 ? '' : 's'} applied`
-                : 'No filters applied'}
-            </div>
-          </>
-        ) : (
           <SidebarMetricSection
-            label="Queue"
-            metrics={queue}
+            label="Projects"
+            metrics={projects}
             onFiltersChange={onFiltersChange}
           />
-        )}
+        ) : null}
       </SidebarContent>
       <SidebarResizeHandle />
     </Sidebar>

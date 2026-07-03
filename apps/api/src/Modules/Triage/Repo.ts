@@ -35,6 +35,7 @@ export class DecisionsRepo extends Context.Service<
     readonly upsert: (decision: Decision) => Effect.Effect<Decision>;
     readonly get: (emailId: EmailIdType) => Effect.Effect<Decision | null>;
     readonly list: () => Effect.Effect<ReadonlyArray<Decision>>;
+    readonly deleteAll: () => Effect.Effect<void>;
   }
 >()('@apps/api/Triage/DecisionsRepo') {}
 
@@ -99,7 +100,11 @@ export const DecisionsRepoBody: Layer.Layer<
       return rows.map((row) => decodeDecision(row as Record<string, unknown>));
     });
 
-    return { upsert, get, list } as const;
+    const deleteAll = Effect.fn('DecisionsRepo.deleteAll')(function* () {
+      yield* sql`DELETE FROM decisions`.pipe(Effect.orDie);
+    });
+
+    return { upsert, get, list, deleteAll } as const;
   })
 );
 

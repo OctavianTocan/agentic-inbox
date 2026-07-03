@@ -3,50 +3,50 @@ version: alpha
 name: Cogram Agentic Inbox
 description: Product-focused AI application system extracted from effect-api-layout.
 colors:
-  primary: "oklch(0.205 0.005 85)"
-  primary-foreground: "oklch(0.985 0.003 85)"
-  background: "oklch(0.984 0.003 85)"
-  foreground: "oklch(0.145 0.005 85)"
-  card: "oklch(1 0 0)"
-  card-foreground: "oklch(0.145 0.005 85)"
-  secondary: "oklch(0.97 0.003 85)"
-  secondary-foreground: "oklch(0.205 0.005 85)"
-  muted: "oklch(0.97 0.003 85)"
-  muted-foreground: "oklch(0.556 0.003 85)"
-  accent: "oklch(0.97 0.003 85)"
-  accent-foreground: "oklch(0.205 0.005 85)"
-  destructive: "oklch(0.577 0.245 27.325)"
-  success: "oklch(50.8% 0.118 165.612)"
-  border: "oklch(0.946 0.001 85)"
-  input: "oklch(1 0 0)"
-  ring: "oklch(0.708 0.003 85)"
+  primary: "#a55a43"
+  primary-foreground: "#fffaf7"
+  background: "#f9f9f7"
+  foreground: "#2d2d2b"
+  card: "#fffefa"
+  card-foreground: "#2d2d2b"
+  secondary: "#efeee9"
+  secondary-foreground: "#2d2d2b"
+  muted: "#efeee9"
+  muted-foreground: "#6f6a62"
+  accent: "#f2e6df"
+  accent-foreground: "#2d2d2b"
+  destructive: "#a6543d"
+  success: "#007846"
+  border: "#ddd9d1"
+  input: "#fffefa"
+  ring: "#cc7d5e"
 typography:
   display:
-    fontFamily: Redaction
+    fontFamily: Manrope
     fontSize: 3rem
     fontWeight: 700
-    lineHeight: 1
+    lineHeight: 1.15
     letterSpacing: 0
   h1:
-    fontFamily: Geist Sans
+    fontFamily: Manrope
     fontSize: 2.25rem
     fontWeight: 700
-    lineHeight: 1.1
+    lineHeight: 1.15
     letterSpacing: 0
   body:
-    fontFamily: Geist Sans
+    fontFamily: DM Sans
     fontSize: 1rem
     fontWeight: 400
     lineHeight: 1.6
     letterSpacing: 0
   label:
-    fontFamily: Geist Sans
+    fontFamily: DM Sans
     fontSize: 0.875rem
     fontWeight: 500
     lineHeight: 1.4
     letterSpacing: 0
   code:
-    fontFamily: Geist Mono Variable
+    fontFamily: Fira Code
     fontSize: 0.875rem
     fontWeight: 400
     lineHeight: 1.5
@@ -132,34 +132,37 @@ components:
 
 ## Overview
 
-This system is a quiet, dense product UI for AI workflows. It should feel like
-an operational tool: crisp, calm, fast to scan, and ready for repeated daily
-use. The design source is `effect-api-layout`, especially the primitives now in
-`apps/web/src/design-system`, the headless chat pieces in `apps/web/src/ai-ui`,
-and the component catalog examples from `apps/design`.
+This system is a quiet, dense product UI for an AEC agentic inbox. It should
+feel like an operational tool: crisp, calm, fast to scan, and ready for
+repeated daily use. The current app is the product, not a showcase: first-run
+triage, inbox review, detail inspection, approval/deny/undo, agent chat, and
+Audit are the primary surfaces.
 
 ## Colors
 
-The palette is neutral-first and OKLCH-based, with strong contrast between
-foreground and background and restrained accents. `primary` is near-black in
-light mode and near-white in dark mode. `secondary`, `muted`, and `accent`
-remain close to the surface color so controls read as product chrome, not
-marketing decoration. Use `success` sparingly for completed checks and
-`destructive` only for real risk.
+The palette is neutral-first and follows the light Codex-like theme used in
+the app: warm off-white surfaces, deep ink text, a muted coral accent, and a
+deeper copper primary for filled controls with light text. There should be no
+blue UI chrome. `secondary`, `muted`, and `accent` remain close to the surface
+color so controls read as product chrome, not marketing decoration. Use
+`success` sparingly for completed checks and `destructive` only for real risk.
 
 ## Typography
 
-Use Geist Sans for almost everything, Geist Mono for code and command text, and
-Redaction only when a screen needs a deliberate display moment. Letter spacing
-stays at `0`; do not use squeezed hero typography. Product panels should keep
+Typography follows the "dashboard" trio: Manrope for headings and display,
+DM Sans for body, labels, and UI text, and Fira Code for code and command
+text. Manrope's optical corrections keep dense dashboards legible; DM Sans
+carries labels and descriptions with compact efficiency. Letter spacing stays
+at `0`; do not use squeezed hero typography. Product panels should keep
 headings compact and reserve display type for top-level pages.
 
 ## Layout
 
-Prefer full-width product bands with constrained inner content over nested
-cards. Cards are for repeated records, compact tool surfaces, and framed
-previews. Dense grids, sticky sidebars, stable toolbar sizes, and predictable
-spacing are preferred over decorative compositions.
+Prefer full-width product bands and resizable work panes over nested cards.
+The desktop shell uses a collapsible/resizable left sidebar, an inbox list, a
+pinned detail pane header, and a collapsible/resizable right agent panel.
+Audit keeps the left sidebar for navigation while hiding inbox filters. Mobile
+uses a compact top bar: menu, agent-search entry, and Audit icon.
 
 ## Elevation & Depth
 
@@ -176,15 +179,16 @@ Avoid nested rounded rectangles that make panels feel padded inside padding.
 ## Components
 
 Default to local primitives from `apps/web/src/design-system/components/ui`
-before adding new UI. AI chat surfaces should build from the vendored
-`ai-ui` primitives and the shadcn chat primitives when installed:
-`message-scroller`, `message`, `bubble`, `attachment`, and `marker`. The
-default `/` route is a component showcase and should remain useful as a manual
-visual smoke test.
+before adding new UI. AI chat surfaces build from the vendored `ai-ui`
+primitives and local chat components. The default `/` route is the inbox
+experience. The first-run screen can appear every visit for now and must keep
+the page locked without stray mobile scroll.
 
 ## Do's and Don'ts
 
 Do keep the UI quiet, readable, and action-oriented. Do use icon buttons for
-tools and text buttons for clear commands. Do preserve the reader's scroll
-intent in streaming chat. Do not add decorative gradient blobs, oversized
-marketing heroes, nested cards, negative letter spacing, or one-hue palettes.
+panel toggles and text buttons for clear commands. Do preserve the reader's
+scroll intent in streaming chat. Do use subtle edge fades only to clarify
+sticky list titles. Do not add decorative gradient blobs, oversized marketing
+heroes, nested cards, negative letter spacing, one-hue palettes, or blue
+chrome.

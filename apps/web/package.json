@@ -14,10 +14,9 @@
   "dependencies": {
     "@base-ui/react": "catalog:",
     "@central-icons-react/round-outlined-radius-2-stroke-1.5": "catalog:",
-    "@fontsource-variable/geist-mono": "catalog:",
-    "@fontsource/geist-sans": "catalog:",
-    "@fontsource/redaction": "catalog:",
-    "@fontsource/redaction-70": "catalog:",
+    "@fontsource-variable/dm-sans": "^5.2.8",
+    "@fontsource-variable/fira-code": "^5.2.7",
+    "@fontsource-variable/manrope": "^5.2.8",
     "@hookform/resolvers": "catalog:",
     "@pierre/diffs": "catalog:",
     "@shadcn/react": "catalog:",

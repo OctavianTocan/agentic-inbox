@@ -7,7 +7,7 @@ import { IdGenerator, type LanguageModel } from 'effect/unstable/ai';
 import { FetchHttpClient } from 'effect/unstable/http';
 
 /** Model id, overridable via `OPENROUTER_MODEL`; defaults to the spike-proven `openai/gpt-5.5`. */
-export const MODEL = Bun.env.OPENROUTER_MODEL ?? 'openai/gpt-5.5';
+export const MODEL = process.env.OPENROUTER_MODEL ?? 'openai/gpt-5.5';
 
 const ClientLive = OpenRouterClient.layerConfig({
   apiKey: Config.map(Config.string('OPENROUTER_API_KEY'), Redacted.make)

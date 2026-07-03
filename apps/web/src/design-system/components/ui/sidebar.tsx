@@ -18,6 +18,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "./sheet";
+import { SIDEBAR_WIDTH_COOKIE_NAME } from "./sidebar-width";
 import { Skeleton } from "./skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
 
@@ -64,28 +65,6 @@ function useSidebar() {
   return context;
 }
 
-const SIDEBAR_WIDTH_COOKIE_NAME = "sidebar_width";
-
-/** Read the saved sidebar width from cookies, falling back to the default. */
-function getPersistedWidth(cookieName: string, defaultWidth: number): number {
-  if (typeof document === "undefined") {
-    return defaultWidth;
-  }
-  // biome-ignore lint/suspicious/noDocumentCookie: cookieStore is Chromium-only, document.cookie works cross-browser
-  const match = document.cookie.match(
-    new RegExp(`(?:^|; )${cookieName}=([^;]*)`),
-  );
-  if (!match) {
-    return defaultWidth;
-  }
-  const persistedWidth = match[1];
-  if (persistedWidth === undefined) {
-    return defaultWidth;
-  }
-  const val = Number.parseInt(persistedWidth, 10);
-  return Number.isNaN(val) ? defaultWidth : val;
-}
-
 /** Save the sidebar width to a cookie for later sessions. */
 function persistWidth(cookieName: string, widthPx: number) {
   if (typeof document === "undefined") {
@@ -103,6 +82,7 @@ type SidebarProviderProps = React.ComponentProps<"div"> & {
   keyboardShortcut?: string | false;
   resizable?: boolean;
   defaultWidth?: number;
+  persistedWidth?: number | undefined;
   minWidth?: number;
   maxWidth?: number;
 };
@@ -116,6 +96,7 @@ function SidebarProvider({
   keyboardShortcut = SIDEBAR_KEYBOARD_SHORTCUT,
   resizable = false,
   defaultWidth = 256,
+  persistedWidth,
   minWidth = 220,
   maxWidth = 480,
   className,
@@ -144,11 +125,7 @@ function SidebarProvider({
     [setOpenProp, open, cookieName],
   );
 
-  const [width, setWidth] = React.useState(() =>
-    resizable
-      ? getPersistedWidth(SIDEBAR_WIDTH_COOKIE_NAME, defaultWidth)
-      : defaultWidth,
-  );
+  const [width, setWidth] = React.useState(persistedWidth ?? defaultWidth);
   const [isDragging, setIsDragging] = React.useState(false);
 
   const toggleSidebar = React.useCallback(() => {
@@ -835,7 +812,6 @@ function SidebarResizeHandle({
     setOpen,
     width,
     setWidth,
-    isDragging: contextIsDragging,
     setIsDragging,
     resizable,
     minWidth,
@@ -880,14 +856,12 @@ function SidebarResizeHandle({
     onExpand,
   });
 
-  const prevIsDragging = React.useRef(isDragging);
-  if (prevIsDragging.current !== isDragging) {
-    prevIsDragging.current = isDragging;
+  React.useEffect(() => {
     setIsDragging(isDragging);
-  }
+  }, [isDragging, setIsDragging]);
 
   React.useEffect(() => {
-    if (contextIsDragging || !resizable) {
+    if (isDragging || !resizable) {
       return;
     }
     if (wrapperRef.current) {
@@ -901,7 +875,7 @@ function SidebarResizeHandle({
         }
       }
     }
-  }, [contextIsDragging, resizable, wrapperRef, width, setWidth]);
+  }, [isDragging, resizable, wrapperRef, width, setWidth]);
 
   if (!resizable) {
     return null;

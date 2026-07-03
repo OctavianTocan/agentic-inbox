@@ -68,6 +68,15 @@ export const Archive = Tool.make('archive', {
   needsApproval: true
 }).annotate(Tool.Strict, true);
 
+/**
+ * The gate that decides whether a triage action pauses for human approval.
+ *
+ * @param sensitive - The deterministic policy verdict for the email under triage.
+ * @returns True when the action must pause for approval; false when it may execute autonomously.
+ */
+export const triageActionNeedsApproval = (sensitive: boolean): boolean =>
+  sensitive;
+
 /** Leaves an email for human review without sending or committing anything. */
 export const FlagForReview = Tool.make('flag_for_review', {
   description:
@@ -131,7 +140,9 @@ export const GetThread = Tool.make('get_thread', {
 /** Lists ledger entries, optionally for one email. */
 export const ListLedger = Tool.make('list_ledger', {
   description: 'List recent action ledger entries.',
-  parameters: Schema.Struct({ emailId: Schema.optionalKey(EmailId) }),
+  parameters: Schema.Struct({
+    emailId: Schema.optionalKey(Schema.NullOr(EmailId))
+  }),
   success: Schema.Array(
     Schema.Struct({
       id: LedgerEntryId,
@@ -150,6 +161,35 @@ export const TriageToolkit = Toolkit.make(
   Archive,
   FlagForReview
 );
+
+/**
+ * Builds a triage toolset whose send/archive tools pause for approval only
+ * when the current email is sensitive, so routine work executes autonomously.
+ *
+ * @param sensitive - The deterministic policy verdict for the email under triage.
+ * @returns A toolkit with the same tool shape as {@link TriageToolkit}.
+ */
+export const makeTriageToolkit = (sensitive: boolean): typeof TriageToolkit => {
+  const gatedSendReply = Tool.make('send_reply', {
+    description:
+      'Send a concise plain-text reply. Do not use for sensitive commitments unless approval has been granted.',
+    parameters: SendReplyParams,
+    success: ToolEntryResult,
+    needsApproval: () => triageActionNeedsApproval(sensitive)
+  }).annotate(Tool.Strict, true);
+  const gatedArchive = Tool.make('archive', {
+    description: 'Archive an email that needs no human action and no reply.',
+    parameters: FileParams,
+    success: ToolEntryResult,
+    needsApproval: () => triageActionNeedsApproval(sensitive)
+  }).annotate(Tool.Strict, true);
+  return Toolkit.make(
+    RecordTriage,
+    gatedSendReply,
+    gatedArchive,
+    FlagForReview
+  );
+};
 
 /** The chat agent toolset. */
 export const ChatToolkit = Toolkit.make(
@@ -265,7 +305,7 @@ export const makeChatHandlers = (
         )
       ),
     list_ledger: (params) =>
-      actions.listLedger(params.emailId).pipe(
+      actions.listLedger(params.emailId ?? undefined).pipe(
         Effect.map((entries) =>
           entries.map((entry) => ({
             id: entry.id,

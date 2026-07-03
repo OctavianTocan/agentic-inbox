@@ -31,8 +31,9 @@ Rules:
 - Then choose one next action.
 - For daily reports and status updates, archive when no reply is needed.
 - For routine RFIs, submittals, vendor quotes, schedule pings, or other routine coordination, send a short plain-text acknowledgement only.
-- For sensitive or low-confidence matters, flag_for_review or propose a reply that can pause for approval.
-- Never promise cost, schedule, legal, safety, or owner commitments.
+- For a sensitive email that genuinely warrants a response (change orders, claims or disputes, owner escalations that expect a reply), draft that reply with send_reply. It will pause for the user's approval and will never be sent autonomously, so the user gets an editable draft to approve or deny.
+- Use flag_for_review only for sensitive or low-confidence email where no reply fits, such as an FYI safety report; it is the fallback when no action is appropriate.
+- Never promise cost, schedule, legal, safety, or owner commitments; a sensitive draft proposes wording for the human, it does not commit anything.
 
 Decision:
 emailId: ${decision.emailId}

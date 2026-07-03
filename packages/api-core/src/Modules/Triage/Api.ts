@@ -4,6 +4,7 @@ import {
   HttpApiSchema,
   OpenApi
 } from 'effect/unstable/httpapi';
+import { TriageRunRequest } from './Domain';
 import { TriageRunFailed } from './Errors';
 import { TriageStreamEvent } from './Events';
 import { Inbox } from './Inbox';
@@ -12,6 +13,7 @@ import { Inbox } from './Inbox';
 export class TriageApi extends HttpApiGroup.make('triage')
   .add(
     HttpApiEndpoint.post('run', '/triage/run', {
+      payload: TriageRunRequest,
       success: HttpApiSchema.StreamSse({
         data: TriageStreamEvent,
         error: TriageRunFailed
@@ -21,7 +23,7 @@ export class TriageApi extends HttpApiGroup.make('triage')
       .annotate(OpenApi.Summary, 'Run batch triage')
       .annotate(
         OpenApi.Description,
-        'Process the inbox and stream per-email events (started, decision, action, approval_pending, failed, done) as Server-Sent Events.'
+        'Process the inbox and stream per-email events (started, decision, action, approval_pending, failed, done) as Server-Sent Events. Pass fresh=true to clear all prior triage state and re-process every email.'
       )
   )
   .add(

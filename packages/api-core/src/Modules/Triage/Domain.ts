@@ -77,3 +77,13 @@ export class Decision extends Schema.Class<Decision>('Decision')({
       'Whether the policy classifies this email as sensitive (never auto-actioned).'
   })
 }) {}
+
+/** Request body for a triage run. */
+export class TriageRunRequest extends Schema.Class<TriageRunRequest>(
+  'TriageRunRequest'
+)({
+  fresh: Schema.optional(Schema.Boolean).annotate({
+    description:
+      'When true, clear all prior decisions, actions, and triage conversations, then re-triage every email.'
+  })
+}) {}

@@ -68,11 +68,9 @@ type AgentSpinnerProps = {
 };
 
 /**
- * Terminal-style text spinner that cycles monospace glyph frames in place.
- *
- * Renders a fixed-width inline span sized to the variant's character count so
- * animation never shifts surrounding layout, and inherits color via
- * `currentColor`. Honors `prefers-reduced-motion` by holding the first frame.
+ * Terminal-style text spinner that cycles monospace glyph frames without
+ * shifting surrounding layout, at any size or variant. Inherits color via
+ * `currentColor` and honors `prefers-reduced-motion` by holding the first frame.
  *
  * @param variant - Which frame set and interval to animate.
  * @param size - Glyph font size in `rem`.
@@ -112,11 +110,18 @@ export function AgentSpinner({
     <span
       aria-label={label}
       className={cn(
-        "inline-flex shrink-0 items-center justify-center overflow-hidden text-center font-mono leading-none tabular-nums",
+        "inline-flex shrink-0 items-center justify-center overflow-hidden text-center font-mono tabular-nums",
         className,
       )}
       role="status"
-      style={{ width: `${frameWidth}ch`, fontSize: `${size}rem` }}
+      // Fixed height + lineHeight keep the box stable: braille/box glyphs can
+      // fall back to a font with a taller line box than the surrounding mono.
+      style={{
+        width: `${frameWidth}ch`,
+        height: "1em",
+        lineHeight: "1em",
+        fontSize: `${size}rem`,
+      }}
     >
       {frames[index] ?? frames[0]}
     </span>

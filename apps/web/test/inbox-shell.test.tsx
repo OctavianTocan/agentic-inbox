@@ -1,7 +1,28 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor
+} from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { InboxShell } from '@/components/inbox/inbox-shell';
 import { DesignSystemProvider } from '@/design-system/providers';
+
+const mobileState = vi.hoisted(() => ({ isMobile: false }));
+
+vi.mock('@/design-system/hooks/use-mobile', async () => {
+  const actual = await vi.importActual<
+    typeof import('@/design-system/hooks/use-mobile')
+  >('@/design-system/hooks/use-mobile');
+  return { ...actual, useIsMobile: () => mobileState.isMobile };
+});
+
+afterEach(() => {
+  cleanup();
+  mobileState.isMobile = false;
+});
 
 vi.mock('@/lib/inbox/client', async () => {
   const { buildMockInbox } = await import('@/lib/inbox/mock');
@@ -19,21 +40,9 @@ vi.mock('@/lib/inbox/client', async () => {
 });
 
 vi.mock('@/components/inbox/run-view', () => ({
-  RunView: ({
-    items,
-    onComplete
-  }: {
-    readonly items: readonly { readonly email: { readonly subject: string } }[];
-    readonly onComplete: () => Promise<void> | void;
-  }) => (
+  RunView: () => (
     <section>
       <h1>Run the agent across the inbox?</h1>
-      {items.map((item) => (
-        <p key={item.email.subject}>{item.email.subject}</p>
-      ))}
-      <button onClick={() => void onComplete()} type="button">
-        Open current inbox
-      </button>
     </section>
   )
 }));
@@ -48,39 +57,117 @@ function renderInboxShell() {
 }
 
 describe('InboxShell', () => {
-  it('shows the run view first, then the populated inbox with resizable list/detail/chat panels', async () => {
+  it('lands straight in the populated inbox for an already-triaged snapshot, skipping the run view', async () => {
     const { container } = renderInboxShell();
 
-    expect(screen.getByText('Run the agent across the inbox?')).toBeDefined();
-    expect(screen.queryByText('No emails match these filters.')).toBeNull();
-
     expect(
-      await screen.findByText(
-        /INCIDENT REPORT - Bay Street - fall arrest anchor/
-      )
-    ).toBeDefined();
+      (
+        await screen.findAllByText(
+          /RFI-187: Lobby east wall finish at Riverside Tower/
+        )
+      ).length
+    ).toBeGreaterThan(0);
 
-    fireEvent.click(screen.getByText('Open current inbox'));
-
-    await waitFor(() => {
-      expect(screen.queryByText('Run the agent across the inbox?')).toBeNull();
-    });
+    expect(screen.queryByText('Run the agent across the inbox?')).toBeNull();
     expect(
       screen.getAllByText('Awaiting your approval').length
-    ).toBeGreaterThan(0);
-    expect(
-      screen.getAllByText(/RFI-187: Lobby east wall finish at Riverside Tower/)
-        .length
     ).toBeGreaterThan(0);
     expect(screen.getByLabelText('Hide chat')).toBeDefined();
     expect(screen.queryByLabelText('Stop generating')).toBeNull();
 
+    // Each column owns its own header slice, so the sidebar hosts the sole
+    // sidebar toggle and the only app title; the new-chat control lives in the
+    // chat header controls, mounted for layout stability but hidden while the
+    // thread is empty.
+    expect(screen.getByLabelText('Hide sidebar')).toBeDefined();
+    expect(screen.queryByLabelText('Toggle Sidebar')).toBeNull();
+    expect(screen.getAllByText('Agentic Inbox')).toHaveLength(1);
+    const newChat = screen.getByLabelText('New chat');
+    expect(newChat.getAttribute('aria-hidden')).toBe('true');
+
+    // Nothing is selected on arrival: the detail pane is hidden and the list
+    // owns the full center space until the user opens an email.
+    expect(screen.queryByLabelText('Close email')).toBeNull();
     const panelStyles = Array.from(
       container.querySelectorAll('[data-panel]')
     ).map((panel) => panel.getAttribute('style') ?? '');
+    expect(panelStyles).toHaveLength(1);
 
-    expect(panelStyles[0]).toContain('flex: 30 1 0px');
-    expect(panelStyles[1]).toContain('flex: 42 1 0px');
-    expect(panelStyles[2]).toContain('flex: 28 1 0px');
+    const chatAside = container.querySelector('[data-slot="chat-slot"]');
+    expect(chatAside?.getAttribute('data-state')).toBe('expanded');
+  });
+
+  it('opens the detail panel on email select and closes it from its header control', async () => {
+    const { container } = renderInboxShell();
+
+    await screen.findAllByText(
+      /RFI-187: Lobby east wall finish at Riverside Tower/
+    );
+
+    // No detail panel until an email is opened.
+    expect(screen.queryByLabelText('Close email')).toBeNull();
+
+    const row = container.querySelector('[data-email-id]');
+    expect(row).not.toBeNull();
+    if (row) {
+      fireEvent.click(row);
+    }
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Close email')).toBeDefined();
+    });
+
+    fireEvent.click(screen.getByLabelText('Close email'));
+
+    await waitFor(() => {
+      expect(screen.queryByLabelText('Close email')).toBeNull();
+    });
+  });
+});
+
+describe('InboxShell mobile', () => {
+  it('focuses the chat composer when the Ask agent bar opens the chat sheet', async () => {
+    mobileState.isMobile = true;
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      renderInboxShell();
+
+      await vi.waitFor(() => {
+        expect(screen.getByText('Ask agent')).toBeDefined();
+      });
+
+      fireEvent.click(screen.getByText('Ask agent'));
+
+      // Focus is driven off the open transition, past vaul's 500ms animation.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(700);
+      });
+
+      await vi.waitFor(() => {
+        expect(document.activeElement?.getAttribute('data-slot')).toBe(
+          'composer-textarea'
+        );
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('mounts the mobile top bar inside the overscroll-locked wrapper, not the scrollable list', async () => {
+    mobileState.isMobile = true;
+    const { container } = renderInboxShell();
+
+    await screen.findByText('Ask agent');
+
+    const askBar = screen.getByText('Ask agent');
+    const lockedWrapper = container.querySelector('.overscroll-none');
+    expect(lockedWrapper).not.toBeNull();
+
+    const scrollRegion = lockedWrapper?.querySelector('.overflow-y-auto');
+    expect(scrollRegion).not.toBeNull();
+    // The bar must sit outside the scroll region so dragging it cannot scroll
+    // it off-screen.
+    expect(scrollRegion?.contains(askBar)).toBe(false);
+    expect(lockedWrapper?.contains(askBar)).toBe(true);
   });
 });

@@ -39,6 +39,7 @@ export class ActionService extends Context.Service<
       entryId: LedgerEntryIdType,
       actor: ActorType
     ) => Effect.Effect<LedgerEntry, ActionNotFound | ActionNotUndoable>;
+    readonly clearLedger: () => Effect.Effect<void>;
   }
 >()('@apps/api/Actions/ActionService') {}
 
@@ -128,13 +129,18 @@ export const ActionServiceBody: Layer.Layer<
       });
     });
 
+    const clearLedger = Effect.fn('ActionService.clearLedger')(function* () {
+      yield* ledger.deleteAll();
+    });
+
     return {
       recordTriage,
       sendReply,
       archive,
       flagForReview,
       listLedger,
-      undoAction
+      undoAction,
+      clearLedger
     } as const;
   })
 );

@@ -22,6 +22,9 @@ services:
       - "${DB_PORT:-5442}:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
+      # Runs once on first boot to create the dedicated `cogram_test` database
+      # the api test suite truncates against (never the live `cogram`).
+      - ./docker/postgres-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U cogram -d cogram"]
       interval: 5s

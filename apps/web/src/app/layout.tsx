@@ -7,7 +7,14 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: siteConfig.name,
-  description: siteConfig.description
+  description: siteConfig.description,
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: '64x64' },
+      { url: '/app-icon.svg', type: 'image/svg+xml' }
+    ],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180' }]
+  }
 };
 
 export default function RootLayout({

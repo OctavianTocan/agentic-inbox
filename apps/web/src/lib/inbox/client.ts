@@ -11,8 +11,8 @@ export type ResolveApprovalInput = {
 export type InboxClient = {
   /** Fetch the current inbox snapshot: summary plus joined items. */
   getInbox: () => Promise<Inbox>;
-  /** Run the batch triage agent and stream progress events. */
-  runTriage: () => AsyncIterable<TriageRunEvent>;
+  /** Run the batch triage agent and stream progress events. Pass fresh to clear prior triage state first. */
+  runTriage: (fresh?: boolean) => AsyncIterable<TriageRunEvent>;
   /** Approve or deny a pending sensitive action and return the updated inbox. */
   resolveApproval: (
     approvalId: string,
@@ -249,8 +249,12 @@ async function* triageEventsFromResponse(
 }
 
 /** Opens the backend triage stream. */
-async function* runTriage(): AsyncIterable<TriageRunEvent> {
-  const response = await fetch(`${API_PREFIX}/triage/run`, { method: 'POST' });
+async function* runTriage(fresh = false): AsyncIterable<TriageRunEvent> {
+  const response = await fetch(`${API_PREFIX}/triage/run`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fresh })
+  });
   await assertOk(response);
   yield* triageEventsFromResponse(response);
 }

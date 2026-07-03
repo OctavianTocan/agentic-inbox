@@ -10,7 +10,7 @@ export const HttpTriageLive = HttpApiBuilder.group(
   Effect.fn(function* (handlers) {
     const triage = yield* TriageService;
     return handlers
-      .handle('run', () => triage.run())
+      .handle('run', ({ payload }) => triage.run(payload.fresh ?? false))
       .handle('inbox', () => triage.inbox());
   })
 );

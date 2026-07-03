@@ -1,15 +1,36 @@
 'use client';
 
-import { useMemo } from 'react';
+import Link from 'next/link';
+import { useMemo, useRef } from 'react';
+import { toast } from 'sonner';
 import {
+  BanIcon,
+  CheckIcon,
   CircleCheckIcon,
+  CopyIcon,
+  ExternalLinkIcon,
+  FlagIcon,
   InboxIcon,
-  RotateCcwIcon
+  RotateCcwIcon,
+  SparklesIcon,
+  XIcon
 } from '@/design-system/components/icons';
 import { Badge } from '@/design-system/components/ui/badge';
 import { Button } from '@/design-system/components/ui/button';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuShortcut,
+  ContextMenuTrigger
+} from '@/design-system/components/ui/context-menu';
+import { Kbd } from '@/design-system/components/ui/kbd';
 import { Markdown } from '@/design-system/components/ui/markdown/markdown';
+import { useScrollFade } from '@/design-system/components/ui/scroll-fade';
 import { Separator } from '@/design-system/components/ui/separator';
+import { useCopyToClipboard } from '@/design-system/hooks/use-copy-to-clipboard';
+import { cn } from '@/design-system/lib/utils';
 import {
   ACTION_LABELS,
   CATEGORY_LABELS,
@@ -28,11 +49,34 @@ type DetailPaneProps = {
   readonly onApprove: (approvalId: string, editedBody?: string) => void;
   readonly onDeny: (approvalId: string) => void;
   readonly onUndo: (ledgerEntryId: string, emailId: string) => void;
+  readonly onClose?: () => void;
+  readonly bordered?: boolean;
+  readonly reserveHeaderRight?: boolean;
 };
 
 /** Whether a ledger entry represents an in-effect (not-yet-undone) action. */
 function isActiveAction(entry: LedgerEntry): boolean {
   return entry.action !== 'undo' && entry.undoneBy === null;
+}
+
+type PaneCloseButtonProps = {
+  readonly onClose: () => void;
+  readonly className?: string;
+};
+
+/** Icon button that dismisses the detail pane. */
+function PaneCloseButton({ onClose, className }: PaneCloseButtonProps) {
+  return (
+    <Button
+      aria-label="Close email"
+      className={cn('shrink-0', className)}
+      onClick={onClose}
+      size="icon-sm"
+      variant="ghost"
+    >
+      <XIcon className="size-4" />
+    </Button>
+  );
 }
 
 type EmailBlockProps = {
@@ -72,6 +116,9 @@ function EmailBlock({ item, isContext }: EmailBlockProps) {
  * @param onApprove - Called with the approval id and final body on accept.
  * @param onDeny - Called with the approval id on deny.
  * @param onUndo - Called with the ledger entry id and email id on undo.
+ * @param onClose - Called when the user dismisses the pane; the close control is omitted when absent.
+ * @param bordered - Whether the header carries a bottom border; off makes the pane one seamless surface for the mobile sheet.
+ * @param reserveHeaderRight - Whether to reserve space at the header's right edge for the floating chat-toggle overlay, so the close button never sits under it.
  * @returns The detail pane.
  */
 export function DetailPane({
@@ -79,16 +126,46 @@ export function DetailPane({
   thread,
   onApprove,
   onDeny,
-  onUndo
+  onUndo,
+  onClose,
+  bordered = true,
+  reserveHeaderRight = false
 }: DetailPaneProps) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useScrollFade(scrollRef);
+  const { copy } = useCopyToClipboard();
+
   const activeActions = useMemo(
     () => (item ? item.actions.filter(isActiveAction) : []),
     [item]
   );
+  const doneActions = useMemo(
+    () => activeActions.filter((entry) => entry.action !== 'flag_for_review'),
+    [activeActions]
+  );
+  const deferrals = useMemo(
+    () => activeActions.filter((entry) => entry.action === 'flag_for_review'),
+    [activeActions]
+  );
+  const undoableAction = activeActions.at(0) ?? null;
+
+  const copyValue = (value: string, label: string) => {
+    void copy(value).then((ok) => {
+      if (ok) {
+        toast(`Copied ${label}`);
+      }
+    });
+  };
 
   if (item === null) {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-muted-foreground">
+      <div className="relative flex h-full flex-col items-center justify-center gap-3 px-6 text-muted-foreground">
+        {onClose ? (
+          <PaneCloseButton
+            className="absolute top-3 right-3"
+            onClose={onClose}
+          />
+        ) : null}
         <InboxIcon className="size-8" />
         <p className="text-sm">Select an email to see the agent's work.</p>
       </div>
@@ -99,28 +176,49 @@ export function DetailPane({
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
-      <div className="shrink-0 border-b bg-card px-6 py-4">
-        <div className="flex flex-wrap items-center gap-2">
-          {decision ? (
-            <Badge variant={severityBadgeVariant(decision.severity)}>
-              {decision.severity}
+      <div
+        className={cn(
+          'flex shrink-0 items-start gap-3 bg-card px-6 py-4',
+          bordered && 'border-b',
+          reserveHeaderRight && 'pr-20'
+        )}
+      >
+        <div className="min-w-0 flex-1">
+          <h2 className="font-semibold text-lg leading-snug">
+            {email.subject}
+          </h2>
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+            {decision ? (
+              <Badge
+                className="h-4 gap-0.5 px-1.5 text-[10px]"
+                variant={severityBadgeVariant(decision.severity)}
+              >
+                {decision.severity}
+              </Badge>
+            ) : null}
+            <Badge
+              className="h-4 gap-0.5 px-1.5 text-[10px]"
+              variant={statusBadgeVariant(status)}
+            >
+              {STATUS_LABELS[status]}
             </Badge>
-          ) : null}
-          <Badge variant={statusBadgeVariant(status)}>
-            {STATUS_LABELS[status]}
-          </Badge>
-          {decision ? (
-            <Badge variant="outline">
-              {CATEGORY_LABELS[decision.category]}
-            </Badge>
-          ) : null}
+            {decision ? (
+              <Badge
+                className="h-4 gap-0.5 px-1.5 text-[10px]"
+                variant="outline"
+              >
+                {CATEGORY_LABELS[decision.category]}
+              </Badge>
+            ) : null}
+          </div>
         </div>
-        <h2 className="mt-2 font-semibold text-lg leading-snug">
-          {email.subject}
-        </h2>
+        {onClose ? <PaneCloseButton onClose={onClose} /> : null}
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+      <div
+        className="scroll-fade min-h-0 flex-1 px-6 pt-7 pb-5"
+        ref={scrollRef}
+      >
         <div className="flex flex-col gap-6">
           {thread.length > 0 ? (
             <div className="flex flex-col gap-4">
@@ -130,11 +228,75 @@ export function DetailPane({
               <Separator />
             </div>
           ) : null}
-          <EmailBlock isContext={false} item={item} />
+          <ContextMenu>
+            <ContextMenuTrigger className="select-text">
+              <EmailBlock isContext={false} item={item} />
+            </ContextMenuTrigger>
+            <ContextMenuContent>
+              {pendingApproval ? (
+                <>
+                  <ContextMenuItem
+                    onClick={() => onApprove(pendingApproval.id)}
+                  >
+                    <CheckIcon />
+                    Approve
+                    <ContextMenuShortcut>
+                      <Kbd variant="ghost">E</Kbd>
+                    </ContextMenuShortcut>
+                  </ContextMenuItem>
+                  <ContextMenuItem
+                    onClick={() => onDeny(pendingApproval.id)}
+                    variant="destructive"
+                  >
+                    <BanIcon />
+                    Deny
+                    <ContextMenuShortcut>
+                      <Kbd variant="ghost">D</Kbd>
+                    </ContextMenuShortcut>
+                  </ContextMenuItem>
+                  <ContextMenuSeparator />
+                </>
+              ) : null}
+              {undoableAction ? (
+                <>
+                  <ContextMenuItem
+                    onClick={() => onUndo(undoableAction.id, email.id)}
+                  >
+                    <RotateCcwIcon />
+                    Undo
+                    <ContextMenuShortcut>
+                      <Kbd variant="ghost">U</Kbd>
+                    </ContextMenuShortcut>
+                  </ContextMenuItem>
+                  <ContextMenuSeparator />
+                </>
+              ) : null}
+              <ContextMenuItem
+                onClick={() => copyValue(email.subject, 'subject')}
+              >
+                <CopyIcon />
+                Copy subject
+              </ContextMenuItem>
+              <ContextMenuItem onClick={() => copyValue(email.id, 'email ID')}>
+                <CopyIcon />
+                Copy email ID
+              </ContextMenuItem>
+              <ContextMenuSeparator />
+              <ContextMenuItem render={<Link href="/audit" />}>
+                <ExternalLinkIcon />
+                Open in Audit
+              </ContextMenuItem>
+            </ContextMenuContent>
+          </ContextMenu>
 
           {decision ? (
-            <div className="flex flex-col gap-4">
-              <Separator />
+            <div className="flex flex-col gap-4 rounded-md border-primary/40 border-l-2 bg-accent/50 p-4">
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                <SparklesIcon className="size-3.5 text-primary" />
+                <span className="font-medium text-xs uppercase tracking-wide">
+                  Agent
+                </span>
+              </div>
               <section className="flex flex-col gap-2">
                 <h3 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
                   Why the agent decided this
@@ -144,7 +306,7 @@ export function DetailPane({
                 </div>
               </section>
               {decision.keyFacts.length > 0 ? (
-                <section className="flex flex-col gap-2 rounded-md bg-muted/60 p-4">
+                <section className="flex flex-col gap-2">
                   <h3 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
                     Key facts
                   </h3>
@@ -169,15 +331,20 @@ export function DetailPane({
             />
           ) : null}
 
-          {activeActions.length > 0 ? (
-            <section className="flex flex-col gap-2">
-              <Separator />
+          {doneActions.length > 0 ? (
+            <section className="flex flex-col gap-2 rounded-md border-primary/40 border-l-2 bg-accent/50 p-4">
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                <SparklesIcon className="size-3.5 text-primary" />
+                <span className="font-medium text-xs uppercase tracking-wide">
+                  Agent
+                </span>
+              </div>
               <h3 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
                 What the agent did
               </h3>
-              {activeActions.map((entry) => (
+              {doneActions.map((entry) => (
                 <div
-                  className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2"
+                  className="flex items-center justify-between gap-3 rounded-md border border-border bg-card px-3 py-2"
                   key={entry.id}
                 >
                   <span className="flex items-center gap-2 text-sm">
@@ -186,6 +353,40 @@ export function DetailPane({
                     <Badge variant="secondary">
                       {ACTION_LABELS[entry.action]}
                     </Badge>
+                  </span>
+                  <Button
+                    onClick={() => onUndo(entry.id, email.id)}
+                    size="sm"
+                    variant="ghost"
+                  >
+                    <RotateCcwIcon />
+                    Undo
+                  </Button>
+                </div>
+              ))}
+            </section>
+          ) : null}
+
+          {deferrals.length > 0 ? (
+            <section className="flex flex-col gap-2 rounded-md border-primary/40 border-l-2 bg-accent/50 p-4">
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                <FlagIcon className="size-3.5 text-primary" />
+                <span className="font-medium text-xs uppercase tracking-wide">
+                  Held for you
+                </span>
+              </div>
+              <h3 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
+                Why the agent did not act
+              </h3>
+              {deferrals.map((entry) => (
+                <div
+                  className="flex items-center justify-between gap-3 rounded-md border border-border bg-card px-3 py-2"
+                  key={entry.id}
+                >
+                  <span className="flex items-center gap-2 text-sm">
+                    <FlagIcon className="size-4 text-primary" />
+                    {entry.summary}
+                    <Badge variant="attention">Deferred to you</Badge>
                   </span>
                   <Button
                     onClick={() => onUndo(entry.id, email.id)}

@@ -1,13 +1,6 @@
-@import "@fontsource/geist-sans/400.css";
-@import "@fontsource/geist-sans/500.css";
-@import "@fontsource/geist-sans/600.css";
-@import "@fontsource/geist-sans/700.css";
-@import "@fontsource-variable/geist-mono";
-@import "@fontsource/redaction/400.css";
-@import "@fontsource/redaction/400-italic.css";
-@import "@fontsource/redaction/700.css";
-@import "@fontsource/redaction/700-italic.css";
-@import "@fontsource/redaction-70/400.css";
+@import "@fontsource-variable/manrope";
+@import "@fontsource-variable/dm-sans";
+@import "@fontsource-variable/fira-code";
 
 @import "tailwindcss";
 @import "tw-animate-css";
@@ -25,12 +18,12 @@
 
 :root,
 .light {
-  --font-family-sans: "Geist Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-family-sans: "DM Sans Variable", ui-sans-serif, system-ui, sans-serif;
   --font-family-mono:
-    "Geist Mono Variable", ui-monospace, SFMono-Regular, monospace;
-  --font-family-serif: "Geist Sans", ui-serif, Georgia, serif;
+    "Fira Code Variable", ui-monospace, SFMono-Regular, monospace;
+  --font-family-serif: "DM Sans Variable", ui-serif, Georgia, serif;
   --font-family-display:
-    "Redaction", "Geist Sans", ui-sans-serif, system-ui, sans-serif;
+    "Manrope Variable", "DM Sans Variable", ui-sans-serif, system-ui, sans-serif;
 
   --background: #f9f9f7;
   --foreground: #2d2d2b;
@@ -38,7 +31,7 @@
   --card-foreground: #2d2d2b;
   --popover: #fffefa;
   --popover-foreground: #2d2d2b;
-  --primary: #cc7d5e;
+  --primary: #a55a43;
   --primary-foreground: #fffaf7;
   --secondary: #efeee9;
   --secondary-foreground: #2d2d2b;
@@ -48,7 +41,7 @@
   --accent-foreground: #2d2d2b;
   --destructive: #a6543d;
   --destructive-foreground: #fffaf7;
-  --success: #008f51;
+  --success: #007846;
   --border: #ddd9d1;
   --input: #fffefa;
   --ring: #cc7d5e;
@@ -61,7 +54,7 @@
   --top-bar-height: 2.5rem;
   --sidebar: #f0efeb;
   --sidebar-foreground: #2d2d2b;
-  --sidebar-primary: #cc7d5e;
+  --sidebar-primary: #a55a43;
   --sidebar-primary-foreground: #fffaf7;
   --sidebar-accent-hover: #e7e4dc;
   --sidebar-accent: #ebe8e1;
@@ -373,8 +366,8 @@
 
   .font-co {
     font-family:
-      "Redaction 70", var(--font-family-display), var(--font-sans),
-      ui-sans-serif, system-ui, sans-serif;
+      var(--font-family-display), var(--font-sans), ui-sans-serif, system-ui,
+      sans-serif;
   }
 
   .font-serif {
@@ -396,7 +389,7 @@
     font-family:
       var(--font-family-display), var(--font-sans), ui-sans-serif, system-ui,
       sans-serif;
-    line-height: 1;
+    line-height: 1.15;
     font-weight: 700;
     letter-spacing: -0.035em;
   }
@@ -895,18 +888,30 @@
 @keyframes collapsible-panel-down {
   from {
     height: 0;
+    opacity: 0;
   }
   to {
     height: var(--collapsible-panel-height);
+    opacity: 1;
   }
 }
 
 @keyframes collapsible-panel-up {
   from {
     height: var(--collapsible-panel-height);
+    opacity: 1;
   }
   to {
     height: 0;
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-slot="collapsible-animated-content"],
+  [data-slot="markdown-details-content"],
+  [data-slot="collapsible-content"] {
+    animation: none !important;
   }
 }
 

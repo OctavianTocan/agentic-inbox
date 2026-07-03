@@ -14,7 +14,7 @@ export type UseInbox = {
   readonly inbox: Inbox | null;
   readonly isLoading: boolean;
   readonly refresh: () => Promise<void>;
-  readonly runTriage: () => AsyncIterable<TriageRunEvent>;
+  readonly runTriage: (fresh?: boolean) => AsyncIterable<TriageRunEvent>;
   readonly approve: (approvalId: string, editedBody?: string) => Promise<void>;
   readonly deny: (approvalId: string) => Promise<void>;
   readonly undo: (ledgerEntryId: string, emailId: string) => Promise<void>;
@@ -94,7 +94,10 @@ export function useInbox(client: InboxClient = inboxClient): UseInbox {
     [client]
   );
 
-  const runTriage = useCallback(() => client.runTriage(), [client]);
+  const runTriage = useCallback(
+    (fresh?: boolean) => client.runTriage(fresh),
+    [client]
+  );
 
   return { inbox, isLoading, refresh, runTriage, approve, deny, undo };
 }

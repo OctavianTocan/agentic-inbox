@@ -1,0 +1,10 @@
+<svg aria-labelledby="title" fill="none" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <title id="title">Cogram Agentic Inbox</title>
+  <path d="M21 39h86a8 8 0 0 1 8 8v48a8 8 0 0 1-8 8H21a8 8 0 0 1-8-8V47a8 8 0 0 1 8-8Z" fill="#fffefa" />
+  <path d="M18 43 54 74a16 16 0 0 0 21 0l35-31" fill="#f2e6df" />
+  <path d="M21 39h86a8 8 0 0 1 8 8v48a8 8 0 0 1-8 8H21a8 8 0 0 1-8-8V47a8 8 0 0 1 8-8Z" stroke="#2d2d2b" stroke-linejoin="round" stroke-width="7" />
+  <path d="M18 43 54 74a16 16 0 0 0 21 0l35-31" stroke="#2d2d2b" stroke-linecap="round" stroke-linejoin="round" stroke-width="7" />
+  <path d="M86 39h21a8 8 0 0 1 8 8v21L86 39Z" fill="#a55a43" />
+  <path d="M86 39h21a8 8 0 0 1 8 8v21" stroke="#2d2d2b" stroke-linecap="round" stroke-linejoin="round" stroke-width="7" />
+  <circle cx="95" cy="83" fill="#a55a43" r="6" />
+</svg>

@@ -37,7 +37,9 @@ type TriageEvent = Schema.Schema.Type<typeof TriageStreamEvent>;
 export class TriageService extends Context.Service<
   TriageService,
   {
-    readonly run: () => Effect.Effect<Stream.Stream<TriageEvent, never>, never>;
+    readonly run: (
+      fresh?: boolean
+    ) => Effect.Effect<Stream.Stream<TriageEvent, never>, never>;
     readonly inbox: () => Effect.Effect<Inbox>;
   }
 >()('@apps/api/Triage/TriageService') {}
@@ -60,7 +62,12 @@ export const TriageServiceBody: Layer.Layer<
     const actions = yield* ActionService;
     const conversations = yield* ConversationsRepo;
 
-    const run = Effect.fn('TriageService.run')(function* () {
+    const run = Effect.fn('TriageService.run')(function* (fresh = false) {
+      if (fresh) {
+        yield* decisions.deleteAll();
+        yield* actions.clearLedger();
+        yield* conversations.deleteTriage();
+      }
       const all = yield* emails.list();
       const existing = yield* decisions.list();
       const existingIds = new Set(existing.map((decision) => decision.emailId));
@@ -70,20 +77,28 @@ export const TriageServiceBody: Layer.Layer<
         Stream.mapEffect(
           (email) =>
             agent.triageEmail(email).pipe(
-              Effect.map(
-                ({ decision, actions: acted, approval }): TriageEvent[] => [
-                  new TriageStarted({ type: 'started', emailId: email.id }),
-                  new TriageDecided({ type: 'decision', decision }),
-                  ...acted,
-                  ...(approval === null
-                    ? []
-                    : [
-                        new TriageApprovalPending({
-                          type: 'approval_pending',
-                          approval
-                        })
-                      ])
-                ]
+              Effect.flatMap(({ decision, actions: acted, approval }) =>
+                decisions.upsert(decision).pipe(
+                  Effect.map((storedDecision): TriageEvent[] => [
+                    new TriageStarted({
+                      type: 'started',
+                      emailId: email.id
+                    }),
+                    new TriageDecided({
+                      type: 'decision',
+                      decision: storedDecision
+                    }),
+                    ...acted,
+                    ...(approval === null
+                      ? []
+                      : [
+                          new TriageApprovalPending({
+                            type: 'approval_pending',
+                            approval
+                          })
+                        ])
+                  ])
+                )
               ),
               Effect.catch((error) =>
                 Effect.succeed<TriageEvent[]>([
@@ -96,7 +111,7 @@ export const TriageServiceBody: Layer.Layer<
                 ])
               )
             ),
-          { concurrency: 8, unordered: true }
+          { concurrency: 24, unordered: true }
         ),
         Stream.flatMap((events) => Stream.fromIterable(events)),
         Stream.concat(
@@ -158,6 +173,12 @@ const statusForItem = (
   actions: ReadonlyArray<LedgerEntry>
 ): EmailStatusType => {
   if (approval !== null || decision === null) {
+    return 'needs_attention';
+  }
+  const activeFlag = actions.some(
+    (entry) => entry.action === 'flag_for_review' && entry.undoneBy === null
+  );
+  if (activeFlag) {
     return 'needs_attention';
   }
   const activeArchive = actions.some(

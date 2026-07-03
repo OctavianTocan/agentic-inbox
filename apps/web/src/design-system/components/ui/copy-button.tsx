@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useCopyAffordanceEnabled } from "@/ai-ui/providers/copy-affordance-provider";
 import { useCopyToClipboard } from "../../hooks/use-copy-to-clipboard";
 import { cn } from "../../lib/utils";
 import { CheckIcon, CopyIcon } from "../icons";
@@ -39,6 +40,7 @@ export function CopyButton({
   ...props
 }: CopyButtonProps) {
   const { isCopied, copy } = useCopyToClipboard({ timeout });
+  const affordanceEnabled = useCopyAffordanceEnabled();
 
   const handleCopyToClipboard = React.useCallback(
     async (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -55,6 +57,10 @@ export function CopyButton({
     },
     [value, onClick, onCopy, copy],
   );
+
+  if (!affordanceEnabled) {
+    return null;
+  }
 
   return (
     <Button

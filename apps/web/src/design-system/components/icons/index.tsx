@@ -107,6 +107,7 @@ export { IconExclamationTriangle as TriangleAlertIcon } from "@central-icons-rea
 export { IconExpand as MaximizeIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconExpand";
 export { IconExpand45 as Maximize2Icon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconExpand45";
 export { IconFileText as FileTextIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconFileText";
+export { IconFlag1 as FlagIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconFlag1";
 export { IconFilter1 as ListFilterIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconFilter1";
 export { IconFloppyDisk1 as SaveIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconFloppyDisk1";
 export { IconFolder1 as FolderIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconFolder1";
@@ -201,6 +202,8 @@ export { IconZap as ZapIcon } from "@central-icons-react/round-outlined-radius-2
 export {
   FilterX as FilterXIcon,
   Network as NetworkIcon,
+  PanelLeftClose as PanelLeftCloseIcon,
+  PanelRightClose as PanelRightCloseIcon,
   ShieldAlert as ShieldAlertIcon,
 } from "lucide-react";
 export { GithubIcon } from "./github-icon";

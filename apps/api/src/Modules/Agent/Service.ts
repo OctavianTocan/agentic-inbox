@@ -38,6 +38,7 @@ import {
   ChatToolkit,
   makeChatHandlers,
   makeTriageHandlers,
+  makeTriageToolkit,
   TriageToolkit
 } from './Toolkit';
 
@@ -128,10 +129,17 @@ export const AgentServiceBody: Layer.Layer<
       }
     );
 
-    /** Runs the native Effect AI tool loop until completion or approval pause. */
+    /**
+     * Runs the native Effect AI tool loop until completion or approval pause.
+     *
+     * In triage mode the caller passes a per-email toolkit whose send/archive
+     * tools require approval only for sensitive emails; chat mode uses the
+     * static chat toolkit.
+     */
     const runLoop = Effect.fn('AgentService.runLoop')(function* (
       initialPrompt: Prompt.Prompt,
-      mode: 'triage' | 'chat'
+      mode: 'triage' | 'chat',
+      triageToolkit: typeof TriageToolkit
     ): Effect.fn.Return<
       LoopResult,
       Config.ConfigError | ActionNotFound | ActionNotUndoable | AiError.AiError,
@@ -156,13 +164,13 @@ export const AgentServiceBody: Layer.Layer<
         const response =
           mode === 'triage'
             ? yield* LanguageModel.generateText({
-                toolkit: TriageToolkit,
+                toolkit: triageToolkit,
                 prompt,
                 concurrency: 4
               }).pipe(
                 Effect.retry({ schedule: retrySchedule }),
                 Effect.provide(
-                  TriageToolkit.toLayer(
+                  triageToolkit.toLayer(
                     makeTriageHandlers(actions, 'batch_agent')
                   )
                 ),
@@ -213,7 +221,11 @@ export const AgentServiceBody: Layer.Layer<
         { role: 'system', content: TRIAGE_SYSTEM_PROMPT },
         { role: 'user', content: triageActionPrompt(email, decision) }
       ]);
-      const result = yield* runLoop(prompt, 'triage');
+      const result = yield* runLoop(
+        prompt,
+        'triage',
+        makeTriageToolkit(decision.isSensitive)
+      );
       const approval =
         result.pending === null
           ? null
@@ -257,7 +269,17 @@ export const AgentServiceBody: Layer.Layer<
           );
         }
 
-        const prompt = decodePrompt(record.prompt);
+        const decoded = decodePrompt(record.prompt);
+        const prompt =
+          input.verdict === 'approve' &&
+          input.editedBody !== undefined &&
+          record.pending !== null
+            ? withSendReplyBody(
+                decoded,
+                record.pending.toolCallId,
+                input.editedBody
+              )
+            : decoded;
         const resumed = Prompt.concat(
           prompt,
           Prompt.make([
@@ -272,7 +294,7 @@ export const AgentServiceBody: Layer.Layer<
             }
           ])
         );
-        const result = yield* runLoop(resumed, 'chat');
+        const result = yield* runLoop(resumed, 'chat', TriageToolkit);
         yield* conversations.save({
           id: record.id,
           status: result.pending === null ? 'complete' : 'awaiting_approval',
@@ -324,7 +346,7 @@ export const AgentServiceBody: Layer.Layer<
         basePrompt,
         Prompt.make([{ role: 'user', content: input.message }])
       );
-      const result = yield* runLoop(prompt, 'chat');
+      const result = yield* runLoop(prompt, 'chat', TriageToolkit);
       const saved = yield* conversations.save({
         id: existing?.id,
         status: result.pending === null ? 'complete' : 'awaiting_approval',
@@ -453,6 +475,40 @@ const approvalRequestFromPrompt = (
     payload,
     createdAt: new Date().toISOString()
   });
+};
+
+/**
+ * Rewrites the `body` param of one paused `send_reply` tool call so the resumed
+ * send executes with the reviewer's edited text instead of the agent's draft.
+ *
+ * @param prompt - The paused conversation prompt to rebuild.
+ * @param toolCallId - Id of the tool call whose body should be replaced.
+ * @param body - The reviewer's edited reply body.
+ * @returns A new prompt with the target tool call's body swapped; unchanged if no such call exists.
+ */
+export const withSendReplyBody = (
+  prompt: Prompt.Prompt,
+  toolCallId: string,
+  body: string
+): Prompt.Prompt => {
+  const messages = prompt.content.map((message) => {
+    if (message.role !== 'assistant') {
+      return message;
+    }
+    const content = message.content.map((part) => {
+      if (part.type !== 'tool-call' || part.id !== toolCallId) {
+        return part;
+      }
+      return Prompt.makePart('tool-call', {
+        id: part.id,
+        name: part.name,
+        params: { ...toRecord(part.params), body },
+        providerExecuted: part.providerExecuted
+      });
+    });
+    return Prompt.makeMessage('assistant', { content });
+  });
+  return Prompt.fromMessages(messages);
 };
 
 /** Finds a tool call in a prompt by id. */

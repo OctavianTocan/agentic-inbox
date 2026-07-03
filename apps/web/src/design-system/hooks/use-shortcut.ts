@@ -59,14 +59,21 @@ export function useShortcut(
   callback: (event: KeyboardEvent) => void,
   options?: UseShortcutOptions,
 ): void {
+  const hotkey = keysToRawHotkey(definition?.keys ?? "Escape");
+  // The library only auto-ignores editable targets for single keys and
+  // Shift/Alt combos; plain Escape/Enter still fire in inputs. Force it for any
+  // combo without a Mod/Ctrl/Meta modifier so typing in the chat composer never
+  // triggers inbox actions, while Cmd/Ctrl shortcuts keep working in inputs.
+  const ignoreInputs = !(hotkey.mod || hotkey.ctrl || hotkey.meta);
   useHotkey(
-    keysToRawHotkey(definition?.keys ?? "Escape"),
+    hotkey,
     (event) => {
       callback(event);
     },
     {
       enabled: definition !== null && (options?.enabled ?? true),
       preventDefault: options?.preventDefault ?? true,
+      ignoreInputs,
     },
   );
 }

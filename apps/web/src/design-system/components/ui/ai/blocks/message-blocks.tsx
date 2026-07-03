@@ -1,6 +1,7 @@
 "use client";
 
 import { type ReactNode, useMemo, useState } from "react";
+import { CopyAffordanceProvider } from "@/ai-ui/providers/copy-affordance-provider";
 import { useInlineEditor } from "@/ai-ui/hooks/use-inline-editor";
 import { useMessage } from "@/ai-ui/providers/message-provider";
 import type { MessageProps } from "@/ai-ui/ui/message";
@@ -72,6 +73,20 @@ function InlineEditor() {
 const LONG_MESSAGE_CHARS = 600;
 const LONG_MESSAGE_LINES = 10;
 
+/** True when the message has finished and carries copyable text — gates the actions footer. */
+function useHasCopyableText(): boolean {
+  const { message, status } = useMessage();
+  const text = useMemo(
+    () =>
+      message.parts
+        .flatMap((part) => (part.type === "text" ? [part.text ?? ""] : []))
+        .join("")
+        .trim(),
+    [message.parts],
+  );
+  return status.type === "complete" && text.length > 0;
+}
+
 /** Bubble wrapper that collapses long user messages behind a Show more toggle. */
 function CollapsibleBubble({ children }: { children: ReactNode }) {
   const { message } = useMessage();
@@ -127,6 +142,7 @@ export const UserMessageBlock = ({
   ...props
 }: UserMessageBlockProps) => {
   const { isEditing } = useMessage();
+  const hasCopyableText = useHasCopyableText();
 
   if (isEditing) {
     return (
@@ -139,9 +155,11 @@ export const UserMessageBlock = ({
   return (
     <Message {...props}>
       <CollapsibleBubble>{children}</CollapsibleBubble>
-      <MessageFooter>
-        <MessageCopyButton />
-      </MessageFooter>
+      {hasCopyableText ? (
+        <MessageFooter>
+          <MessageCopyButton />
+        </MessageFooter>
+      ) : null}
     </Message>
   );
 };
@@ -154,15 +172,23 @@ export const AssistantMessageBlock = ({
   children,
   ...props
 }: AssistantMessageBlockProps) => {
+  const { status } = useMessage();
+  const hasCopyableText = useHasCopyableText();
+  const isComplete = status.type === "complete";
+
   return (
     <Message {...props}>
       <MessageContent className="w-full min-w-0 overflow-hidden">
-        {children}
+        <CopyAffordanceProvider enabled={isComplete}>
+          {children}
+        </CopyAffordanceProvider>
       </MessageContent>
-      <MessageFooter>
-        <MessageTimingBadge />
-        <MessageCopyButton />
-      </MessageFooter>
+      {hasCopyableText ? (
+        <MessageFooter>
+          <MessageTimingBadge />
+          <MessageCopyButton />
+        </MessageFooter>
+      ) : null}
     </Message>
   );
 };

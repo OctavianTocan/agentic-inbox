@@ -1,5 +1,19 @@
-import { AuditPage } from '@/components/traces/trace-page';
+import { cookies } from 'next/headers';
 
-export default function AgentAuditPage() {
-  return <AuditPage />;
+import { AuditPage } from '@/components/traces/trace-page';
+import {
+  parseWidthCookie,
+  SIDEBAR_WIDTH_COOKIE_NAME
+} from '@/design-system/components/ui/sidebar-width';
+
+export default async function AgentAuditPage() {
+  const cookieStore = await cookies();
+  const persistedWidth = parseWidthCookie(
+    cookieStore.get(SIDEBAR_WIDTH_COOKIE_NAME)?.value,
+    264,
+    220,
+    360
+  );
+
+  return <AuditPage persistedWidth={persistedWidth} />;
 }
