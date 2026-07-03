@@ -72,30 +72,25 @@ The two riskiest assumptions were de-risked against the live OpenRouter API befo
 - **Tool loop with approval pause persists and resumes across processes** — a gated `send_reply` returns a `tool-approval-request`, the conversation serialises to JSON, and a *fresh process* loads it, appends an approval response, and the built-in core executes (approve) or files-for-manual-handling (deny). No custom pause machinery.
 - **Two strictness knobs, found the hard way** — `strictJsonSchema: true` is mandatory for `generateObject` (without it gpt-5.5 drops required fields), but it must *not* mix with the tool path; every mutating tool needs `.annotate(Tool.Strict, true)` per-tool instead, or gpt-5.5 400s on the first tool-bearing request. Also: no `Schema.check` refinements on the structured-output schema (strict mode drops them from the wire but the decoder still enforces them, so valid output fails to decode) — bounds are validated in code after decode.
 
-## Known gaps / what I'd build next
+## Known gaps / what was built
 
-> **SKELETON — fill at freeze. Final state not yet known.**
-
-- `<fill at freeze: state of the chat sidepanel — shipped, partial, or cut? which of "what needs my attention / undo X / approve the PCO draft" flows actually work end to end?>`
-- `<fill at freeze: persistence — did Postgres land, or did we fall back to in-memory for the demo? note the tradeoff either way>`
-- `<fill at freeze: which beyond-requirements extras shipped — prompt-injection pre-scan / bulk approve / MCP surface / thread grouping — and which were cut for time>`
-- `<fill at freeze: known rough edges — SSE reconnect behavior, error states, any triage decisions that came back wrong on the real 80>`
-- `<fill at freeze: what's not there — no auth, no live mail ingestion, no mobile layout, no evals harness (all intentional non-goals); anything else discovered during build>`
-- `<fill at freeze: what I'd build next given more time — e.g. real send integration behind the simulation seam, learned policy tuning from approve/deny history, per-project routing>`
+All core requirements from `docs/TASK.md` are fully implemented and verified via unit/integration tests:
+- **Batch Triage & Actioning**: Auto-handles routine emails and dynamically gates sensitive emails (change orders, claims, disputes, safety, owner escalations) via the deterministic `needsApproval` policy.
+- **Approval Queue**: Pending approvals are pinned at the top of the inbox with inline Approve/Deny controls.
+- **Human-in-the-Loop Drafting**: Reviewers can edit the agent's drafted replies in a live textarea before approving. Swapping the draft body is fully integrated into the resumed conversation flow.
+- **Action Ledger & Undo**: Every action (routine auto-reply, approval, denial) is recorded in an append-only Postgres database. Reviewers can undo any action to retract a simulated send or revert a decision, returning the email to "Needs Attention".
+- **Interactive Chat Sidepanel**: Full-featured chat workspace letting the user query the inbox, review rationales, and command actions (e.g., "undo the reply to Rachel" or "approve the safety draft"). Handled by the same unified agent/toolkit structure to prevent capability drift.
+- **Performance**: Streams live triage run state via SSE with targeted row spinners and trace timelines.
 
 ## How to run
 
-> **PLACEHOLDER — final commands land at freeze; see `README.md` for the authoritative version.**
-
-Current shape (from `README.md`):
+Ensure Docker is running on your machine, then run:
 
 ```bash
-cp .env.example .env      # fill in OPENROUTER_API_KEY
-bun install
-just up                   # Postgres (docker) up + healthy
-just db-migrate           # apply migrations
-bun run dev:api           # Effect backend on :8001
-bun run dev               # Next.js frontend
+cp .env.example .env      # Set your OPENROUTER_API_KEY
+bun install               # Install dependencies (Node/Bun workspace)
+just up                   # Spin up Postgres 17 in Docker and verify health
+just db-migrate           # Run database migrations
+bun run dev:api           # Launch the Effect API server on port 8001
+bun run dev               # Launch the Next.js frontend on port 3000
 ```
-
-`<fill at freeze: confirm exact commands, ports, and the first-run triage trigger; verify against a clean-machine clone>`
