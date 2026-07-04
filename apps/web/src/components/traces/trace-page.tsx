@@ -25,6 +25,7 @@ import {
 import { useInbox } from '@/components/inbox/use-inbox';
 import {
   ArchiveIcon,
+  ChevronDownIcon,
   FilterXIcon,
   HistoryIcon,
   InboxIcon,
@@ -165,9 +166,12 @@ function AuditDetail({
   reserveHeaderRight = false
 }: AuditDetailProps) {
   const { entry, item } = record;
+  const { email } = item;
   const Icon = ACTION_ICON[entry.action];
   const scrollRef = useRef<HTMLDivElement>(null);
   useScrollFade(scrollRef);
+  const [isEmailOpen, setIsEmailOpen] = useState(false);
+  const bodyId = `audit-email-body-${entry.id}`;
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
@@ -220,12 +224,44 @@ function AuditDetail({
             <h3 className="font-medium text-muted-foreground text-xs uppercase">
               Email
             </h3>
-            <div>
-              <p className="font-medium text-sm">{item.email.subject}</p>
-              <p className="text-muted-foreground text-sm">
-                {senderName(item.email.from)}
-              </p>
-            </div>
+            <button
+              aria-controls={bodyId}
+              aria-expanded={isEmailOpen}
+              className="-mx-2 flex items-start gap-3 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-muted/60"
+              onClick={() => setIsEmailOpen((open) => !open)}
+              type="button"
+            >
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-sm">{email.subject}</p>
+                <p className="text-muted-foreground text-sm">
+                  {senderName(email.from)}
+                </p>
+              </div>
+              <ChevronDownIcon
+                className={cn(
+                  'mt-0.5 size-4 shrink-0 text-muted-foreground transition-transform',
+                  isEmailOpen && 'rotate-180'
+                )}
+              />
+            </button>
+            {isEmailOpen ? (
+              <div
+                className="mt-1 flex flex-col gap-3 border-l-2 pl-4"
+                id={bodyId}
+              >
+                <p className="text-muted-foreground text-xs">
+                  To {email.to.join(', ')}
+                  {email.cc.length > 0 ? ` · Cc ${email.cc.join(', ')}` : ''}
+                  {' · '}
+                  <span className="tabular-nums">
+                    {formatTimestamp(email.timestamp)}
+                  </span>
+                </p>
+                <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                  {email.body}
+                </p>
+              </div>
+            ) : null}
           </section>
 
           {item.decision ? (
