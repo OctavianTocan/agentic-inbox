@@ -66,7 +66,6 @@ describe('InboxList untriaged presentation', () => {
     renderList([untriagedItem]);
 
     expect(screen.getByText('Not triaged yet')).toBeDefined();
-    expect(screen.getByText('Not triaged')).toBeDefined();
     expect(screen.queryByText('Needs attention')).toBeNull();
     expect(screen.queryByText('Inbox')).toBeNull();
   });

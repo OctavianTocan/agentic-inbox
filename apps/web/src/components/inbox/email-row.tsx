@@ -12,7 +12,6 @@ import {
   RefreshCwIcon,
   RotateCcwIcon
 } from '@/design-system/components/icons';
-import { Badge } from '@/design-system/components/ui/badge';
 import { Button } from '@/design-system/components/ui/button';
 import {
   ContextMenu,
@@ -28,22 +27,13 @@ import {
 import {
   Item,
   ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemTitle
+  ItemContent
 } from '@/design-system/components/ui/item';
 import { Kbd } from '@/design-system/components/ui/kbd';
 import { Markdown } from '@/design-system/components/ui/markdown/markdown';
 import { useCopyToClipboard } from '@/design-system/hooks/use-copy-to-clipboard';
 import { cn } from '@/design-system/lib/utils';
-import {
-  formatTimestamp,
-  projectOf,
-  STATUS_LABELS,
-  senderName,
-  severityBadgeVariant,
-  statusBadgeVariant
-} from '@/lib/inbox/labels';
+import { formatTimestamp, projectOf, senderName } from '@/lib/inbox/labels';
 import type { InboxItem, LedgerEntry } from '@/lib/inbox/types';
 import type { InboxFilters } from './filters';
 
@@ -117,9 +107,9 @@ type EmailRowProps = {
 };
 
 /**
- * One inbox list row: sender, subject, why-preview, status/severity chips, and
- * timestamp. Untriaged items (no decision) render a neutral "Not triaged" chip
- * instead. When an approval is pending it shows inline Approve/Deny buttons.
+ * One inbox list row: sender, subject, preview, timestamp, and contextual
+ * approval controls. The row follows an email-client scan path instead of a
+ * stacked task-card layout.
  *
  * @param item - The joined email, decision, status, and pending state.
  * @param isSelected - Whether this row is the open detail selection.
@@ -145,11 +135,12 @@ export function EmailRow({
   onRetriage,
   onFiltersChange
 }: EmailRowProps) {
-  const { email, decision, status, pendingApproval } = item;
+  const { email, decision, pendingApproval } = item;
   const { copy } = useCopyToClipboard();
 
   const undoableAction = item.actions.find(isUndoableAction) ?? null;
   const project = projectOf(email.subject);
+  const sender = senderName(email.from);
 
   const copyValue = (value: string, label: string) => {
     void copy(value).then((ok) => {
@@ -166,7 +157,7 @@ export function EmailRow({
           <Item
             aria-current={isSelected}
             className={cn(
-              'cursor-pointer rounded-none border-0 px-4 py-3.5 sm:px-6',
+              'cursor-pointer rounded-none border-0 px-4 py-2.5 sm:px-6',
               'hover:bg-muted/60',
               isDimmed && !isSelected && 'opacity-55',
               isSelected && 'bg-primary/5'
@@ -176,62 +167,72 @@ export function EmailRow({
           />
         }
       >
-        <ItemContent className="min-w-0 gap-0.5">
-          <ItemTitle className="w-full justify-between gap-3 font-semibold">
-            <span className="min-w-0 truncate">{email.subject}</span>
-            <span className="shrink-0 font-normal text-muted-foreground text-xs tabular-nums">
-              {formatTimestamp(email.timestamp)}
-            </span>
-          </ItemTitle>
-          <p className="truncate text-muted-foreground text-xs">
-            {senderName(email.from)}
-          </p>
-          <ItemDescription className="line-clamp-1">
-            <PreviewMarkdown>
-              {decision?.whyPreview ?? email.body}
-            </PreviewMarkdown>
-          </ItemDescription>
-          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1.5">
-            <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-              {decision ? (
-                <>
-                  <Badge variant={statusBadgeVariant(status)}>
-                    {STATUS_LABELS[status]}
-                  </Badge>
-                  <Badge variant={severityBadgeVariant(decision.severity)}>
-                    {decision.severity}
-                  </Badge>
-                </>
-              ) : (
-                <Badge variant="outline">Not triaged</Badge>
-              )}
+        <ItemContent className="min-w-0 gap-0">
+          <div className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5 sm:grid-cols-[minmax(8rem,12rem)_minmax(0,1fr)_8rem] sm:gap-x-4">
+            <div className="hidden min-w-0 sm:block">
+              <p className="truncate font-medium text-sm leading-6">{sender}</p>
             </div>
-            {pendingApproval ? (
-              <ItemActions className="ml-auto shrink-0 gap-1.5">
-                <Button
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onApprove(pendingApproval.id);
-                  }}
-                  size="xs"
-                  variant="secondary"
+            <div className="min-w-0">
+              <div className="flex min-w-0 items-baseline gap-2 text-sm leading-6">
+                <span className="min-w-0 max-w-[52%] shrink-0 truncate font-medium">
+                  {email.subject}
+                </span>
+                <span
+                  className="min-w-0 flex-1 truncate text-muted-foreground"
+                  data-slot="item-description"
                 >
-                  <CheckIcon />
-                  Approve
-                </Button>
-                <Button
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onDeny(pendingApproval.id);
-                  }}
-                  size="xs"
-                  variant="destructive"
+                  <PreviewMarkdown>
+                    {decision?.whyPreview ?? email.body}
+                  </PreviewMarkdown>
+                </span>
+              </div>
+              <p className="truncate text-muted-foreground text-xs leading-4 sm:hidden">
+                {sender}
+              </p>
+            </div>
+            <div className="relative flex h-7 w-24 shrink-0 items-center justify-end sm:w-32">
+              <span
+                className={cn(
+                  'text-muted-foreground text-xs tabular-nums transition-opacity',
+                  pendingApproval &&
+                    'sm:group-hover/item:opacity-0 sm:group-focus-within/item:opacity-0',
+                  pendingApproval && isSelected && 'sm:opacity-0'
+                )}
+              >
+                {formatTimestamp(email.timestamp)}
+              </span>
+              {pendingApproval ? (
+                <ItemActions
+                  className={cn(
+                    'pointer-events-none absolute inset-y-0 right-0 hidden items-center gap-1.5 opacity-0 transition-opacity sm:flex sm:group-hover/item:pointer-events-auto sm:group-hover/item:opacity-100 sm:group-focus-within/item:pointer-events-auto sm:group-focus-within/item:opacity-100',
+                    isSelected && 'sm:pointer-events-auto sm:opacity-100'
+                  )}
                 >
-                  <BanIcon />
-                  Deny
-                </Button>
-              </ItemActions>
-            ) : null}
+                  <Button
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onApprove(pendingApproval.id);
+                    }}
+                    size="xs"
+                    variant="secondary"
+                  >
+                    <CheckIcon />
+                    Approve
+                  </Button>
+                  <Button
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onDeny(pendingApproval.id);
+                    }}
+                    size="xs"
+                    variant="destructive"
+                  >
+                    <BanIcon />
+                    Deny
+                  </Button>
+                </ItemActions>
+              ) : null}
+            </div>
           </div>
         </ItemContent>
       </ContextMenuTrigger>
