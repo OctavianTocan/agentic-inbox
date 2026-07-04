@@ -79,6 +79,21 @@ Only hand-roll for a *specifically* elevated CTA (e.g. a hero call-to-action wit
 
 Six layers: top inner highlight, ambient inset, dark hairline "cut," and three external depth shadows. If you can see the gradient, it's too strong.
 
+## Inline Icon Rhythm
+
+Text controls with an inline icon should keep balanced horizontal padding. Do not shave only the icon side (`pl-*` for a leading icon or `pr-*` for a trailing icon); that makes the text group visually drift off-center. Use symmetric inline padding on the control and let `gap-*` own the icon/text separation.
+
+Inline icons and logo marks that sit in text rhythm should size to the line box with `1lh`, not `1em`. `1lh` includes the element's line-height, so the glyph scales with typography changes and fills the visual line consistently:
+
+```css
+.icon {
+  height: 1lh;
+  width: 1lh;
+}
+```
+
+Use this for `data-icon="inline-start"` / `data-icon="inline-end"` glyphs and logo marks paired with text. Keep standalone icon buttons, decorators, and fixed-format artwork on their explicit square sizes.
+
 ## Hit Target Expansion
 
 When the visible element is smaller than the recommended 44px hit target, expand via a pseudo-element with negative inset (`domain-frontend`'s ui-constraints.md owns the rule):

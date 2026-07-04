@@ -16,24 +16,13 @@ const logoVariants = cva("inline-flex items-center gap-3", {
   },
 });
 
-const logoIconVariants = cva("shrink-0", {
-  variants: {
-    size: {
-      sm: "h-4 w-4",
-      md: "h-6 w-6",
-      lg: "h-8 w-8",
-    },
-  },
-  defaultVariants: {
-    size: "md",
-  },
-});
+const logoIconVariants = cva("size-[1lh] shrink-0");
 
-export interface LogoProps extends VariantProps<typeof logoVariants> {
+export type LogoProps = VariantProps<typeof logoVariants> & {
   showText?: boolean;
   className?: string;
   iconClassName?: string;
-}
+};
 
 /** Company logo pairing the symbol mark with the company name. */
 export function Logo({
@@ -44,7 +33,7 @@ export function Logo({
 }: LogoProps) {
   return (
     <div className={cn(logoVariants({ size }), className)}>
-      <LogoIcon className={cn(logoIconVariants({ size }), iconClassName)} />
+      <LogoIcon className={cn(logoIconVariants(), iconClassName)} />
       {showText && (
         <span className="whitespace-nowrap font-bold font-display">
           {siteConfig.name}

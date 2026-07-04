@@ -89,6 +89,8 @@ const SHORTCUTS = {
   }
 } satisfies Record<string, ShortcutDefinition>;
 
+const DETAIL_CLOSE_ANIMATION_MS = 160;
+
 /** Prior emails in the same thread as `item`, oldest first. */
 function threadContext(
   item: InboxItem | null,
@@ -268,6 +270,7 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
   const [chatKey, setChatKey] = useState(0);
   const [isChatEmpty, setIsChatEmpty] = useState(true);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isDetailClosing, setIsDetailClosing] = useState(false);
   const [activePane, setActivePane] = useState<'list' | 'detail'>('list');
   const [sortKey, setSortKey] = useState<SortKey>('severity');
   const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
@@ -279,13 +282,24 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
   // "Re-run triage" lands on the run screen after navigating back to the inbox.
   const [runViewRequested, setRunViewRequested] = useState(isRunViewRequested);
   const mobileChatRef = useRef<HTMLDivElement>(null);
+  const detailCloseTimerRef = useRef<number | null>(null);
   const isMobile = useIsMobile();
+
+  const clearDetailCloseTimer = useCallback(() => {
+    if (detailCloseTimerRef.current === null) {
+      return;
+    }
+    window.clearTimeout(detailCloseTimerRef.current);
+    detailCloseTimerRef.current = null;
+  }, []);
 
   // The cross-page request is captured into local state on mount; clear the
   // module flag so a later reload or re-navigation does not re-trigger it.
   useEffect(() => {
     clearRunViewRequest();
   }, []);
+
+  useEffect(() => clearDetailCloseTimer, [clearDetailCloseTimer]);
 
   const toggleChat = useCallback(() => {
     setIsChatOpen(!isChatOpen);
@@ -362,9 +376,24 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
     if (isMobile) {
       setIsMobileDetailOpen(true);
     } else {
+      clearDetailCloseTimer();
+      setIsDetailClosing(false);
       setIsDetailOpen(true);
     }
-  }, [isMobile]);
+  }, [clearDetailCloseTimer, isMobile]);
+
+  const closeDetail = useCallback(() => {
+    if (!isDetailOpen) {
+      return;
+    }
+    clearDetailCloseTimer();
+    setIsDetailClosing(true);
+    detailCloseTimerRef.current = window.setTimeout(() => {
+      setIsDetailOpen(false);
+      setIsDetailClosing(false);
+      detailCloseTimerRef.current = null;
+    }, DETAIL_CLOSE_ANIMATION_MS);
+  }, [clearDetailCloseTimer, isDetailOpen]);
 
   const selectEmail = useCallback(
     (emailId: string) => {
@@ -474,6 +503,7 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
   // instead, so the run screen is the first inbox chrome the user ever sees.
   // Once seen this session, keep the shell + list spinner (Audit -> Inbox).
   const showNeutralLoading = isLoading && !hasRun && !hasSeenInbox();
+  const shouldRenderDetail = isDetailOpen || isDetailClosing;
 
   useEffect(() => {
     if (!isLoading && inbox !== null && !showRunView) {
@@ -720,9 +750,15 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
                       )}
                     </div>
                   </ResizablePanel>
-                  {isDetailOpen ? (
+                  {shouldRenderDetail ? (
                     <>
-                      <ResizableHandle withHandle />
+                      <ResizableHandle
+                        className={cn(
+                          'transition-opacity duration-150 ease-panel',
+                          isDetailClosing && 'opacity-0'
+                        )}
+                        withHandle
+                      />
                       <ResizablePanel
                         defaultSize="58%"
                         id="inbox-detail"
@@ -730,16 +766,22 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
                       >
                         <div
                           className={cn(
-                            'flex h-full flex-col bg-card transition-opacity duration-200 ease-[var(--ease-panel)]',
-                            activePane === 'list' && 'opacity-[0.93]'
+                            'flex h-full flex-col bg-card transition-[opacity,transform] duration-150 ease-panel motion-reduce:transition-none motion-reduce:translate-x-0',
+                            activePane === 'list' && !isDetailClosing
+                              ? 'opacity-[0.93]'
+                              : 'opacity-100',
+                            isDetailClosing &&
+                              'pointer-events-none translate-x-3 opacity-0'
                           )}
+                          data-slot="inbox-detail-panel"
+                          data-state={isDetailClosing ? 'closing' : 'open'}
                           onPointerDownCapture={() => setActivePane('detail')}
                         >
                           <div className="min-h-0 flex-1">
                             <DetailPane
                               item={selectedItem}
                               onApprove={approve}
-                              onClose={() => setIsDetailOpen(false)}
+                              onClose={closeDetail}
                               onDeny={deny}
                               onUndo={undo}
                               reserveHeaderRight={!isChatOpen}

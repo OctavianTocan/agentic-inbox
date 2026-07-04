@@ -184,6 +184,13 @@ primitives and local chat components. The default `/` route is the inbox
 experience. The first-run screen can appear every visit for now and must keep
 the page locked without stray mobile scroll.
 
+Text controls that include inline icons must keep symmetric horizontal padding;
+use component `gap` for icon/text spacing instead of reducing only the icon
+side. Inline icons and logo marks that share a text line should size to
+`1lh`, not `1em`, so they track the element's line-height and remain visually
+aligned when leading changes. Keep standalone icon-only controls on explicit
+square sizes.
+
 ## Do's and Don'ts
 
 Do keep the UI quiet, readable, and action-oriented. Do use icon buttons for

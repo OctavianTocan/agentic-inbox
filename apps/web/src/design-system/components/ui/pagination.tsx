@@ -80,7 +80,7 @@ function PaginationPrevious({
   return (
     <PaginationLink
       aria-label="Go to previous page"
-      className={cn("pl-1.5!", className)}
+      className={className}
       size="default"
       {...props}
     >
@@ -99,7 +99,7 @@ function PaginationNext({
   return (
     <PaginationLink
       aria-label="Go to next page"
-      className={cn("pr-1.5!", className)}
+      className={className}
       size="default"
       {...props}
     >

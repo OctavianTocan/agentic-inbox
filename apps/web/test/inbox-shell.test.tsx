@@ -120,6 +120,12 @@ describe('InboxShell', () => {
 
     fireEvent.click(screen.getByLabelText('Close email'));
 
+    expect(
+      container
+        .querySelector('[data-slot="inbox-detail-panel"]')
+        ?.getAttribute('data-state')
+    ).toBe('closing');
+
     await waitFor(() => {
       expect(screen.queryByLabelText('Close email')).toBeNull();
     });
