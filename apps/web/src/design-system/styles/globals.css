@@ -356,6 +356,18 @@
   [role="button"]:not(:disabled) {
     @apply cursor-pointer;
   }
+  /* Suppress the double-tap-zoom wait so taps fire immediately on touch,
+     instead of feeling dropped and needing a second tap. Pinch-zoom is
+     preserved. */
+  a,
+  button,
+  [role="button"],
+  label,
+  input,
+  select,
+  textarea {
+    touch-action: manipulation;
+  }
 
   /* Enhanced typography classes */
   .font-display {
