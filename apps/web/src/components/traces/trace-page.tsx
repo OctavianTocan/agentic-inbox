@@ -120,7 +120,7 @@ function AuditList({ records, onSelect }: AuditListProps) {
             >
               <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
               <ItemContent>
-                <ItemTitle className="w-full justify-between gap-3">
+                <ItemTitle className="w-full justify-between gap-3 font-semibold">
                   <span>{ACTION_LABELS[entry.action]}</span>
                   <span className="shrink-0 text-muted-foreground text-xs tabular-nums">
                     {formatTimestamp(entry.createdAt)}
@@ -192,7 +192,7 @@ function AuditDetail({
             <div className="mt-4 flex items-start gap-3">
               <Icon className="mt-1 size-5 shrink-0 text-muted-foreground" />
               <div className="min-w-0">
-                <h2 className="text-balance font-sans font-medium text-sm leading-5 sm:font-semibold sm:text-xl sm:leading-7">
+                <h2 className="text-balance font-semibold text-lg leading-snug">
                   {entry.summary}
                 </h2>
                 <p className="mt-1 text-muted-foreground text-sm tabular-nums">
@@ -221,7 +221,7 @@ function AuditDetail({
       >
         <div className="flex flex-col gap-6">
           <section className="flex flex-col gap-2">
-            <h3 className="font-medium text-muted-foreground text-xs uppercase">
+            <h3 className="font-semibold text-muted-foreground text-xs uppercase">
               Email
             </h3>
             <button
@@ -232,7 +232,7 @@ function AuditDetail({
               type="button"
             >
               <div className="min-w-0 flex-1">
-                <p className="font-medium text-sm">{email.subject}</p>
+                <p className="font-semibold text-sm">{email.subject}</p>
                 <p className="text-muted-foreground text-sm">
                   {senderName(email.from)}
                 </p>
@@ -266,7 +266,7 @@ function AuditDetail({
 
           {item.decision ? (
             <section className="flex flex-col gap-2">
-              <h3 className="font-medium text-muted-foreground text-xs uppercase">
+              <h3 className="font-semibold text-muted-foreground text-xs uppercase">
                 Agent decision
               </h3>
               <div className="flex flex-wrap gap-2">
@@ -284,7 +284,7 @@ function AuditDetail({
           <Separator />
 
           <section className="flex flex-col gap-2">
-            <h3 className="font-medium text-muted-foreground text-xs uppercase">
+            <h3 className="font-semibold text-muted-foreground text-xs uppercase">
               Payload
             </h3>
             <pre className="max-h-72 overflow-auto rounded-md bg-muted p-4 text-xs">

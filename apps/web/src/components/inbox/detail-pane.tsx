@@ -189,24 +189,15 @@ export function DetailPane({
           </h2>
           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
             {decision ? (
-              <Badge
-                className="h-4 gap-0.5 px-1.5 text-[10px]"
-                variant={severityBadgeVariant(decision.severity)}
-              >
+              <Badge variant={severityBadgeVariant(decision.severity)}>
                 {decision.severity}
               </Badge>
             ) : null}
-            <Badge
-              className="h-4 gap-0.5 px-1.5 text-[10px]"
-              variant={statusBadgeVariant(status)}
-            >
+            <Badge variant={statusBadgeVariant(status)}>
               {STATUS_LABELS[status]}
             </Badge>
             {decision ? (
-              <Badge
-                className="h-4 gap-0.5 px-1.5 text-[10px]"
-                variant="outline"
-              >
+              <Badge variant="outline">
                 {CATEGORY_LABELS[decision.category]}
               </Badge>
             ) : null}

@@ -360,7 +360,7 @@ export const QuickSearchFilters = memo(function QuickSearchFilters<TData>({
                         <sup
                           className={cn(
                             !optionsCount && "hidden",
-                            "ml-0.5 tabular-nums tracking-tight text-muted-foreground",
+                            "ml-0.5 tabular-nums text-muted-foreground",
                             count === 0 && "slashed-zero",
                           )}
                         >

@@ -86,7 +86,7 @@ function Calendar({
         ),
         weekdays: cn("flex", defaultClassNames.weekdays),
         weekday: cn(
-          "flex-1 select-none rounded-(--cell-radius) font-normal text-[0.8rem] text-muted-foreground",
+          "flex-1 select-none rounded-(--cell-radius) font-normal text-muted-foreground text-xs",
           defaultClassNames.weekday,
         ),
         week: cn("mt-2 flex w-full", defaultClassNames.week),
@@ -95,7 +95,7 @@ function Calendar({
           defaultClassNames.week_number_header,
         ),
         week_number: cn(
-          "select-none text-[0.8rem] text-muted-foreground",
+          "select-none text-muted-foreground text-xs",
           defaultClassNames.week_number,
         ),
         day: cn(

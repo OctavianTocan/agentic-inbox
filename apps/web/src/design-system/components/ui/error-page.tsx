@@ -35,7 +35,7 @@ function ErrorPageTitle({
   return (
     <h1
       className={cn(
-        "mt-6 text-balance font-display text-4xl text-foreground tracking-tight",
+        "mt-6 text-balance font-display text-4xl text-foreground",
         className,
       )}
       data-slot="error-page-title"

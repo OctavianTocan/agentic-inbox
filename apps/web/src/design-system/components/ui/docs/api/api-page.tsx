@@ -92,7 +92,7 @@ export function APIPage({
       <div className="space-y-8">
         <header className="not-prose space-y-3">
           <APIInfo method={operation.method} path={operation.path} />
-          <h1 className="font-display font-semibold text-3xl tracking-tight">
+          <h1 className="font-display font-semibold text-3xl">
             {operation.summary ?? operation.operationId}
           </h1>
           {operation.description && (

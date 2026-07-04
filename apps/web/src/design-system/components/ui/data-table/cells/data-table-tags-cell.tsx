@@ -24,12 +24,12 @@ export function DataTableTagsCell({
       {...props}
     >
       {visible.map((t) => (
-        <Badge className="px-1.5 text-[10px]" key={t} variant="secondary">
+        <Badge className="px-1.5 text-xs" key={t} variant="secondary">
           {t}
         </Badge>
       ))}
       {overflow > 0 ? (
-        <Badge className="px-1.5 text-[10px]" variant="outline">
+        <Badge className="px-1.5 text-xs" variant="outline">
           +{overflow}
         </Badge>
       ) : null}

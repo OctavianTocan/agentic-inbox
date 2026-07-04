@@ -127,7 +127,7 @@ export function RunView({ items, onRun, onComplete }: RunViewProps) {
   return (
     <div className="mx-auto flex h-full min-h-0 w-full max-w-3xl flex-col justify-center gap-5 overflow-hidden px-5 py-6 sm:gap-7 sm:px-8 sm:py-10">
       <div className="flex flex-col gap-3">
-        <h1 className="font-sans font-semibold text-2xl tracking-normal sm:text-3xl">
+        <h1 className="font-display font-semibold text-2xl">
           {isInboxEmpty
             ? 'The inbox is all caught up'
             : 'Run the agent across the inbox?'}

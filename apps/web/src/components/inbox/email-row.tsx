@@ -75,7 +75,9 @@ const INLINE_PREVIEW_COMPONENTS: Partial<Components> = {
   pre: ({ children }) => <span>{children} </span>,
   code: ({ children }) => (
     <code className="font-normal font-sans">{children}</code>
-  )
+  ),
+  strong: ({ children }) => <span className="font-normal">{children}</span>,
+  b: ({ children }) => <span className="font-normal">{children}</span>
 };
 
 type PreviewMarkdownProps = {
@@ -174,62 +176,64 @@ export function EmailRow({
           />
         }
       >
-        <ItemContent className="min-w-0">
-          <ItemTitle className="w-full justify-between gap-3">
-            <span className="min-w-0 truncate">{senderName(email.from)}</span>
-            <span className="shrink-0 text-muted-foreground text-xs tabular-nums">
+        <ItemContent className="min-w-0 gap-0.5">
+          <ItemTitle className="w-full justify-between gap-3 font-semibold">
+            <span className="min-w-0 truncate">{email.subject}</span>
+            <span className="shrink-0 font-normal text-muted-foreground text-xs tabular-nums">
               {formatTimestamp(email.timestamp)}
             </span>
           </ItemTitle>
-          <div className="min-w-0 truncate font-medium text-sm">
-            {email.subject}
-          </div>
-          <ItemDescription className="line-clamp-2">
+          <p className="truncate text-muted-foreground text-xs">
+            {senderName(email.from)}
+          </p>
+          <ItemDescription className="line-clamp-1">
             <PreviewMarkdown>
               {decision?.whyPreview ?? email.body}
             </PreviewMarkdown>
           </ItemDescription>
-          <div className="mt-1 flex flex-wrap items-center gap-1.5">
-            {decision ? (
-              <>
-                <Badge variant={statusBadgeVariant(status)}>
-                  {STATUS_LABELS[status]}
-                </Badge>
-                <Badge variant={severityBadgeVariant(decision.severity)}>
-                  {decision.severity}
-                </Badge>
-              </>
-            ) : (
-              <Badge variant="outline">Not triaged</Badge>
-            )}
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1.5">
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+              {decision ? (
+                <>
+                  <Badge variant={statusBadgeVariant(status)}>
+                    {STATUS_LABELS[status]}
+                  </Badge>
+                  <Badge variant={severityBadgeVariant(decision.severity)}>
+                    {decision.severity}
+                  </Badge>
+                </>
+              ) : (
+                <Badge variant="outline">Not triaged</Badge>
+              )}
+            </div>
+            {pendingApproval ? (
+              <ItemActions className="ml-auto shrink-0 gap-1.5">
+                <Button
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onApprove(pendingApproval.id);
+                  }}
+                  size="xs"
+                  variant="secondary"
+                >
+                  <CheckIcon />
+                  Approve
+                </Button>
+                <Button
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onDeny(pendingApproval.id);
+                  }}
+                  size="xs"
+                  variant="destructive"
+                >
+                  <BanIcon />
+                  Deny
+                </Button>
+              </ItemActions>
+            ) : null}
           </div>
         </ItemContent>
-        {pendingApproval ? (
-          <ItemActions className="basis-full justify-end pt-1">
-            <Button
-              onClick={(event) => {
-                event.stopPropagation();
-                onApprove(pendingApproval.id);
-              }}
-              size="sm"
-              variant="secondary"
-            >
-              <CheckIcon />
-              Approve
-            </Button>
-            <Button
-              onClick={(event) => {
-                event.stopPropagation();
-                onDeny(pendingApproval.id);
-              }}
-              size="sm"
-              variant="destructive"
-            >
-              <BanIcon />
-              Deny
-            </Button>
-          </ItemActions>
-        ) : null}
       </ContextMenuTrigger>
       <ContextMenuContent>
         {pendingApproval ? (

@@ -534,7 +534,7 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
             aria-hidden="true"
             className="size-5 shrink-0 rounded-sm bg-[url('/app-icon.svg')] bg-cover bg-center"
           />
-          <span className="font-display font-medium text-sm tracking-tight">
+          <span className="font-display font-medium text-sm">
             Agentic Inbox
           </span>
         </div>

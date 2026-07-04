@@ -173,7 +173,10 @@ describe('EmailRow context menu', () => {
     const onDeny = vi.fn();
     renderRow(pendingItem, { onApprove, onDeny });
 
-    fireEvent.click(screen.getByRole('button', { name: /Approve/ }));
+    const approveButton = screen.getByRole('button', { name: /Approve/ });
+    expect(approveButton.closest('[data-slot="item-content"]')).not.toBeNull();
+
+    fireEvent.click(approveButton);
     expect(onApprove).toHaveBeenCalledWith('a-042');
 
     fireEvent.click(screen.getByRole('button', { name: /Deny/ }));

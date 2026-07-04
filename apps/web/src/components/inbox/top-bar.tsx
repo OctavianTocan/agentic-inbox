@@ -43,7 +43,7 @@ export function SidebarHeaderSlice({ title, peek }: SidebarHeaderSliceProps) {
       />
       <span
         className={cn(
-          'min-w-0 flex-1 truncate font-display font-medium text-sm tracking-tight transition-opacity duration-200 ease-panel',
+          'min-w-0 flex-1 truncate font-display font-medium text-sm transition-opacity duration-200 ease-panel',
           open ? 'opacity-100' : 'opacity-0'
         )}
       >

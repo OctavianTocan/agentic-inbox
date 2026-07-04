@@ -383,14 +383,14 @@ export function FilterValueNumberDisplay<TData>({
     const maxValue = filter.values[1];
 
     return (
-      <span className="tabular-nums tracking-tight">
+      <span className="tabular-nums">
         {minValue} {t("and", locale)} {maxValue}
       </span>
     );
   }
 
   const value = filter.values[0];
-  return <span className="tabular-nums tracking-tight">{value}</span>;
+  return <span className="tabular-nums">{value}</span>;
 }
 
 interface FilterValueControllerProps<TData, TType extends ColumnDataType> {
@@ -529,7 +529,7 @@ const OptionItem = memo(function OptionItem({
           <sup
             className={cn(
               count == null && "hidden",
-              "ml-0.5 tabular-nums tracking-tight text-muted-foreground",
+              "ml-0.5 tabular-nums text-muted-foreground",
               count === 0 && "slashed-zero",
             )}
           >

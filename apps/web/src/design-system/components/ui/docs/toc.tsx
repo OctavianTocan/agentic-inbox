@@ -45,7 +45,7 @@ export function TOC({ items, className }: TOCProps) {
         )}
         data-slot="docs-toc"
       >
-        <p className="px-3 font-medium text-[0.7rem] text-muted-foreground uppercase tracking-wider">
+        <p className="px-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">
           On this page
         </p>
         <TOCList items={items} />
@@ -92,7 +92,7 @@ function TOCItem({ item }: TOCItemProps) {
   return (
     <li style={{ paddingInlineStart: 12 * Math.max(item.depth - 1, 0) }}>
       <Primitive.TOCItem
-        className="block py-1 pl-3 text-[0.8rem] text-muted-foreground leading-relaxed transition-colors hover:text-foreground data-[active=true]:text-primary"
+        className="block py-1 pl-3 text-muted-foreground text-sm leading-relaxed transition-colors hover:text-foreground data-[active=true]:text-primary"
         href={item.url}
       >
         {item.title}
