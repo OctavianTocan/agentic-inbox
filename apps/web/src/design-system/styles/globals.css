@@ -260,6 +260,7 @@
   --duration-tool-block-enter: 200ms;
   --duration-tool-block-exit: 120ms;
   --duration-tool-block-swap: 140ms;
+  --duration-panel-close: 220ms;
   --ease-panel: cubic-bezier(0.32, 0.72, 0, 1);
   --ease-in-quad: cubic-bezier(0.55, 0.085, 0.68, 0.53);
   --ease-in-cubic: cubic-bezier(0.55, 0.055, 0.675, 0.19);
@@ -889,6 +890,21 @@
   }
   to {
     background-position: -200% center;
+  }
+}
+
+/* Collapses a resizable detail panel to zero width so its neighbor grows
+   smoothly before unmount. Targets the outer panel div (which carries the
+   layout flex-grow); react-resizable-panels applies className to an inner div,
+   so this must be a data-attribute rule, not a utility class. */
+[data-slot="resizable-panel"][data-closing] {
+  flex-grow: 0 !important;
+  transition: flex-grow var(--duration-panel-close) var(--ease-panel);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-slot="resizable-panel"][data-closing] {
+    transition: none;
   }
 }
 

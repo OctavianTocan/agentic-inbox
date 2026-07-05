@@ -78,13 +78,13 @@ const ACTION_ICON: Readonly<Record<ActionKind, typeof SendIcon>> = {
 
 const DETAIL_CLOSE_ANIMATION_MS = 220;
 
-type TraceRecord = {
+type AuditRecord = {
   readonly entry: LedgerEntry;
   readonly item: InboxItem;
 };
 
 /** Flatten inbox actions into newest-first audit records. */
-function auditRecords(items: readonly InboxItem[]): readonly TraceRecord[] {
+function auditRecords(items: readonly InboxItem[]): readonly AuditRecord[] {
   return items
     .flatMap((item) => item.actions.map((entry) => ({ entry, item })))
     .sort((a, b) => b.entry.createdAt.localeCompare(a.entry.createdAt));
@@ -96,7 +96,7 @@ function payloadText(payload: Readonly<Record<string, unknown>>): string {
 }
 
 type AuditListProps = {
-  readonly records: readonly TraceRecord[];
+  readonly records: readonly AuditRecord[];
   readonly onSelect: (entryId: string) => void;
 };
 
@@ -145,7 +145,7 @@ function AuditList({ records, onSelect }: AuditListProps) {
 }
 
 type AuditDetailProps = {
-  readonly record: TraceRecord;
+  readonly record: AuditRecord;
   readonly onClose?: () => void;
   readonly bordered?: boolean;
   readonly reserveHeaderRight?: boolean;
@@ -354,6 +354,9 @@ export function AuditPage({ persistedWidth }: { persistedWidth?: number }) {
   );
 
   const closeDetail = useCallback(() => {
+    if (!isDetailOpen || isDetailClosing) {
+      return;
+    }
     setActivePane('list');
     setIsDetailClosing(true);
     detailCloseTimerRef.current = window.setTimeout(() => {
@@ -361,7 +364,7 @@ export function AuditPage({ persistedWidth }: { persistedWidth?: number }) {
       setIsDetailClosing(false);
       detailCloseTimerRef.current = null;
     }, DETAIL_CLOSE_ANIMATION_MS);
-  }, []);
+  }, [isDetailOpen, isDetailClosing]);
 
   useEffect(
     () => () => {
@@ -492,10 +495,7 @@ export function AuditPage({ persistedWidth }: { persistedWidth?: number }) {
                         withHandle
                       />
                       <ResizablePanel
-                        className={cn(
-                          isDetailClosing &&
-                            'grow-0! transition-[flex-grow] duration-[220ms] ease-panel motion-reduce:transition-none'
-                        )}
+                        data-closing={isDetailClosing ? '' : undefined}
                         defaultSize="58%"
                         id="audit-detail"
                         minSize="40%"

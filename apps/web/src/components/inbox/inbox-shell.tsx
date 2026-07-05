@@ -383,7 +383,7 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
   }, [clearDetailCloseTimer, isMobile]);
 
   const closeDetail = useCallback(() => {
-    if (!isDetailOpen) {
+    if (!isDetailOpen || isDetailClosing) {
       return;
     }
     clearDetailCloseTimer();
@@ -393,7 +393,7 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
       setIsDetailClosing(false);
       detailCloseTimerRef.current = null;
     }, DETAIL_CLOSE_ANIMATION_MS);
-  }, [clearDetailCloseTimer, isDetailOpen]);
+  }, [clearDetailCloseTimer, isDetailOpen, isDetailClosing]);
 
   const selectEmail = useCallback(
     (emailId: string) => {
@@ -764,10 +764,7 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
                         withHandle
                       />
                       <ResizablePanel
-                        className={cn(
-                          isDetailClosing &&
-                            'grow-0! transition-[flex-grow] duration-[220ms] ease-panel motion-reduce:transition-none'
-                        )}
+                        data-closing={isDetailClosing ? '' : undefined}
                         defaultSize="58%"
                         id="inbox-detail"
                         minSize="40%"
