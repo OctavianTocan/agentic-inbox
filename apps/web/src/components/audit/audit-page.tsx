@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import {
   type KeyboardEvent,
   useCallback,
-  useEffect,
   useMemo,
   useRef,
   useState
@@ -23,6 +22,7 @@ import {
   ChatHeaderSlice,
   CollapsedSidebarTrigger
 } from '@/components/inbox/top-bar';
+import { useDetailClose } from '@/components/inbox/use-detail-close';
 import { useInbox } from '@/components/inbox/use-inbox';
 import {
   ArchiveIcon,
@@ -75,8 +75,6 @@ const ACTION_ICON: Readonly<Record<ActionKind, typeof SendIcon>> = {
   flag_for_review: FilterXIcon,
   undo: RotateCcwIcon
 };
-
-const DETAIL_CLOSE_ANIMATION_MS = 220;
 
 type AuditRecord = {
   readonly entry: LedgerEntry;
@@ -309,9 +307,13 @@ function AuditDetail({
 export function AuditPage({ persistedWidth }: { persistedWidth?: number }) {
   const { inbox, isLoading } = useInbox();
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [isDetailClosing, setIsDetailClosing] = useState(false);
-  const detailCloseTimerRef = useRef<number | null>(null);
+  const {
+    isDetailOpen,
+    isDetailClosing,
+    shouldRenderDetail,
+    openDetail,
+    closeDetail: closeDetailBase
+  } = useDetailClose();
   const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(false);
   const [activePane, setActivePane] = useState<'list' | 'detail'>('list');
   const [isChatOpen, setIsChatOpen] = useSharedChatOpen();
@@ -342,40 +344,16 @@ export function AuditPage({ persistedWidth }: { persistedWidth?: number }) {
       if (isMobile) {
         setIsMobileDetailOpen(true);
       } else {
-        if (detailCloseTimerRef.current !== null) {
-          window.clearTimeout(detailCloseTimerRef.current);
-          detailCloseTimerRef.current = null;
-        }
-        setIsDetailClosing(false);
-        setIsDetailOpen(true);
+        openDetail();
       }
     },
-    [isMobile]
+    [isMobile, openDetail]
   );
 
   const closeDetail = useCallback(() => {
-    if (!isDetailOpen || isDetailClosing) {
-      return;
-    }
     setActivePane('list');
-    setIsDetailClosing(true);
-    detailCloseTimerRef.current = window.setTimeout(() => {
-      setIsDetailOpen(false);
-      setIsDetailClosing(false);
-      detailCloseTimerRef.current = null;
-    }, DETAIL_CLOSE_ANIMATION_MS);
-  }, [isDetailOpen, isDetailClosing]);
-
-  useEffect(
-    () => () => {
-      if (detailCloseTimerRef.current !== null) {
-        window.clearTimeout(detailCloseTimerRef.current);
-      }
-    },
-    []
-  );
-
-  const shouldRenderDetail = isDetailOpen || isDetailClosing;
+    closeDetailBase();
+  }, [closeDetailBase]);
 
   const toggleChat = useCallback(() => {
     setIsChatOpen(!isChatOpen);

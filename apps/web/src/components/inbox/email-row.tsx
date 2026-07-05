@@ -218,12 +218,12 @@ export function EmailRow({
               </ItemActions>
             ) : null}
           </div>
-          <div className="hidden w-full items-center gap-x-4 sm:grid sm:grid-cols-[minmax(8rem,12rem)_minmax(0,1fr)_10rem]">
+          <div className="hidden w-full items-center gap-x-4 sm:grid sm:grid-cols-[minmax(0,11rem)_minmax(0,1fr)_8.5rem]">
             <div className="hidden min-w-0 sm:block">
               <p className="truncate font-medium text-sm leading-6">{sender}</p>
             </div>
             <div className="min-w-0">
-              <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] items-baseline gap-x-2 text-sm leading-6 sm:grid-cols-[minmax(12rem,18rem)_minmax(0,1fr)]">
+              <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] items-baseline gap-x-2 text-sm leading-6 sm:grid-cols-[minmax(4rem,18rem)_minmax(0,1fr)]">
                 <span className="min-w-0 truncate font-medium">
                   {email.subject}
                 </span>

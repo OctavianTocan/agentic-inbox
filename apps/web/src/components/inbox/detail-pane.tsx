@@ -292,9 +292,9 @@ export function DetailPane({
                 <h3 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
                   Why the agent decided this
                 </h3>
-                <div className="prose prose-sm max-w-none text-sm">
-                  <Markdown>{decision.rationale}</Markdown>
-                </div>
+                <Markdown containerProps={{ className: 'prose-sm max-w-none' }}>
+                  {decision.rationale}
+                </Markdown>
               </section>
               {decision.keyFacts.length > 0 ? (
                 <section className="flex flex-col gap-2">
