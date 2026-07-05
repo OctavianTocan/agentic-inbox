@@ -92,7 +92,7 @@ export function InboxSummaryBlock({
   if (isLoading || summary === null) {
     return (
       <div className="flex items-center gap-3 border-b bg-card px-6 py-5 text-muted-foreground text-sm">
-        <AgentSpinner variant="dotsCircle" label="Computing inbox summary" />
+        <AgentSpinner label="Computing inbox summary" />
         <span>Reviewing your inbox…</span>
       </div>
     );

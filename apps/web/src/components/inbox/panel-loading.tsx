@@ -10,7 +10,7 @@ import { AgentSpinner } from '@/design-system/components/ui/agent-spinner';
 export function PanelLoading({ label }: { readonly label: string }) {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
-      <AgentSpinner label={label} size={1.125} variant="dotsCircle" />
+      <AgentSpinner label={label} size={1.125} />
       <span className="text-sm">{label}</span>
     </div>
   );

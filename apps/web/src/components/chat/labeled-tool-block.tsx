@@ -76,7 +76,7 @@ function StatusGlyph({ status }: { status: ToolStatus }) {
         <TriangleAlertIcon className="size-3.5 shrink-0 text-destructive" />
       );
     default:
-      return <AgentSpinner size={0.75} variant="dots" />;
+      return <AgentSpinner size={0.75} />;
   }
 }
 

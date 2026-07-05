@@ -95,7 +95,7 @@ function ThinkingRow() {
   }
   return (
     <div className="flex items-center gap-2 px-1 text-sm">
-      <AgentSpinner variant="dotsCircle" />
+      <AgentSpinner />
       <TextShimmer as="span" baseColor="var(--muted-foreground)">
         Thinking…
       </TextShimmer>

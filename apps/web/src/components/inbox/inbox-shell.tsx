@@ -514,7 +514,7 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
   if (showNeutralLoading) {
     return (
       <div className="flex h-svh items-center justify-center">
-        <AgentSpinner label="Loading inbox" size={1.25} variant="dotsCircle" />
+        <AgentSpinner label="Loading inbox" size={1.25} />
       </div>
     );
   }

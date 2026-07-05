@@ -208,7 +208,6 @@ export function RunView({ items, onRun, onComplete }: RunViewProps) {
                   className="-translate-y-px text-primary"
                   label="Triaging"
                   size={1}
-                  variant="dots"
                 />
                 <TextShimmer as="span" baseColor="var(--muted-foreground)">
                   Agent is working through the inbox…
