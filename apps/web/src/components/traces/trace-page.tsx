@@ -403,8 +403,9 @@ export function AuditPage({ persistedWidth }: { persistedWidth?: number }) {
           showFilters={false}
           title="Audit"
         />
-        <SidebarInset className="min-h-0 min-w-0 overflow-hidden bg-background">
-          <div className="flex h-full min-w-0">
+        <SidebarInset className="min-h-0 min-w-0 overflow-hidden bg-background md:bg-sidebar">
+          <div className="hidden h-(--top-bar-height) shrink-0 md:block" />
+          <div className="flex min-h-0 min-w-0 flex-1 md:p-2">
             <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
               <header className="flex h-14 shrink-0 items-center justify-between gap-2 border-b bg-sidebar px-3 md:hidden">
                 <div className="flex min-w-0 items-center gap-2">
@@ -432,7 +433,7 @@ export function AuditPage({ persistedWidth }: { persistedWidth?: number }) {
                   >
                     <div
                       className={cn(
-                        'flex h-full min-h-0 flex-col overflow-hidden transition-opacity duration-200 ease-[var(--ease-panel)]',
+                        'flex h-full min-h-0 flex-col overflow-hidden md:rounded-xl md:border md:bg-card transition-opacity duration-200 ease-[var(--ease-panel)]',
                         isDetailOpen &&
                           activePane === 'detail' &&
                           'opacity-[0.93]'
@@ -452,7 +453,7 @@ export function AuditPage({ persistedWidth }: { persistedWidth?: number }) {
                   </ResizablePanel>
                   {isDetailOpen && selectedRecord ? (
                     <>
-                      <ResizableHandle withHandle />
+                      <ResizableHandle className="w-2 bg-transparent" withHandle />
                       <ResizablePanel
                         defaultSize="58%"
                         id="audit-detail"
@@ -460,7 +461,7 @@ export function AuditPage({ persistedWidth }: { persistedWidth?: number }) {
                       >
                         <div
                           className={cn(
-                            'flex h-full flex-col bg-card transition-opacity duration-200 ease-[var(--ease-panel)]',
+                            'flex h-full flex-col overflow-hidden rounded-xl border bg-card transition-opacity duration-200 ease-[var(--ease-panel)]',
                             activePane === 'list' && 'opacity-[0.93]'
                           )}
                           onPointerDownCapture={() => setActivePane('detail')}
@@ -468,7 +469,7 @@ export function AuditPage({ persistedWidth }: { persistedWidth?: number }) {
                           <AuditDetail
                             onClose={() => setIsDetailOpen(false)}
                             record={selectedRecord}
-                            reserveHeaderRight={!isChatOpen}
+                            reserveHeaderRight={false}
                           />
                         </div>
                       </ResizablePanel>

@@ -520,7 +520,7 @@ export function InboxSidebar({
   const { setOpenMobile } = useSidebar();
 
   return (
-    <Sidebar collapsible="offcanvas" className="border-r">
+    <Sidebar collapsible="offcanvas" className="group-data-[side=left]:border-r-0">
       {!isMobile && title !== undefined ? (
         <SidebarHeaderSlice peek={headerPeek} title={title} />
       ) : null}
@@ -592,7 +592,7 @@ export function InboxSidebar({
           />
         ) : null}
       </SidebarContent>
-      <SidebarResizeHandle />
+      <SidebarResizeHandle className="-right-2 top-[calc(var(--top-bar-height)+1.25rem)] bottom-5" />
     </Sidebar>
   );
 }

@@ -133,7 +133,7 @@ design work, read `domain-design` and `domain-frontend` first.
 
 - Scoped path aliases for cross-package (`@apps/*`, `@platform/*`, `@comcom/*`, `@ui/*`, `@clients/*`, `@tooling/*`, `@infra/*`, `@ci/*`, `@agent-dev/*`); `@/*` for local.
 - Import directly from files, never from `index.ts` barrels: `@ui/design-system/components/ui/button`, not `@ui/design-system`.
-- Approved package-export exception: `@ui/design-system/components/icons` is the design-system icon registry; direct `lucide-react` imports belong there.
+- Approved package-export exception: `@ui/design-system/components/icons` is the design-system icon registry; direct `@hugeicons/*` imports belong there. Import icons only from that registry — never `@hugeicons/react`, `@hugeicons/core-free-icons`, or `lucide-react` directly elsewhere.
 - No file extensions in imports (`.ts`, `.tsx`, `.js`).
 
 ### Tests

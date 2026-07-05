@@ -72,8 +72,9 @@ export function ChatSlot({ isOpen, chatKey, onEmptyChange }: ChatSlotProps) {
   return (
     <aside
       className={cn(
-        'relative h-full shrink-0 overflow-hidden border-l bg-card',
-        !isDragging && 'transition-[width] duration-200 ease-panel'
+        'relative h-full shrink-0 overflow-hidden rounded-xl border bg-card',
+        isOpen && 'ml-2',
+        !isDragging && 'transition-[width,margin] duration-200 ease-panel'
       )}
       data-slot="chat-slot"
       data-state={isOpen ? 'expanded' : 'collapsed'}

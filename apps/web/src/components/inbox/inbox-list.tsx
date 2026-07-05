@@ -31,6 +31,7 @@ import {
   DropdownMenuTrigger
 } from '@/design-system/components/ui/dropdown-menu';
 import { ItemGroup } from '@/design-system/components/ui/item';
+import { cn } from '@/design-system/lib/utils';
 import {
   SORT_KEYS,
   SORT_LABELS,
@@ -256,13 +257,24 @@ export function InboxList({
               {visiblePending.map(renderRow)}
             </ItemGroup>
             {hiddenCount > 0 || isExpanded ? (
-              <div className="px-4 pt-2 sm:px-6">
+              <div className="px-4 pt-1 sm:px-6">
                 <Button
+                  className="-ml-3 gap-1 font-normal text-muted-foreground text-xs hover:text-foreground"
                   onClick={() => setIsExpanded((prev) => !prev)}
                   size="sm"
                   variant="ghost"
                 >
-                  {isExpanded ? 'Show fewer' : `${hiddenCount} more approvals`}
+                  <ChevronDownIcon
+                    className={cn(
+                      'size-3.5 transition-transform duration-200',
+                      isExpanded && 'rotate-180'
+                    )}
+                  />
+                  <span className="tabular-nums">
+                    {isExpanded
+                      ? 'Show fewer'
+                      : `${hiddenCount} more approvals`}
+                  </span>
                 </Button>
               </div>
             ) : null}

@@ -174,7 +174,15 @@ should clarify layering without making panels look floaty or promotional.
 
 The base radius is 8px. Small controls can use 4px; larger framed surfaces can
 use 12px. Do not exceed this scale unless a source component already does it.
-Avoid nested rounded rectangles that make panels feel padded inside padding.
+
+Nested rounded elements must use concentric radii: `outer = inner + padding`
+(equivalently `inner = outer − padding`). Equal radii on a padded parent and
+its rounded child read as wrong. Example: a `rounded-xl` (12px) surface with
+`p-2` (8px) holds a `rounded-sm` (4px) child, not another `rounded-xl`. This
+applies only to true nesting — the floating work panels sit on a flat,
+non-rounded backing, so they are the outermost rounded surface and keep a
+uniform 12px radius. Still avoid nested rounded rectangles that make panels
+feel padded inside padding.
 
 ## Components
 

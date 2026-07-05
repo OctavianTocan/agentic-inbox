@@ -692,12 +692,12 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
               </Drawer>
             </div>
 
-            <div className="hidden h-full flex-col overflow-hidden md:flex">
+            <div className="hidden h-full flex-col overflow-hidden bg-sidebar md:flex">
               <div
-                className="h-(--top-bar-height) shrink-0 border-b"
+                className="h-(--top-bar-height) shrink-0"
                 data-slot="inbox-top-bar"
               />
-              <div className="flex min-h-0 flex-1">
+              <div className="flex min-h-0 flex-1 p-2">
                 <ResizablePanelGroup
                   className="min-w-0 flex-1"
                   defaultLayout={{ 'inbox-list': 42, 'inbox-detail': 58 }}
@@ -710,7 +710,7 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
                   >
                     <div
                       className={cn(
-                        'flex h-full flex-col overflow-hidden transition-opacity duration-200 ease-[var(--ease-panel)]',
+                        'flex h-full flex-col overflow-hidden rounded-xl border bg-card transition-opacity duration-200 ease-[var(--ease-panel)]',
                         isDetailOpen &&
                           activePane === 'detail' &&
                           'opacity-[0.93]'
@@ -758,7 +758,7 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
                     <>
                       <ResizableHandle
                         className={cn(
-                          'transition-opacity duration-150 ease-panel',
+                          'w-2 bg-transparent transition-opacity duration-150 ease-panel',
                           isDetailClosing && 'opacity-0'
                         )}
                         withHandle
@@ -770,7 +770,7 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
                       >
                         <div
                           className={cn(
-                            'flex h-full flex-col bg-card transition-[opacity,transform] duration-150 ease-panel motion-reduce:transition-none motion-reduce:translate-x-0',
+                            'flex h-full flex-col overflow-hidden rounded-xl border bg-card transition-[opacity,transform] duration-150 ease-panel motion-reduce:transition-none motion-reduce:translate-x-0',
                             activePane === 'list' && !isDetailClosing
                               ? 'opacity-[0.93]'
                               : 'opacity-100',

@@ -1,211 +1,358 @@
 /**
- * Centralized icon exports. Central Icon System is the primary provider;
- * lucide-react is a narrow fallback for icons Central does not ship.
+ * Centralized icon exports. Hugeicons is the primary provider for line icons;
+ * local brand SVG components cover logos Hugeicons does not ship.
  *
  * Import icon names from this module. Direct imports of `lucide-react` or
  * `@central-icons-react/*` must not appear elsewhere in the codebase.
  */
 
-import type { ComponentType, SVGProps } from "react";
+import {
+  HugeiconsIcon,
+  type IconSvgElement,
+} from "@hugeicons/react";
+import {
+  Activity01Icon as HiActivity,
+  AiBrowserIcon as HiAiBrowser,
+  Alert02Icon as HiAlertTriangle,
+  Archive01Icon as HiArchive,
+  ArrowDown01Icon as HiArrowDown,
+  ArrowDownLeft01Icon as HiArrowDownLeft,
+  ArrowLeft01Icon as HiArrowLeft,
+  ArrowReloadHorizontalIcon as HiReloadHorizontal,
+  ArrowRight01Icon as HiArrowRight,
+  ArrowUp01Icon as HiArrowUp,
+  ArrowUpRight01Icon as HiArrowUpRight,
+  BarChartIcon as HiBarChart,
+  Brain01Icon as HiBrain,
+  BubbleChatQuestionIcon as HiBubbleChatText,
+  Building02Icon as HiBuilding,
+  Calendar01Icon as HiCalendar,
+  CalendarSetting01Icon as HiCalendarClock,
+  Calendar03Icon as HiCalendarDays,
+  CallIncoming01Icon as HiCallIncoming,
+  Camera01Icon as HiCamera,
+  CancelCircleIcon as HiCircleX,
+  Cancel01Icon as HiCancel,
+  CancelCircleHalfDotIcon as HiStopCircle,
+  ChartUpIcon as HiTradeUp,
+  CheckmarkBadge01Icon as HiBadgeCheck,
+  CheckmarkCircle01Icon as HiCircleCheck,
+  CheckmarkSquare01Icon as HiCheckSquare,
+  ChevronDownIcon as HiChevronDown,
+  ChevronLeftIcon as HiChevronLeft,
+  ChevronRightIcon as HiChevronRight,
+  ChevronUpIcon as HiChevronUp,
+  ChipIcon as HiChip,
+  CircleIcon as HiCircle,
+  CircleDashedIcon as HiCircleDashed,
+  Clock01Icon as HiClock,
+  ColorPickerIcon as HiColorPicker,
+  CommandIcon as HiCommand,
+  ConsoleIcon as HiConsole,
+  ContrastIcon as HiContrast,
+  Copy01Icon as HiCopy,
+  CreditCardIcon as HiCreditCard,
+  CrosshairIcon as HiCrosshair,
+  CursorPointer01Icon as HiCursorClick,
+  DashboardSquare01Icon as HiDashboard,
+  Delete02Icon as HiTrash,
+  DragDropVerticalIcon as HiDragVertical,
+  Edit02Icon as HiEdit,
+  FavouriteIcon as HiStar,
+  File01Icon as HiFile,
+  FileAddIcon as HiFileAdd,
+  FileEditIcon as HiFileEdit,
+  FilterIcon as HiFilter,
+  FilterHorizontalIcon as HiSliders,
+  FilterRemoveIcon as HiFilterRemove,
+  Flag02Icon as HiFlag,
+  FloppyDiskIcon as HiFloppyDisk,
+  Folder01Icon as HiFolder,
+  FolderOpenIcon as HiFolderOpen,
+  GitBranchIcon as HiGitBranch,
+  GitMergeIcon as HiGitMerge,
+  GitPullRequestIcon as HiGitPullRequest,
+  GitPullRequestClosedIcon as HiGitPullRequestClosed,
+  HashtagIcon as HiHashtag,
+  HierarchyIcon as HiHierarchy,
+  HistoryIcon as HiHistory,
+  HomeIcon as HiHome,
+  ImageIcon as HiImage,
+  InboxIcon as HiInbox,
+  InboxDownloadIcon as HiInboxDownload,
+  InformationCircleIcon as HiInfoCircle,
+  Key01Icon as HiKey,
+  Key02Icon as HiKeyRound,
+  Layers01Icon as HiLayers,
+  Layout01Icon as HiLayout,
+  LayoutGridIcon as HiLayoutGrid,
+  LifebuoyIcon as HiLifebuoy,
+  Link01Icon as HiLink,
+  LinkSquare01Icon as HiExternalLink,
+  Loading01Icon as HiLoading,
+  LockIcon as HiLock,
+  Logout01Icon as HiLogout,
+  Mail01Icon as HiMail,
+  Maximize01Icon as HiMaximize,
+  Maximize02Icon as HiMaximize2,
+  Menu01Icon as HiMenu,
+  Message01Icon as HiMessage,
+  Minimize01Icon as HiMinimize,
+  Minimize03Icon as HiMinimize2,
+  MinusSignIcon as HiMinus,
+  Moon02Icon as HiMoon,
+  MoonEclipseIcon as HiMoonStar,
+  MoreHorizontalIcon as HiMoreHorizontal,
+  MoreVerticalIcon as HiMoreVertical,
+  Notification01Icon as HiNotification,
+  Package01Icon as HiPackage,
+  PaintBrush02Icon as HiPaintBrush,
+  PauseIcon as HiPause,
+  PencilIcon as HiPencil,
+  PencilEdit01Icon as HiPencilEdit,
+  Pin02Icon as HiPin2,
+  PinIcon as HiPin,
+  PinOffIcon as HiPinOff,
+  PlayIcon as HiPlay,
+  PlusSignIcon as HiPlusSign,
+  PlusSignCircleIcon as HiPlusCircle,
+  PuzzleIcon as HiPuzzle,
+  QuestionIcon as HiHelpCircle,
+  RemoveCircleHalfDotIcon as HiBan,
+  Robot01Icon as HiRobot,
+  RocketIcon as HiRocket,
+  SecurityWarningIcon as HiShieldAlert,
+  SentIcon as HiSent,
+  Search01Icon as HiSearch,
+  ServerStack01Icon as HiServer,
+  Settings02Icon as HiSettings,
+  Settings01Icon as HiSettingsGear,
+  Shield01Icon as HiShield,
+  SidebarLeft01Icon as HiSidebarLeft,
+  SidebarLeftIcon as HiSidebarLeftClose,
+  SidebarRight01Icon as HiSidebarRight,
+  SidebarRightIcon as HiSidebarRightClose,
+  SmartPhone01Icon as HiSmartPhone,
+  SmileIcon as HiSmile,
+  SourceCodeIcon as HiSourceCode,
+  SparklesIcon as HiSparkles,
+  SquareUnlockIcon as HiSquareUnlock,
+  Sun01Icon as HiSun,
+  TextAlignCenterIcon as HiAlignCenter,
+  TextAlignLeftIcon as HiAlignLeft,
+  TextAlignRightIcon as HiAlignRight,
+  TextBoldIcon as HiBold,
+  TextFontIcon as HiText,
+  TextItalicIcon as HiItalic,
+  TextUnderlineIcon as HiUnderline,
+  Tick01Icon as HiCheck,
+  TvIcon as HiTv,
+  UnfoldMoreIcon as HiUnfoldMore,
+  Upload01Icon as HiUpload,
+  UserIcon as HiUser,
+  UserAdd01Icon as HiUserAdd,
+  UserCheck01Icon as HiUserCheck,
+  UserEdit01Icon as HiUserEdit,
+  UserGroupIcon as HiUserGroup,
+  UserSettings01Icon as HiUserSettings,
+  ViewSidebarRightIcon as HiViewSidebarRight,
+  Wrench01Icon as HiWrench,
+  AppWindowIcon as HiAppWindow,
+  ClaudeIcon as HiClaude,
+  ChatGptIcon as HiChatGpt,
+  EnergyIcon as HiEnergy,
+  GlobalIcon as HiGlobal,
+  LocationOfflineIcon as HiLocationOffline,
+  Book02Icon as HiBook,
+} from "@hugeicons/core-free-icons";
+import type { ComponentProps, ComponentType, SVGProps } from "react";
 
 export type IconProps = SVGProps<SVGSVGElement> & { size?: string | number };
 export type Icon = ComponentType<IconProps>;
 
-export { IconAlignmentCenter as AlignCenterIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconAlignmentCenter";
-export { IconAlignmentLeft as AlignLeftIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconAlignmentLeft";
-export { IconAlignmentRight as AlignRightIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconAlignmentRight";
-export { IconAnthropic as AnthropicIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconAnthropic";
-export {
-  IconArchive as ArchiveIcon,
-  IconArchive as BoxIcon,
-} from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconArchive";
-export { IconArrowBoxLeft as LogOutIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconArrowBoxLeft";
-export { IconArrowDownLeft as MoveDownLeftIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconArrowDownLeft";
-export { IconArrowInbox as DownloadIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconArrowInbox";
-export { IconArrowLeft as ArrowLeftIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconArrowLeft";
-export { IconArrowOutOfBox as UploadIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconArrowOutOfBox";
-export {
-  IconArrowRight as ArrowRightIcon,
-  IconArrowRight as MoveRightIcon,
-} from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconArrowRight";
-export { IconArrowRotateClockwise as RefreshCwIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconArrowRotateClockwise";
-export {
-  IconArrowRotateCounterClockwise as RefreshCcwIcon,
-  IconArrowRotateCounterClockwise as RotateCcwIcon,
-} from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconArrowRotateCounterClockwise";
-export { IconArrowUp as ArrowUpIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconArrowUp";
-export { IconArrowUpRight as MoveUpRightIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconArrowUpRight";
-export { IconBarsThree as MenuIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconBarsThree";
-export { IconBell as BellIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconBell";
-export { IconBlocks as BlocksIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconBlocks";
-export { IconBold as BoldIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconBold";
-export { IconBook as BookIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconBook";
-export { IconBrackets1 as BracesIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconBrackets1";
-export { IconBrain1 as BrainIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconBrain1";
-export { IconBranch as GitBranchIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconBranch";
-export { IconBrush as PaintbrushIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconBrush";
-export { IconBubble6 as MessageSquareIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconBubble6";
-export {
-  IconBubbleText as BotMessageSquareIcon,
-  IconBubbleText as MessageSquareTextIcon,
-} from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconBubbleText";
-export {
-  IconBuildings as Building2Icon,
-  IconBuildings as BuildingIcon,
-} from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconBuildings";
-export { IconCalendar1 as CalendarIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconCalendar1";
-export { IconCalendarClock as CalendarClockIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconCalendarClock";
-export { IconCalendarDays as CalendarDaysIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconCalendarDays";
-export { IconCallIncoming as PhoneCallIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconCallIncoming";
-export { IconCamera1 as CameraIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconCamera1";
-export { IconChainLink1 as LinkIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconChainLink1";
-export { IconChart3 as BarChart3Icon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconChart3";
-export { IconCheckmark1 as CheckIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconCheckmark1";
-export { IconChevronBottom as ChevronDownIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconChevronBottom";
-export { IconChevronDoubleLeft as ChevronsLeftIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconChevronDoubleLeft";
-export { IconChevronDoubleRight as ChevronsRightIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconChevronDoubleRight";
-export { IconChevronGrabberVertical as ChevronsUpDownIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconChevronGrabberVertical";
-export { IconChevronLeft as ChevronLeftIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconChevronLeft";
-export { IconChevronRight as ChevronRightIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconChevronRight";
-export { IconChevronTop as ChevronUpIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconChevronTop";
-export { IconChip as ChipIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconChip";
-export { IconCircle as CircleIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconCircle";
-export { IconCircleBanSign as BanIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconCircleBanSign";
-export { IconCircleCheck as CircleCheckIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconCircleCheck";
-export { IconCircleDashed as CircleDashedIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconCircleDashed";
-export { IconCircleHalfFill as HalfCircleIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconCircleHalfFill";
-export {
-  IconCircleInfo as AlertCircleIcon,
-  IconCircleInfo as InfoIcon,
-} from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconCircleInfo";
-export { IconCirclePlus as PlusCircleIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconCirclePlus";
-export { IconCircleQuestionmark as HelpCircleIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconCircleQuestionmark";
-export {
-  IconCircleX as OctagonXIcon,
-  IconCircleX as XCircleIcon,
-} from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconCircleX";
-export { IconClock as ClockIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconClock";
-export { IconCmd as CommandIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconCmd";
-export { IconColorPalette as PaletteIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconColorPalette";
-export { IconConsole as TerminalIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconConsole";
-export { IconCreditCard1 as CreditCardIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconCreditCard1";
-export {
-  IconCrossLarge as CloseIcon,
-  IconCrossLarge as XIcon,
-} from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconCrossLarge";
-export { IconCursorClick as MousePointerClickIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconCursorClick";
-export { IconDotGrid1x3Horizontal as MoreHorizontalIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconDotGrid1x3Horizontal";
-export {
-  IconDotGrid1x3Vertical as GripVerticalIcon,
-  IconDotGrid1x3Vertical as MoreVerticalIcon,
-} from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconDotGrid1x3Vertical";
-export { IconEditBig as EditIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconEditBig";
-export { IconElectrocardiogram as ActivityIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconElectrocardiogram";
-export { IconEmail1 as MailIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconEmail1";
-export { IconEmojiSmiley as SmileIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconEmojiSmiley";
-export { IconExclamationTriangle as TriangleAlertIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconExclamationTriangle";
-export { IconExpand as MaximizeIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconExpand";
-export { IconExpand45 as Maximize2Icon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconExpand45";
-export { IconFileText as FileTextIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconFileText";
-export { IconFlag1 as FlagIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconFlag1";
-export { IconFilter1 as ListFilterIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconFilter1";
-export { IconFloppyDisk1 as SaveIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconFloppyDisk1";
-export { IconFolder1 as FolderIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconFolder1";
-export { IconFolderOpen as FolderOpenIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconFolderOpen";
-export { IconGroup1 as UsersIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconGroup1";
-export { IconHashtag as HashIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconHashtag";
-export { IconHistory as HistoryIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconHistory";
-export { IconHome as HomeIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconHome";
-export { IconImages1 as ImageIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconImages1";
-export { IconInboxEmpty as InboxIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconInboxEmpty";
-export { IconItalic as ItalicIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconItalic";
-export { IconKey1 as KeyIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconKey1";
-export { IconKey2 as KeyRoundIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconKey2";
-export { IconLayersThree as LayersIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconLayersThree";
-export { IconLayoutDashboard as LayoutDashboardIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconLayoutDashboard";
-export { IconLayoutGrid1 as LayoutGridIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconLayoutGrid1";
-export { IconLayoutTopbar as PanelsTopLeftIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconLayoutTopbar";
-export { IconLoader as LoaderIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconLoader";
-export { IconLock as LockIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconLock";
-export { IconMagnifyingGlass as SearchIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconMagnifyingGlass";
-export { IconMaintenance as WrenchIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconMaintenance";
-export { IconMerged as GitMergeIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconMerged";
-export { IconMinimize as MinimizeIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconMinimize";
-export { IconMinimize315 as Minimize2Icon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconMinimize315";
-export { IconMinusSmall as MinusIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconMinusSmall";
-export { IconMoon as MoonIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconMoon";
-export { IconMoonStar as SunMoonIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconMoonStar";
-export { IconOpenai as OpenAiIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconOpenai";
-export { IconPackage as PackageIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconPackage";
-export { IconPageAdd as FilePlusIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconPageAdd";
-export { IconPageEmpty as FileIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconPageEmpty";
-export { IconPaperPlane as SendIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconPaperPlane";
-export { IconPause as PauseIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconPause";
-export { IconPencil as PencilIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconPencil";
-export { IconPencilLine as SquarePenIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconPencilLine";
-export { IconPeople as UserIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconPeople";
-export { IconPeopleAdd as UserPlusIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconPeopleAdd";
-export { IconPeopleAdded as UserCheckIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconPeopleAdded";
-export { IconPeopleEdit as UserPenIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconPeopleEdit";
-export { IconPhone as SmartphoneIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconPhone";
-export { IconPin as PinIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconPin";
-export { IconPin2 as Pin2Icon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconPin2";
-export { IconPlay as PlayIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconPlay";
-export { IconPlusLarge as PlusIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconPlusLarge";
-export { IconPullRequest as GitPullRequestIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconPullRequest";
-export { IconPullRequestClosedSimple as GitPullRequestClosedIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconPullRequestClosedSimple";
-export { IconRescueRing as LifeBuoyIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconRescueRing";
-export { IconRobot as BotIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconRobot";
-export { IconRocket as RocketIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconRocket";
-export { IconScriptAi as ScriptAiIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconScriptAi";
-export { IconServer as DatabaseIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconServer";
-export {
-  IconSettingsGear1 as CogIcon,
-  IconSettingsGear1 as MonitorCogIcon,
-} from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconSettingsGear1";
-export {
-  IconSettingsGear2 as Settings2Icon,
-  IconSettingsGear2 as SettingsIcon,
-} from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconSettingsGear2";
-export { IconSettingsSliderHor as SlidersHorizontalIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconSettingsSliderHor";
-export { IconShield as ShieldIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconShield";
-export { IconSidebarSimpleLeftWide as PanelLeftIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconSidebarSimpleLeftWide";
-export { IconSidebarSimpleRightSquare as PanelRightSquareIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconSidebarSimpleRightSquare";
-export { IconSidebarSimpleRightWide as PanelRightIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconSidebarSimpleRightWide";
-export { IconSparklesThree as SparklesIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconSparklesThree";
-export { IconSquareArrowTopRight as ExternalLinkIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconSquareArrowTopRight";
-export { IconSquareBehindSquare1 as CopyIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconSquareBehindSquare1";
-export { IconSquareCheck as CheckSquareIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconSquareCheck";
-export { IconStar as StarIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconStar";
-export { IconStopCircle as StopCircleIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconStopCircle";
-export { IconSubscriptionTick1 as BadgeCheckIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconSubscriptionTick1";
-export { IconSun as SunIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconSun";
-export { IconTarget1 as CrosshairIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconTarget1";
-export { IconTelevision as MonitorIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconTelevision";
-export { IconText1 as TextIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconText1";
-export {
-  IconTrashCan as Trash2Icon,
-  IconTrashCan as TrashIcon,
-} from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconTrashCan";
-export { IconTrending1 as TrendingUpIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconTrending1";
-export { IconUnderline as UnderlineIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconUnderline";
-export {
-  IconUnlocked as LockOpenIcon,
-  IconUnlocked as UnlockIcon,
-} from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconUnlocked";
-export { IconUnpin as PinOffIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconUnpin";
-export { IconUnpin2 as PinOff2Icon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconUnpin2";
-export { IconUserSettings as UserSettingsIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconUserSettings";
-export { IconWindowApp as AppWindowIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconWindowApp";
-export { IconWorld as GlobeIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconWorld";
-export { IconZap as ZapIcon } from "@central-icons-react/round-outlined-radius-2-stroke-1.5/IconZap";
-export {
-  FilterX as FilterXIcon,
-  Network as NetworkIcon,
-  PanelLeftClose as PanelLeftCloseIcon,
-  PanelRightClose as PanelRightCloseIcon,
-  ShieldAlert as ShieldAlertIcon,
-} from "lucide-react";
+/** Wraps a Hugeicons data object as an `<svg>`-compatible icon component. */
+const hugeicon = (data: IconSvgElement): Icon => {
+  const IconComponent = ({ strokeWidth, ...props }: IconProps) => {
+    const iconProps: ComponentProps<typeof HugeiconsIcon> = {
+      icon: data,
+      ...props,
+      // HugeiconsIcon narrows strokeWidth to number; drop non-numeric SVG values.
+      ...(typeof strokeWidth === "number" ? { strokeWidth } : {}),
+    };
+    return <HugeiconsIcon {...iconProps} />;
+  };
+  return IconComponent;
+};
+
+export const AlignCenterIcon = hugeicon(HiAlignCenter);
+export const AlignLeftIcon = hugeicon(HiAlignLeft);
+export const AlignRightIcon = hugeicon(HiAlignRight);
+export const AnthropicIcon = hugeicon(HiClaude);
+export const ArchiveIcon = hugeicon(HiArchive);
+export const BoxIcon = hugeicon(HiArchive);
+export const LogOutIcon = hugeicon(HiLogout);
+export const MoveDownLeftIcon = hugeicon(HiArrowDownLeft);
+export const DownloadIcon = hugeicon(HiInboxDownload);
+export const ArrowLeftIcon = hugeicon(HiArrowLeft);
+export const UploadIcon = hugeicon(HiUpload);
+export const ArrowRightIcon = hugeicon(HiArrowRight);
+export const MoveRightIcon = hugeicon(HiArrowRight);
+export const RefreshCwIcon = hugeicon(HiReloadHorizontal);
+export const RefreshCcwIcon = hugeicon(HiReloadHorizontal);
+export const RotateCcwIcon = hugeicon(HiReloadHorizontal);
+export const ArrowDownIcon = hugeicon(HiArrowDown);
+export const ArrowUpIcon = hugeicon(HiArrowUp);
+export const MoveUpRightIcon = hugeicon(HiArrowUpRight);
+export const MenuIcon = hugeicon(HiMenu);
+export const BellIcon = hugeicon(HiNotification);
+export const BlocksIcon = hugeicon(HiPuzzle);
+export const BoldIcon = hugeicon(HiBold);
+export const BookIcon = hugeicon(HiBook);
+export const BracesIcon = hugeicon(HiSourceCode);
+export const BrainIcon = hugeicon(HiBrain);
+export const GitBranchIcon = hugeicon(HiGitBranch);
+export const PaintbrushIcon = hugeicon(HiPaintBrush);
+export const MessageSquareIcon = hugeicon(HiMessage);
+export const BotMessageSquareIcon = hugeicon(HiBubbleChatText);
+export const MessageSquareTextIcon = hugeicon(HiBubbleChatText);
+export const Building2Icon = hugeicon(HiBuilding);
+export const BuildingIcon = hugeicon(HiBuilding);
+export const CalendarIcon = hugeicon(HiCalendar);
+export const CalendarClockIcon = hugeicon(HiCalendarClock);
+export const CalendarDaysIcon = hugeicon(HiCalendarDays);
+export const PhoneCallIcon = hugeicon(HiCallIncoming);
+export const CameraIcon = hugeicon(HiCamera);
+export const LinkIcon = hugeicon(HiLink);
+export const BarChart3Icon = hugeicon(HiBarChart);
+export const CheckIcon = hugeicon(HiCheck);
+export const ChevronDownIcon = hugeicon(HiChevronDown);
+export const ChevronsLeftIcon = hugeicon(HiChevronLeft);
+export const ChevronsRightIcon = hugeicon(HiChevronRight);
+export const ChevronsUpDownIcon = hugeicon(HiUnfoldMore);
+export const ChevronLeftIcon = hugeicon(HiChevronLeft);
+export const ChevronRightIcon = hugeicon(HiChevronRight);
+export const ChevronUpIcon = hugeicon(HiChevronUp);
+export const ChipIcon = hugeicon(HiChip);
+export const CircleIcon = hugeicon(HiCircle);
+export const BanIcon = hugeicon(HiBan);
+export const CircleCheckIcon = hugeicon(HiCircleCheck);
+export const CircleDashedIcon = hugeicon(HiCircleDashed);
+export const HalfCircleIcon = hugeicon(HiContrast);
+export const AlertCircleIcon = hugeicon(HiInfoCircle);
+export const InfoIcon = hugeicon(HiInfoCircle);
+export const PlusCircleIcon = hugeicon(HiPlusCircle);
+export const HelpCircleIcon = hugeicon(HiHelpCircle);
+export const OctagonXIcon = hugeicon(HiCircleX);
+export const XCircleIcon = hugeicon(HiCircleX);
+export const ClockIcon = hugeicon(HiClock);
+export const CommandIcon = hugeicon(HiCommand);
+export const PaletteIcon = hugeicon(HiColorPicker);
+export const TerminalIcon = hugeicon(HiConsole);
+export const CreditCardIcon = hugeicon(HiCreditCard);
+export const CloseIcon = hugeicon(HiCancel);
+export const XIcon = hugeicon(HiCancel);
+export const MousePointerClickIcon = hugeicon(HiCursorClick);
+export const MoreHorizontalIcon = hugeicon(HiMoreHorizontal);
+export const GripVerticalIcon = hugeicon(HiDragVertical);
+export const MoreVerticalIcon = hugeicon(HiMoreVertical);
+export const EditIcon = hugeicon(HiEdit);
+export const ActivityIcon = hugeicon(HiActivity);
+export const MailIcon = hugeicon(HiMail);
+export const SmileIcon = hugeicon(HiSmile);
+export const TriangleAlertIcon = hugeicon(HiAlertTriangle);
+export const MaximizeIcon = hugeicon(HiMaximize);
+export const Maximize2Icon = hugeicon(HiMaximize2);
+export const FileTextIcon = hugeicon(HiFileEdit);
+export const FlagIcon = hugeicon(HiFlag);
+export const ListFilterIcon = hugeicon(HiFilter);
+export const SaveIcon = hugeicon(HiFloppyDisk);
+export const FolderIcon = hugeicon(HiFolder);
+export const FolderOpenIcon = hugeicon(HiFolderOpen);
+export const UsersIcon = hugeicon(HiUserGroup);
+export const HashIcon = hugeicon(HiHashtag);
+export const HistoryIcon = hugeicon(HiHistory);
+export const HomeIcon = hugeicon(HiHome);
+export const ImageIcon = hugeicon(HiImage);
+export const InboxIcon = hugeicon(HiInbox);
+export const ItalicIcon = hugeicon(HiItalic);
+export const KeyIcon = hugeicon(HiKey);
+export const KeyRoundIcon = hugeicon(HiKeyRound);
+export const LayersIcon = hugeicon(HiLayers);
+export const LayoutDashboardIcon = hugeicon(HiDashboard);
+export const LayoutGridIcon = hugeicon(HiLayoutGrid);
+export const PanelsTopLeftIcon = hugeicon(HiLayout);
+export const LoaderIcon = hugeicon(HiLoading);
+export const LockIcon = hugeicon(HiLock);
+export const SearchIcon = hugeicon(HiSearch);
+export const WrenchIcon = hugeicon(HiWrench);
+export const GitMergeIcon = hugeicon(HiGitMerge);
+export const MinimizeIcon = hugeicon(HiMinimize);
+export const Minimize2Icon = hugeicon(HiMinimize2);
+export const MinusIcon = hugeicon(HiMinus);
+export const MoonIcon = hugeicon(HiMoon);
+export const SunMoonIcon = hugeicon(HiMoonStar);
+export const OpenAiIcon = hugeicon(HiChatGpt);
+export const PackageIcon = hugeicon(HiPackage);
+export const FilePlusIcon = hugeicon(HiFileAdd);
+export const FileIcon = hugeicon(HiFile);
+export const SendIcon = hugeicon(HiSent);
+export const PauseIcon = hugeicon(HiPause);
+export const PencilIcon = hugeicon(HiPencil);
+export const SquarePenIcon = hugeicon(HiPencilEdit);
+export const UserIcon = hugeicon(HiUser);
+export const UserPlusIcon = hugeicon(HiUserAdd);
+export const UserCheckIcon = hugeicon(HiUserCheck);
+export const UserPenIcon = hugeicon(HiUserEdit);
+export const SmartphoneIcon = hugeicon(HiSmartPhone);
+export const PinIcon = hugeicon(HiPin);
+export const Pin2Icon = hugeicon(HiPin2);
+export const PlayIcon = hugeicon(HiPlay);
+export const PlusIcon = hugeicon(HiPlusSign);
+export const GitPullRequestIcon = hugeicon(HiGitPullRequest);
+export const GitPullRequestClosedIcon = hugeicon(HiGitPullRequestClosed);
+export const LifeBuoyIcon = hugeicon(HiLifebuoy);
+export const BotIcon = hugeicon(HiRobot);
+export const RocketIcon = hugeicon(HiRocket);
+export const ScriptAiIcon = hugeicon(HiAiBrowser);
+export const DatabaseIcon = hugeicon(HiServer);
+export const CogIcon = hugeicon(HiSettingsGear);
+export const MonitorCogIcon = hugeicon(HiSettingsGear);
+export const Settings2Icon = hugeicon(HiSettings);
+export const SettingsIcon = hugeicon(HiSettings);
+export const SlidersHorizontalIcon = hugeicon(HiSliders);
+export const ShieldIcon = hugeicon(HiShield);
+export const PanelLeftIcon = hugeicon(HiSidebarLeft);
+export const PanelRightSquareIcon = hugeicon(HiViewSidebarRight);
+export const PanelRightIcon = hugeicon(HiSidebarRight);
+export const SparklesIcon = hugeicon(HiSparkles);
+export const ExternalLinkIcon = hugeicon(HiExternalLink);
+export const CopyIcon = hugeicon(HiCopy);
+export const CheckSquareIcon = hugeicon(HiCheckSquare);
+export const StarIcon = hugeicon(HiStar);
+export const StopCircleIcon = hugeicon(HiStopCircle);
+export const BadgeCheckIcon = hugeicon(HiBadgeCheck);
+export const SunIcon = hugeicon(HiSun);
+export const CrosshairIcon = hugeicon(HiCrosshair);
+export const MonitorIcon = hugeicon(HiTv);
+export const TextIcon = hugeicon(HiText);
+export const Trash2Icon = hugeicon(HiTrash);
+export const TrashIcon = hugeicon(HiTrash);
+export const TrendingUpIcon = hugeicon(HiTradeUp);
+export const UnderlineIcon = hugeicon(HiUnderline);
+export const LockOpenIcon = hugeicon(HiSquareUnlock);
+export const UnlockIcon = hugeicon(HiSquareUnlock);
+export const PinOffIcon = hugeicon(HiPinOff);
+export const PinOff2Icon = hugeicon(HiLocationOffline);
+export const UserSettingsIcon = hugeicon(HiUserSettings);
+export const AppWindowIcon = hugeicon(HiAppWindow);
+export const GlobeIcon = hugeicon(HiGlobal);
+export const ZapIcon = hugeicon(HiEnergy);
+export const FilterXIcon = hugeicon(HiFilterRemove);
+export const NetworkIcon = hugeicon(HiHierarchy);
+export const PanelLeftCloseIcon = hugeicon(HiSidebarLeftClose);
+export const PanelRightCloseIcon = hugeicon(HiSidebarRightClose);
+export const ShieldAlertIcon = hugeicon(HiShieldAlert);
+
 export { GithubIcon } from "./github-icon";
 export { GoogleIcon } from "./google-icon";
 export { HuggingFaceLogoIcon } from "./hugging-face-logo-icon";

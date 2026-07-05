@@ -1,12 +1,12 @@
 import {
-  Bot,
-  Braces,
-  DatabaseZap,
-  FileText,
-  Layers3,
-  MessageSquareText,
-  Sparkles
-} from 'lucide-react';
+  BotIcon,
+  BracesIcon,
+  DatabaseIcon,
+  FileTextIcon,
+  LayersIcon,
+  MessageSquareTextIcon,
+  SparklesIcon
+} from '@/design-system/components/icons';
 import { Badge } from '@/design-system/components/ui/badge';
 import { Button } from '@/design-system/components/ui/button';
 import {
@@ -58,7 +58,7 @@ export default function ComponentShowcase() {
         <aside className="space-y-6 lg:sticky lg:top-8 lg:h-fit">
           <div className="space-y-4">
             <Badge className="w-fit gap-1.5" variant="outline">
-              <Sparkles aria-hidden className="size-3" />
+              <SparklesIcon aria-hidden className="size-3" />
               AI app template
             </Badge>
             <div className="space-y-3">
@@ -95,7 +95,7 @@ export default function ComponentShowcase() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Layers3 aria-hidden className="size-4" />
+                  <LayersIcon aria-hidden className="size-4" />
                   Design kit
                 </CardTitle>
                 <CardDescription>
@@ -114,7 +114,7 @@ export default function ComponentShowcase() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Bot aria-hidden className="size-4" />
+                  <BotIcon aria-hidden className="size-4" />
                   AI stack
                 </CardTitle>
                 <CardDescription>
@@ -136,7 +136,7 @@ export default function ComponentShowcase() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <DatabaseZap aria-hidden className="size-4" />
+                  <DatabaseIcon aria-hidden className="size-4" />
                   Verification
                 </CardTitle>
                 <CardDescription>
@@ -178,15 +178,15 @@ export default function ComponentShowcase() {
                 />
                 <div className="flex flex-wrap gap-2">
                   <Button>
-                    <MessageSquareText aria-hidden />
+                    <MessageSquareTextIcon aria-hidden />
                     Draft response
                   </Button>
                   <Button variant="outline">
-                    <FileText aria-hidden />
+                    <FileTextIcon aria-hidden />
                     Save prompt
                   </Button>
                   <Button size="icon" variant="ghost">
-                    <Braces aria-label="Inspect schema" />
+                    <BracesIcon aria-label="Inspect schema" />
                   </Button>
                 </div>
               </CardContent>
