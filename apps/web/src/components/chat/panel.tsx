@@ -34,8 +34,7 @@ import {
   Empty,
   EmptyDescription,
   EmptyHeader,
-  EmptyMedia,
-  EmptyTitle
+  EmptyMedia
 } from '@/design-system/components/ui/empty';
 import { TextShimmer } from '@/design-system/components/ui/text-shimmer';
 import { cn } from '@/design-system/lib/utils';
@@ -73,7 +72,6 @@ function EmptyState() {
           <EmptyMedia variant="icon">
             <MessageSquareIcon />
           </EmptyMedia>
-          <EmptyTitle>Ask about your inbox</EmptyTitle>
           <EmptyDescription>
             The agent can search, explain what it did, draft replies, and undo
             actions.
