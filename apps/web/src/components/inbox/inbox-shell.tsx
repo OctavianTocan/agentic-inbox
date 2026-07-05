@@ -89,7 +89,7 @@ const SHORTCUTS = {
   }
 } satisfies Record<string, ShortcutDefinition>;
 
-const DETAIL_CLOSE_ANIMATION_MS = 160;
+const DETAIL_CLOSE_ANIMATION_MS = 220;
 
 /** Prior emails in the same thread as `item`, oldest first. */
 function threadContext(
@@ -764,18 +764,21 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
                         withHandle
                       />
                       <ResizablePanel
+                        className={cn(
+                          isDetailClosing &&
+                            'grow-0! transition-[flex-grow] duration-[220ms] ease-panel motion-reduce:transition-none'
+                        )}
                         defaultSize="58%"
                         id="inbox-detail"
                         minSize="40%"
                       >
                         <div
                           className={cn(
-                            'flex h-full flex-col overflow-hidden rounded-xl border bg-card transition-[opacity,transform] duration-150 ease-panel motion-reduce:transition-none motion-reduce:translate-x-0',
+                            'flex h-full flex-col overflow-hidden rounded-xl border bg-card transition-opacity duration-150 ease-panel',
                             activePane === 'list' && !isDetailClosing
                               ? 'opacity-[0.93]'
                               : 'opacity-100',
-                            isDetailClosing &&
-                              'pointer-events-none translate-x-3 opacity-0'
+                            isDetailClosing && 'pointer-events-none opacity-0'
                           )}
                           data-slot="inbox-detail-panel"
                           data-state={isDetailClosing ? 'closing' : 'open'}

@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 
-import { AuditPage } from '@/components/traces/trace-page';
+import { AuditPage } from '@/components/audit/audit-page';
 import {
   parseWidthCookie,
   SIDEBAR_WIDTH_COOKIE_NAME

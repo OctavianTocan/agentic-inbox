@@ -133,13 +133,6 @@ export function ChatHeaderSlice({
 
   return (
     <div className="pointer-events-none absolute top-0 right-0 z-40 flex h-(--top-bar-height) items-center justify-end gap-1 pr-3 pl-4">
-      <span
-        aria-hidden={!isChatOpen}
-        className="pointer-events-auto font-medium text-muted-foreground text-sm data-[hidden]:invisible"
-        data-hidden={isChatOpen ? undefined : ''}
-      >
-        Ask about your inbox
-      </span>
       <Button
         aria-hidden={isChatEmpty}
         aria-label="New chat"

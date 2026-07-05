@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as sessionState from '@/components/inbox/session-state';
 import type { UseInbox } from '@/components/inbox/use-inbox';
-import { AuditPage } from '@/components/traces/trace-page';
+import { AuditPage } from '@/components/audit/audit-page';
 import { DesignSystemProvider } from '@/design-system/providers';
 import type { Inbox, InboxItem } from '@/lib/inbox/types';
 

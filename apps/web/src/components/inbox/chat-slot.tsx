@@ -93,6 +93,9 @@ export function ChatSlot({ isOpen, chatKey, onEmptyChange }: ChatSlotProps) {
         />
       )}
       <div className="flex h-full flex-col" style={{ width }}>
+        <div className="flex h-11 shrink-0 items-center border-b px-4">
+          <span className="font-medium text-sm">Ask about your inbox</span>
+        </div>
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <ChatPanel key={chatKey} onEmptyChange={onEmptyChange} />
         </div>

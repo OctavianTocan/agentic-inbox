@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import {
   type KeyboardEvent,
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState
@@ -74,6 +75,8 @@ const ACTION_ICON: Readonly<Record<ActionKind, typeof SendIcon>> = {
   flag_for_review: FilterXIcon,
   undo: RotateCcwIcon
 };
+
+const DETAIL_CLOSE_ANIMATION_MS = 220;
 
 type TraceRecord = {
   readonly entry: LedgerEntry;
@@ -307,6 +310,8 @@ export function AuditPage({ persistedWidth }: { persistedWidth?: number }) {
   const { inbox, isLoading } = useInbox();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isDetailClosing, setIsDetailClosing] = useState(false);
+  const detailCloseTimerRef = useRef<number | null>(null);
   const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(false);
   const [activePane, setActivePane] = useState<'list' | 'detail'>('list');
   const [isChatOpen, setIsChatOpen] = useSharedChatOpen();
@@ -337,11 +342,37 @@ export function AuditPage({ persistedWidth }: { persistedWidth?: number }) {
       if (isMobile) {
         setIsMobileDetailOpen(true);
       } else {
+        if (detailCloseTimerRef.current !== null) {
+          window.clearTimeout(detailCloseTimerRef.current);
+          detailCloseTimerRef.current = null;
+        }
+        setIsDetailClosing(false);
         setIsDetailOpen(true);
       }
     },
     [isMobile]
   );
+
+  const closeDetail = useCallback(() => {
+    setActivePane('list');
+    setIsDetailClosing(true);
+    detailCloseTimerRef.current = window.setTimeout(() => {
+      setIsDetailOpen(false);
+      setIsDetailClosing(false);
+      detailCloseTimerRef.current = null;
+    }, DETAIL_CLOSE_ANIMATION_MS);
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (detailCloseTimerRef.current !== null) {
+        window.clearTimeout(detailCloseTimerRef.current);
+      }
+    },
+    []
+  );
+
+  const shouldRenderDetail = isDetailOpen || isDetailClosing;
 
   const toggleChat = useCallback(() => {
     setIsChatOpen(!isChatOpen);
@@ -451,10 +482,20 @@ export function AuditPage({ persistedWidth }: { persistedWidth?: number }) {
                       <AuditList onSelect={selectRecord} records={records} />
                     </div>
                   </ResizablePanel>
-                  {isDetailOpen && selectedRecord ? (
+                  {shouldRenderDetail && selectedRecord ? (
                     <>
-                      <ResizableHandle className="w-2 bg-transparent" withHandle />
+                      <ResizableHandle
+                        className={cn(
+                          'w-2 bg-transparent transition-opacity duration-150 ease-panel',
+                          isDetailClosing && 'opacity-0'
+                        )}
+                        withHandle
+                      />
                       <ResizablePanel
+                        className={cn(
+                          isDetailClosing &&
+                            'grow-0! transition-[flex-grow] duration-[220ms] ease-panel motion-reduce:transition-none'
+                        )}
                         defaultSize="58%"
                         id="audit-detail"
                         minSize="40%"
@@ -462,12 +503,15 @@ export function AuditPage({ persistedWidth }: { persistedWidth?: number }) {
                         <div
                           className={cn(
                             'flex h-full flex-col overflow-hidden rounded-xl border bg-card transition-opacity duration-200 ease-[var(--ease-panel)]',
-                            activePane === 'list' && 'opacity-[0.93]'
+                            activePane === 'list' &&
+                              !isDetailClosing &&
+                              'opacity-[0.93]',
+                            isDetailClosing && 'pointer-events-none opacity-0'
                           )}
                           onPointerDownCapture={() => setActivePane('detail')}
                         >
                           <AuditDetail
-                            onClose={() => setIsDetailOpen(false)}
+                            onClose={closeDetail}
                             record={selectedRecord}
                             reserveHeaderRight={false}
                           />
