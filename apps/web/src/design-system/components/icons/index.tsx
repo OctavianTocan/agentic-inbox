@@ -39,6 +39,8 @@ import {
   CheckmarkCircle01Icon as HiCircleCheck,
   CheckmarkSquare01Icon as HiCheckSquare,
   ChevronDownIcon as HiChevronDown,
+  ArrowLeftDoubleIcon as HiChevronsLeft,
+  ArrowRightDoubleIcon as HiChevronsRight,
   ChevronLeftIcon as HiChevronLeft,
   ChevronRightIcon as HiChevronRight,
   ChevronUpIcon as HiChevronUp,
@@ -226,8 +228,8 @@ export const LinkIcon = hugeicon(HiLink);
 export const BarChart3Icon = hugeicon(HiBarChart);
 export const CheckIcon = hugeicon(HiCheck);
 export const ChevronDownIcon = hugeicon(HiChevronDown);
-export const ChevronsLeftIcon = hugeicon(HiChevronLeft);
-export const ChevronsRightIcon = hugeicon(HiChevronRight);
+export const ChevronsLeftIcon = hugeicon(HiChevronsLeft);
+export const ChevronsRightIcon = hugeicon(HiChevronsRight);
 export const ChevronsUpDownIcon = hugeicon(HiUnfoldMore);
 export const ChevronLeftIcon = hugeicon(HiChevronLeft);
 export const ChevronRightIcon = hugeicon(HiChevronRight);

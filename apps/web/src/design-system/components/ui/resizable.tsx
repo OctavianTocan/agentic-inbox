@@ -3,6 +3,7 @@
 import * as ResizablePrimitive from "react-resizable-panels";
 
 import { cn } from "../../lib/utils";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
 
 /** Container that lays out resizable panels in a row or column. */
 function ResizablePanelGroup({
@@ -44,7 +45,14 @@ function ResizableHandle({
       {...props}
     >
       {withHandle && (
-        <div className="z-10 flex h-6 w-1 shrink-0 rounded-lg bg-border" />
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <div className="z-10 flex h-6 w-1 shrink-0 rounded-lg bg-border" />
+            }
+          />
+          <TooltipContent>Drag to resize</TooltipContent>
+        </Tooltip>
       )}
     </ResizablePrimitive.Separator>
   );

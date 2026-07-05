@@ -2,8 +2,8 @@
 
 import type { ReactNode } from 'react';
 import {
-  PanelLeftCloseIcon,
-  PanelLeftIcon,
+  ChevronsLeftIcon,
+  MenuIcon,
   PanelRightCloseIcon,
   PanelRightIcon,
   SquarePenIcon
@@ -43,22 +43,24 @@ export function SidebarHeaderSlice({ title, peek }: SidebarHeaderSliceProps) {
       />
       <span
         className={cn(
-          'min-w-0 truncate font-display font-medium text-sm transition-opacity duration-200 ease-panel',
+          'min-w-0 flex-1 truncate font-display font-medium text-sm transition-opacity duration-200 ease-panel',
           open ? 'opacity-100' : 'opacity-0'
         )}
       >
         {title}
       </span>
-      <PanelPeek
-        icon={<PanelLeftCloseIcon className="size-4" />}
-        isPanelOpen={open}
-        label="Hide sidebar"
-        onToggle={toggleSidebar}
-        peekWidth={SIDEBAR_PEEK_WIDTH}
-        side="left"
-      >
-        {peek}
-      </PanelPeek>
+      <span className="shrink-0 opacity-0 transition-opacity duration-150 focus-within:opacity-100 group-hover/sidebar:opacity-100">
+        <PanelPeek
+          icon={<ChevronsLeftIcon className="size-4" />}
+          isPanelOpen={open}
+          label="Hide sidebar"
+          onToggle={toggleSidebar}
+          peekWidth={SIDEBAR_PEEK_WIDTH}
+          side="left"
+        >
+          {peek}
+        </PanelPeek>
+      </span>
     </div>
   );
 }
@@ -87,7 +89,7 @@ export function CollapsedSidebarTrigger({
   return (
     <div className="absolute top-0 left-0 z-40 flex h-(--top-bar-height) items-center pl-3">
       <PanelPeek
-        icon={<PanelLeftIcon className="size-4" />}
+        icon={<MenuIcon className="size-4" />}
         isPanelOpen={false}
         label="Show sidebar"
         onToggle={toggleSidebar}

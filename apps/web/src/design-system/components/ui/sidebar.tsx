@@ -882,19 +882,26 @@ function SidebarResizeHandle({
   }
 
   return (
-    <button
-      aria-label="Resize sidebar"
-      className={cn(
-        "absolute inset-y-0 right-0 z-20 w-1 cursor-col-resize border-none bg-transparent p-0 transition-colors",
-        isDragging ? "bg-border" : "hover:bg-border/50",
-        className,
-      )}
-      data-slot="sidebar-resize-handle"
-      onDoubleClick={handleDoubleClick}
-      onMouseDown={handleMouseDown}
-      type="button"
-      {...props}
-    />
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <button
+            aria-label="Resize sidebar"
+            className={cn(
+              "absolute inset-y-0 right-0 z-20 w-1 cursor-col-resize border-none bg-transparent p-0 transition-colors",
+              isDragging ? "bg-border" : "hover:bg-border/50",
+              className,
+            )}
+            data-slot="sidebar-resize-handle"
+            onDoubleClick={handleDoubleClick}
+            onMouseDown={handleMouseDown}
+            type="button"
+            {...props}
+          />
+        }
+      />
+      <TooltipContent side="right">Drag to resize</TooltipContent>
+    </Tooltip>
   );
 }
 

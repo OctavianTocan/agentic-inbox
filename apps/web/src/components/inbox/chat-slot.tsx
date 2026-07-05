@@ -2,6 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import ChatPanel from '@/components/chat/panel';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@/design-system/components/ui/tooltip';
 import { cn } from '@/design-system/lib/utils';
 
 const MIN_WIDTH = 320;
@@ -81,16 +86,23 @@ export function ChatSlot({ isOpen, chatKey, onEmptyChange }: ChatSlotProps) {
       style={{ width: isOpen ? width : 0 }}
     >
       {isOpen && (
-        <button
-          aria-label="Resize chat"
-          className={cn(
-            'absolute inset-y-0 left-0 z-20 w-1 cursor-col-resize border-none bg-transparent p-0 transition-colors',
-            isDragging ? 'bg-border' : 'hover:bg-border/50'
-          )}
-          onDoubleClick={handleDoubleClick}
-          onMouseDown={handleMouseDown}
-          type="button"
-        />
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <button
+                aria-label="Resize chat"
+                className={cn(
+                  'absolute inset-y-0 left-0 z-20 w-1 cursor-col-resize border-none bg-transparent p-0 transition-colors',
+                  isDragging ? 'bg-border' : 'hover:bg-border/50'
+                )}
+                onDoubleClick={handleDoubleClick}
+                onMouseDown={handleMouseDown}
+                type="button"
+              />
+            }
+          />
+          <TooltipContent side="left">Drag to resize</TooltipContent>
+        </Tooltip>
       )}
       <div className="flex h-full flex-col" style={{ width }}>
         <div className="flex h-11 shrink-0 items-center border-b px-4">

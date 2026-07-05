@@ -520,7 +520,10 @@ export function InboxSidebar({
   const { setOpenMobile } = useSidebar();
 
   return (
-    <Sidebar collapsible="offcanvas" className="group-data-[side=left]:border-r-0">
+    <Sidebar
+      className="group/sidebar group-data-[side=left]:border-r-0"
+      collapsible="offcanvas"
+    >
       {!isMobile && title !== undefined ? (
         <SidebarHeaderSlice peek={headerPeek} title={title} />
       ) : null}
