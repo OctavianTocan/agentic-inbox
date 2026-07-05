@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import {
   type InboxClient,
@@ -21,6 +21,11 @@ export type UseInbox = {
   readonly retriage: (emailId: string) => Promise<void>;
 };
 
+/** Whether an API failure came from resolving an approval that is no longer pending. */
+function isApprovalNotFoundError(error: unknown): boolean {
+  return error instanceof Error && error.message.includes('ApprovalNotFound');
+}
+
 /**
  * Drives the inbox against an `InboxClient`, exposing the current snapshot and
  * mutation handlers. Undo surfaces a sonner toast; approve/deny replace the
@@ -32,6 +37,7 @@ export type UseInbox = {
 export function useInbox(client: InboxClient = inboxClient): UseInbox {
   const [inbox, setInbox] = useState<Inbox | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const resolvingApprovalIdsRef = useRef(new Set<string>());
 
   const refresh = useCallback(async () => {
     const next = await client.getInbox();
@@ -55,10 +61,27 @@ export function useInbox(client: InboxClient = inboxClient): UseInbox {
 
   const resolve = useCallback(
     async (approvalId: string, input: ResolveApprovalInput) => {
-      const next = await client.resolveApproval(approvalId, input);
-      setInbox(next);
+      if (resolvingApprovalIdsRef.current.has(approvalId)) {
+        return;
+      }
+      resolvingApprovalIdsRef.current.add(approvalId);
+      try {
+        const next = await client.resolveApproval(approvalId, input);
+        setInbox(next);
+      } catch (error) {
+        if (isApprovalNotFoundError(error)) {
+          await refresh();
+          toast('Approval already handled', {
+            description: 'The inbox was refreshed with the latest state.'
+          });
+          return;
+        }
+        throw error;
+      } finally {
+        resolvingApprovalIdsRef.current.delete(approvalId);
+      }
     },
-    [client]
+    [client, refresh]
   );
 
   const approve = useCallback(

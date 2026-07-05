@@ -86,7 +86,10 @@ function PreviewMarkdown({ children }: PreviewMarkdownProps) {
     <Markdown
       as="span"
       components={INLINE_PREVIEW_COMPONENTS}
-      containerProps={{ className: 'not-prose' }}
+      containerProps={{
+        className:
+          'not-prose inline max-w-none text-inherit !text-sm !leading-6 [&_*]:!text-sm [&_*]:!leading-6 [&_*]:text-inherit'
+      }}
     >
       {children}
     </Markdown>
@@ -168,13 +171,60 @@ export function EmailRow({
         }
       >
         <ItemContent className="min-w-0 gap-0">
-          <div className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5 sm:grid-cols-[minmax(8rem,12rem)_minmax(0,1fr)_8rem] sm:gap-x-4">
+          <div className="w-full sm:hidden">
+            <div className="flex min-w-0 items-baseline gap-3 text-sm leading-6">
+              <span className="min-w-0 flex-1 truncate font-medium">
+                {email.subject}
+              </span>
+              <span className="shrink-0 text-muted-foreground text-xs tabular-nums">
+                {formatTimestamp(email.timestamp)}
+              </span>
+            </div>
+            <span
+              className="block truncate text-muted-foreground text-sm leading-6"
+              data-slot="item-description"
+            >
+              <PreviewMarkdown>
+                {decision?.whyPreview ?? email.body}
+              </PreviewMarkdown>
+            </span>
+            <p className="truncate text-muted-foreground text-xs leading-4">
+              {sender}
+            </p>
+            {pendingApproval ? (
+              <ItemActions className="mt-1.5 gap-1.5">
+                <Button
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onApprove(pendingApproval.id);
+                  }}
+                  size="xs"
+                  variant="secondary"
+                >
+                  <CheckIcon />
+                  Approve
+                </Button>
+                <Button
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onDeny(pendingApproval.id);
+                  }}
+                  size="xs"
+                  variant="destructive"
+                >
+                  <BanIcon />
+                  Deny
+                </Button>
+              </ItemActions>
+            ) : null}
+          </div>
+          <div className="hidden w-full items-center gap-x-4 sm:grid sm:grid-cols-[minmax(8rem,12rem)_minmax(0,1fr)_10rem]">
             <div className="hidden min-w-0 sm:block">
               <p className="truncate font-medium text-sm leading-6">{sender}</p>
             </div>
             <div className="min-w-0">
-              <div className="flex min-w-0 items-baseline gap-2 text-sm leading-6">
-                <span className="min-w-0 max-w-[52%] shrink-0 truncate font-medium">
+              <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] items-baseline gap-x-2 text-sm leading-6 sm:grid-cols-[minmax(12rem,18rem)_minmax(0,1fr)]">
+                <span className="min-w-0 truncate font-medium">
                   {email.subject}
                 </span>
                 <span
@@ -186,11 +236,8 @@ export function EmailRow({
                   </PreviewMarkdown>
                 </span>
               </div>
-              <p className="truncate text-muted-foreground text-xs leading-4 sm:hidden">
-                {sender}
-              </p>
             </div>
-            <div className="relative flex h-7 w-24 shrink-0 items-center justify-end sm:w-32">
+            <div className="relative flex h-7 shrink-0 items-center justify-end">
               <span
                 className={cn(
                   'text-muted-foreground text-xs tabular-nums transition-opacity',

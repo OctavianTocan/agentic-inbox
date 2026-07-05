@@ -173,13 +173,22 @@ describe('EmailRow context menu', () => {
     const onDeny = vi.fn();
     renderRow(pendingItem, { onApprove, onDeny });
 
-    const approveButton = screen.getByRole('button', { name: /Approve/ });
+    const approveButton = screen.getAllByRole('button', {
+      name: /Approve/
+    })[0];
+    if (approveButton === undefined) {
+      throw new Error('pending row should render an Approve button');
+    }
     expect(approveButton.closest('[data-slot="item-content"]')).not.toBeNull();
 
     fireEvent.click(approveButton);
     expect(onApprove).toHaveBeenCalledWith('a-042');
 
-    fireEvent.click(screen.getByRole('button', { name: /Deny/ }));
+    const denyButton = screen.getAllByRole('button', { name: /Deny/ })[0];
+    if (denyButton === undefined) {
+      throw new Error('pending row should render a Deny button');
+    }
+    fireEvent.click(denyButton);
     expect(onDeny).toHaveBeenCalledWith('a-042');
   });
 

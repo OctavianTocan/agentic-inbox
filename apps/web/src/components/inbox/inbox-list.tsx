@@ -119,7 +119,9 @@ function CollapsibleSection({ label, children }: CollapsibleSectionProps) {
         <ChevronDownIcon className="size-3.5 shrink-0 transition-transform group-data-[panel-open]:rotate-0 -rotate-90" />
         {label}
       </CollapsibleTrigger>
-      <CollapsibleAnimatedContent>{children}</CollapsibleAnimatedContent>
+      <CollapsibleAnimatedContent contentClassName="pt-1">
+        {children}
+      </CollapsibleAnimatedContent>
     </Collapsible>
   );
 }
