@@ -6,7 +6,7 @@ import { Config, Context, Layer, Redacted } from 'effect';
 import { IdGenerator, LanguageModel } from 'effect/unstable/ai';
 import { FetchHttpClient } from 'effect/unstable/http';
 
-/** Model id, overridable via `OPENROUTER_MODEL`; defaults to the spike-proven `openai/gpt-5.5`. */
+/** Model id, overridable via `OPENROUTER_MODEL`; defaults to the Phase 0 proven `openai/gpt-5.5`. */
 export const MODEL = process.env.OPENROUTER_MODEL ?? 'openai/gpt-5.5';
 
 /**

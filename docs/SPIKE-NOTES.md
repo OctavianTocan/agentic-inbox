@@ -1,10 +1,9 @@
 # Spike notes — Phase 0 items 1-2 (2026-07-02)
 
 De-risking the two riskiest assumptions in PLAN.md against the **real** OpenRouter
-key (`openai/gpt-5.5`, reasoning effort `low`). Throwaway code lives in `spike/`
-(standalone package, own `bun install`, kept OUT of the root workspace so the main
-`bun.lock` stays clean). Both scripts were run against the live API; real output is
-quoted below.
+key (`openai/gpt-5.5`, reasoning effort `low`). Phase 0 throwaway scripts were run
+against the live API; real output is quoted below. The throwaway code has been removed;
+findings are implemented in `packages/api-core` + `apps/api`.
 
 ## TL;DR for wave 3
 
@@ -19,24 +18,12 @@ quoted below.
    per-call override): strict-on for `generateObject`, and tools carrying
    `Tool.Strict, true` for `generateText`. See gotcha #3 — this is the biggest deviation.
 
-## How to run (reproduce)
-
-```bash
-cd spike
-bun install                    # standalone; writes spike/bun.lock only
-set -a && . ../.env && set +a  # loads OPENROUTER_API_KEY from repo root .env
-bun run src/triage.ts          # Script A — structured triage on 3 emails
-bun run src/approval-pause.ts  # Script B pt1 — run until approval, serialize, exit
-bun run src/approval-resume.ts # Script B pt2 — FRESH process, approve, execute
-DENY=1 bun run src/approval-resume.ts  # denial path (send_reply never fires)
-```
-
 ## Layer wiring (verified working)
 
 `OpenRouterLanguageModel.layer` provides `LanguageModel.LanguageModel`; it needs an
 `OpenRouterClient` (from `layerConfig`, needs `HttpClient`) and an `IdGenerator`.
-`IdGenerator.layer` requires `{ alphabet, size }` — for the spike we provide the
-prebuilt `IdGenerator.defaultIdGenerator` via `Layer.succeed` instead.
+`IdGenerator.layer` requires `{ alphabet, size }` — Phase 0 used the prebuilt
+`IdGenerator.defaultIdGenerator` via `Layer.succeed` instead.
 
 ```ts
 import { Config, Layer, Redacted } from "effect"
@@ -250,18 +237,6 @@ Final assistant text: ... a short acknowledgment reply was drafted, but the PM d
   needed; the Effect AI core owns it. The undo/undo-ledger work is separate from this.
 - **Latency is real (~3–4s/call).** The streaming run view, progress bar, and per-row
   spinners (Phase 4) are load-bearing, not polish.
-
-## Files
-
-- `spike/package.json`, `spike/bun.lock` — standalone package (out of root workspace).
-- `spike/src/shared.ts` — email loader + model layers (`ModelLive` strict for triage,
-  `ToolModelLive` for the tool loop).
-- `spike/src/triage.ts` — Script A.
-- `spike/src/toolkit.ts` — the two tools + handler layer (`Tool.Strict, true` on both).
-- `spike/src/loop.ts` — hand-rolled agent loop + `Prompt.Prompt` encode/decode helpers.
-- `spike/src/approval-pause.ts` / `approval-resume.ts` — Script B pause/resume.
-- `spike/src/probe-tools.ts` — throwaway diagnostic that captured the `strict: null`
-  root cause (logs/rewrites the outgoing tool schema).
 
 ## Addendum: learnings from the slice build's full live run (2026-07-02)
 
