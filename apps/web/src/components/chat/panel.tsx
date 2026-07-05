@@ -14,6 +14,8 @@ import {
   Composer,
   ComposerContent,
   ComposerFooter,
+  ComposerModelPill,
+  ComposerPlusMenu,
   ComposerSendButton,
   ComposerStopButton,
   ComposerTextField
@@ -144,11 +146,14 @@ function ChatSurface({ composerClassName }: ChatSurfaceProps) {
       <div className={cn('shrink-0 px-3 pb-3', composerClassName)}>
         <Composer>
           <ComposerContent>
-            <ComposerTextField placeholder="Ask agent" />
+            <ComposerTextField placeholder="Type @ for sources or / for modes" />
           </ComposerContent>
           <ComposerFooter>
-            <span />
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
+              <ComposerPlusMenu />
+            </div>
+            <div className="flex shrink-0 items-center gap-1.5">
+              <ComposerModelPill label="GPT-5.5" />
               <ComposerSendButton />
               {isBusy ? <ComposerStopButton /> : null}
             </div>

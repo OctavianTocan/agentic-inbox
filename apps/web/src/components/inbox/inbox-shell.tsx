@@ -693,6 +693,10 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
             </div>
 
             <div className="hidden h-full flex-col overflow-hidden md:flex">
+              <div
+                className="h-(--top-bar-height) shrink-0 border-b"
+                data-slot="inbox-top-bar"
+              />
               <div className="flex min-h-0 flex-1">
                 <ResizablePanelGroup
                   className="min-w-0 flex-1"
@@ -784,7 +788,7 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
                               onClose={closeDetail}
                               onDeny={deny}
                               onUndo={undo}
-                              reserveHeaderRight={!isChatOpen}
+                              reserveHeaderRight={false}
                               thread={threadContext(selectedItem, items)}
                             />
                           </div>

@@ -92,7 +92,6 @@ export function ChatSlot({ isOpen, chatKey, onEmptyChange }: ChatSlotProps) {
         />
       )}
       <div className="flex h-full flex-col" style={{ width }}>
-        <div className="h-(--top-bar-height) shrink-0" />
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <ChatPanel key={chatKey} onEmptyChange={onEmptyChange} />
         </div>

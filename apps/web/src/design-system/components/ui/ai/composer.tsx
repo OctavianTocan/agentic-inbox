@@ -28,6 +28,7 @@ import {
 import {
   ArrowRightIcon,
   ArrowUpIcon,
+  ChevronDownIcon,
   PlusIcon,
   StopCircleIcon,
   UploadIcon,
@@ -69,14 +70,9 @@ import {
 const Composer = ({ className, ...props }: ComposerProps) => (
   <ComposerPrimitive
     className={cn(
-      "relative mx-auto flex max-w-2xl flex-col rounded-md bg-card text-card-foreground cursor-text touch-manipulation",
-      "border border-border",
-      "shadow-[inset_0_1px_0_0_rgb(255_255_255/0.6),0_1px_2px_rgb(17_24_39/0.06),0_4px_8px_-2px_rgb(17_24_39/0.04),0_12px_24px_-8px_rgb(17_24_39/0.06)]",
-      "dark:shadow-[inset_0_1px_0_0_rgb(255_255_255/0.06),inset_0_-1px_0_0_rgb(0_0_0/0.35),0_2px_8px_-2px_rgb(0_0_0/0.4)]",
-      "transition-[box-shadow,border-color] duration-200",
+      "relative mx-auto flex max-w-2xl flex-col rounded-xl bg-card text-card-foreground cursor-text touch-manipulation",
+      "border border-border transition-colors duration-200",
       "focus-within:border-ring/60",
-      "focus-within:shadow-[inset_0_1px_0_0_rgb(255_255_255/0.7),0_1px_2px_rgb(17_24_39/0.08),0_6px_16px_-4px_rgb(17_24_39/0.07),0_18px_36px_-10px_rgb(17_24_39/0.08)]",
-      "dark:focus-within:shadow-[inset_0_1px_0_0_rgb(255_255_255/0.08),inset_0_-1px_0_0_rgb(0_0_0/0.4),0_4px_16px_-4px_rgb(0_0_0/0.55)]",
       "data-[state=drag-active]:border-primary",
       className,
     )}
@@ -116,13 +112,12 @@ const ComposerTextField = ({
   ...props
 }: ComposerTextFieldProps) => {
   const isMobile = useIsMobile();
-  const resolvedMinHeight = minHeight ?? (isMobile ? 56 : 76);
+  const resolvedMinHeight = minHeight ?? 52;
   const resolvedMaxHeight = maxHeight ?? (isMobile ? 140 : 200);
   return (
     <ComposerTextFieldPrimitive
       className={cn(
-        "w-full resize-none border-0 bg-transparent px-4.5 pt-3.5 pb-2 text-base placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-        "[mask-image:linear-gradient(to_bottom,transparent_0px,black_12px,black_calc(100%-12px),transparent_100%)]",
+        "w-full resize-none border-0 bg-transparent px-4 py-3.5 text-base leading-normal placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-50",
         "overflow-y-auto scrollbar-none",
         className,
       )}
@@ -137,7 +132,7 @@ const ComposerTextField = ({
 const ComposerFooter = ({ className, ...props }: ComposerFooterProps) => (
   <ComposerFooterPrimitive
     className={cn(
-      "flex items-center justify-between gap-2 px-3 pb-2.5",
+      "flex items-center justify-between gap-2 px-2.5 py-2",
       className,
     )}
     {...props}
@@ -180,8 +175,8 @@ function ComposerPlusMenu({ className }: { className?: string }) {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
         className={cn(
-          buttonVariants({ size: "icon-sm", variant: "ghost" }),
-          "text-muted-foreground max-md:size-8",
+          "flex size-8 shrink-0 items-center justify-center rounded-full border border-primary/20 bg-card text-foreground",
+          "transition-transform hover:bg-accent active:scale-[0.97]",
           className,
         )}
         render={<button aria-label="Attach files" type="button" />}
@@ -224,7 +219,7 @@ const ComposerSendButton = ({
   <ComposerSendButtonPrimitive
     className={cn(
       buttonVariants({ size: "icon-sm", variant: "default" }),
-      "transition-[opacity,transform] duration-150 ease-out max-md:size-8",
+      "size-8! rounded-full transition-[opacity,transform] duration-150 ease-out",
       "data-[state=disabled]:scale-95 data-[state=disabled]:opacity-60",
       className,
     )}
@@ -249,7 +244,7 @@ const ComposerStopButton = ({
   <ComposerStopButtonPrimitive
     className={cn(
       buttonVariants({ size: "icon-sm", variant: "outline" }),
-      "max-md:size-8",
+      "size-8! rounded-full",
       className,
     )}
     {...props}
@@ -257,6 +252,30 @@ const ComposerStopButton = ({
     {children ?? <StopCircleIcon className="size-4" />}
   </ComposerStopButtonPrimitive>
 );
+
+type ComposerModelPillProps = {
+  /** Active model name shown in the pill. */
+  readonly label: string;
+  readonly className?: string;
+};
+
+/** Rounded toolbar pill displaying the active model name. */
+function ComposerModelPill({ label, className }: ComposerModelPillProps) {
+  return (
+    <button
+      aria-label={`Model: ${label}`}
+      className={cn(
+        "flex h-8 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-foreground text-sm",
+        "transition-colors hover:bg-foreground/5",
+        className,
+      )}
+      type="button"
+    >
+      <span>{label}</span>
+      <ChevronDownIcon className="size-3.5 text-muted-foreground" />
+    </button>
+  );
+}
 
 /**
  * Animated composer wrapper with a spring layout transition.
@@ -313,6 +332,8 @@ export {
   type ComposerFooterProps,
   ComposerHeader,
   type ComposerHeaderProps,
+  ComposerModelPill,
+  type ComposerModelPillProps,
   ComposerMotionRoot,
   ComposerPlusMenu,
   type ComposerProps,
