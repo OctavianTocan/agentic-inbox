@@ -893,17 +893,28 @@
   }
 }
 
-/* Collapses a resizable detail panel to zero width so its neighbor grows
-   smoothly before unmount. Targets the outer panel div (which carries the
-   layout flex-grow); react-resizable-panels applies className to an inner div,
-   so this must be a data-attribute rule, not a utility class. */
-[data-slot="resizable-panel"][data-closing] {
-  flex-grow: 0 !important;
+/* Animate a resizable panel opening and closing: the flex-grow transition is
+   always on so a mounting/unmounting neighbor grows or shrinks smoothly. It is
+   suppressed while a resize drag is active (data-resizing on the group) so the
+   handle tracks the pointer with no lag, and under reduced motion. data-closing
+   collapses the detail panel to zero width before it unmounts. The rule targets
+   the outer panel div (which carries the layout flex-grow); react-resizable-
+   panels applies className to an inner div, so this must be a data-attribute
+   rule, not a utility class. */
+[data-slot="resizable-panel"] {
   transition: flex-grow var(--duration-panel-close) var(--ease-panel);
 }
 
+[data-slot="resizable-panel-group"][data-resizing] [data-slot="resizable-panel"] {
+  transition: none;
+}
+
+[data-slot="resizable-panel"][data-closing] {
+  flex-grow: 0 !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  [data-slot="resizable-panel"][data-closing] {
+  [data-slot="resizable-panel"] {
     transition: none;
   }
 }

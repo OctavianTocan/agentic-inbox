@@ -54,6 +54,7 @@ import {
 import { ChatHeaderSlice, CollapsedSidebarTrigger } from './top-bar';
 import { useDetailClose } from './use-detail-close';
 import { useInbox } from './use-inbox';
+import { usePanelResizing } from './use-panel-resizing';
 
 const SHORTCUTS = {
   next: {
@@ -275,6 +276,7 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
     openDetail: openDesktopDetail,
     closeDetail
   } = useDetailClose();
+  const { isResizing, startResizing } = usePanelResizing();
   const [activePane, setActivePane] = useState<'list' | 'detail'>('list');
   const [sortKey, setSortKey] = useState<SortKey>('severity');
   const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
@@ -677,6 +679,7 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
               <div className="flex min-h-0 flex-1 p-2">
                 <ResizablePanelGroup
                   className="min-w-0 flex-1"
+                  data-resizing={isResizing || undefined}
                   defaultLayout={{ 'inbox-list': 42, 'inbox-detail': 58 }}
                   orientation="horizontal"
                 >
@@ -738,6 +741,7 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
                           'w-2 bg-transparent transition-opacity duration-150 ease-panel',
                           isDetailClosing && 'opacity-0'
                         )}
+                        onPointerDownCapture={startResizing}
                         withHandle
                       />
                       <ResizablePanel

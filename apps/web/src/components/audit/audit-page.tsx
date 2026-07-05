@@ -24,6 +24,7 @@ import {
 } from '@/components/inbox/top-bar';
 import { useDetailClose } from '@/components/inbox/use-detail-close';
 import { useInbox } from '@/components/inbox/use-inbox';
+import { usePanelResizing } from '@/components/inbox/use-panel-resizing';
 import {
   ArchiveIcon,
   ChevronDownIcon,
@@ -314,6 +315,7 @@ export function AuditPage({ persistedWidth }: { persistedWidth?: number }) {
     openDetail,
     closeDetail: closeDetailBase
   } = useDetailClose();
+  const { isResizing, startResizing } = usePanelResizing();
   const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(false);
   const [activePane, setActivePane] = useState<'list' | 'detail'>('list');
   const [isChatOpen, setIsChatOpen] = useSharedChatOpen();
@@ -435,6 +437,7 @@ export function AuditPage({ persistedWidth }: { persistedWidth?: number }) {
               ) : (
                 <ResizablePanelGroup
                   className="min-h-0 min-w-0 flex-1"
+                  data-resizing={isResizing || undefined}
                   defaultLayout={{ 'audit-list': 42, 'audit-detail': 58 }}
                   orientation="horizontal"
                 >
@@ -470,6 +473,7 @@ export function AuditPage({ persistedWidth }: { persistedWidth?: number }) {
                           'w-2 bg-transparent transition-opacity duration-150 ease-panel',
                           isDetailClosing && 'opacity-0'
                         )}
+                        onPointerDownCapture={startResizing}
                         withHandle
                       />
                       <ResizablePanel
