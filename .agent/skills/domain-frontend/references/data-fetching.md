@@ -1,195 +1,59 @@
 # Data Fetching
 
-How to read and write data — choosing between Electric SQL sync and React Query, calling the API client, and handling errors.
+How frontend code reads and writes data in this take-home repo.
 
-## Decision Rule: Sync vs React Query
+## Decision Rule
 
-**Use Electric SQL sync** when the table is registered in `syncTablesConfig` (`packages/comcom/sync/src/tables.ts`). These are small, org-scoped tables that benefit from real-time updates across tabs/devices.
+- Static inbox/domain transforms live under `apps/web/src/lib/{feature}`.
+- Browser-facing API clients live under `apps/web/src/lib/{feature}` and call `/api/v1/...`.
+- Shared request/response schemas and contracts live in `packages/api-core`.
+- Durable backend behavior lives in `apps/api`; do not duplicate policy in the web app.
 
-**Use React Query** for everything else — large datasets, aggregated/derived data, auth-client calls, data without real-time needs.
+## Inbox API Client
 
-The rule is binary: if it's in `syncTablesConfig`, use sync. Otherwise, use React Query.
-
-## Reading Synced Data
-
-Get the collection from context, subscribe with `useLiveQuery`. Always wrap in a custom hook:
-
-```tsx
-export function useItems() {
-  const { items } = useCollections();
-  const { data, isLoading } = useLiveQuery(
-    (query) => query.from({ items }),
-    [items],
-  );
-  return { items: data ?? [], isLoading };
-}
-```
-
-`useLiveQuery` from `@tanstack/react-db` re-renders when the Electric SQL stream pushes changes.
-
-## Writing Synced Data
-
-### Updates and deletes — optimistic via collection
-
-The sync layer calls the API for you. Just update the draft:
+The inbox UI talks through `apps/web/src/lib/inbox/client.ts`:
 
 ```tsx
-export function useItemArchive() {
-  const { items } = useCollections();
-  return useCallback(
-    (itemId: string) =>
-      items.update(itemId, (draft) => {
-        draft.archivedAt = new Date();
-      }),
-    [items],
-  );
-}
-```
-
-### Creates — useMutation (need server response)
-
-Creates require a server-generated ID:
-
-```tsx
-export function useItemCreate() {
-  return useMutation({
-    mutationFn: async (body: CreateItemPayload) => {
-      const { data } = await itemsCreate({ body, throwOnError: true });
-      return data;
-    },
-    onError: toastApiError,
-  });
-}
-```
-
-## Reading with React Query
-
-### Query key factory
-
-Centralize keys for predictable invalidation:
-
-```tsx
-const itemKeys = {
-  all: ({ orgSlug }: { orgSlug: string | null }) =>
-    ['items', orgSlug ?? ''] as const,
-  list: ({ orgSlug }: { orgSlug: string | null }) =>
-    [...itemKeys.all({ orgSlug }), 'list'] as const,
-  detail: ({ orgSlug, id }: { orgSlug: string | null; id: string }) =>
-    [...itemKeys.all({ orgSlug }), 'detail', id] as const,
-};
-```
-
-### useQuery hook
-
-```tsx
-export function useItemList() {
-  const orgSlug = useOrgSlug();
-  return useQuery({
-    queryKey: itemKeys.list({ orgSlug }),
-    queryFn: async ({ signal }) => {
-      const { data } = await itemsList({ signal, throwOnError: true });
-      return data;
-    },
-    enabled: !!orgSlug,
-  });
-}
-```
-
-Key conventions:
-- `throwOnError: true` — always, so TypeScript knows `data` is non-null
-- `signal` — forward for proper abort on unmount
-- `enabled` — guard on required context
-
-## Writing with React Query
-
-### Tier 1: Simple mutation
-
-```tsx
-useMutation({
-  mutationFn: async (body) => {
-    const { data } = await itemsCreate({ body, throwOnError: true });
-    return data;
-  },
-  onError: toastApiError,
+const inbox = await inboxClient.getInbox();
+const nextInbox = await inboxClient.undoAction(ledgerEntryId, emailId);
+const updated = await inboxClient.resolveApproval(approvalId, {
+  verdict: 'approved',
+  editedBody,
 });
 ```
 
-### Tier 2: Mutation + invalidation
+Keep this seam thin. It should adapt transport details into typed UI shapes, not make triage/safety policy decisions.
 
-```tsx
-useMutation({
-  mutationFn: async (body) => { ... },
-  onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: itemKeys.all({ orgSlug }) });
-  },
-  onError: toastApiError,
-});
-```
+## SSE Streams
 
-### Tier 3: Full optimistic (onMutate/onError/onSettled)
+Triage and chat stream over SSE. Parse stream events at the client seam and expose small typed events to components:
 
-```tsx
-useMutation({
-  mutationFn: async (input) => { /* API call */ },
-  onMutate: async (vars) => {
-    const key = itemKeys.all({ orgSlug });
-    await queryClient.cancelQueries({ queryKey: key });
-    const previous = queryClient.getQueryData(key);
-    queryClient.setQueryData(key, (old) => /* optimistic update */);
-    return { previous, key };
-  },
-  onError: (err, _vars, context) => {
-    if (context?.previous) queryClient.setQueryData(context.key, context.previous);
-    toastApiError(err);
-  },
-  onSettled: () => {
-    queryClient.invalidateQueries({ queryKey: itemKeys.all({ orgSlug }) });
-  },
-});
-```
+- `apps/web/src/lib/inbox/client.ts` maps triage SSE events to `TriageRunEvent`.
+- `apps/web/src/lib/chat/http-transport.ts` maps chat SSE chunks to `ChatTransportEvent`.
 
-### mutateAsync vs mutate
-
-- `mutateAsync` — when you need to `await` the result (e.g., dialog transitions, navigation after create)
-- `mutate` — fire-and-forget with `onSuccess`/`onError` callbacks
-
-```tsx
-const result = await mutation.mutateAsync(values);
-navigate(`/items/${result.id}`);
-
-mutation.mutate(values, { onSuccess: () => close() });
-```
-
-## API Client Conventions
-
-Generated by `@hey-api/openapi-ts`, lives in `@comcom/api-client`:
-
-```tsx
-const { data } = await itemsCreate({ body, throwOnError: true });
-const { data } = await itemsList({ signal, throwOnError: true });
-const { data } = await itemsDelete({ path: { id }, throwOnError: true });
-```
-
-Auth client calls (`authClient.*`) return `{ data, error }` — check `error` manually.
+Components should not parse raw SSE blocks.
 
 ## Error Handling
 
-```tsx
-// API client errors → toastApiError
-import { toastApiError } from '@comcom/app-shared/lib/api-errors';
+Fetch helpers should throw readable `Error` messages. Components then render inline errors or toasts depending on the surface.
 
-// Auth client errors → toastAuthError
-import { toastAuthError } from '@comcom/app-core/lib/auth-errors';
+```tsx
+async function assertOk(response: Response): Promise<void> {
+  if (response.ok) return;
+  const body = await response.text().catch(() => '');
+  throw new Error(body || response.statusText || `HTTP ${response.status}`);
+}
 ```
 
-## Cache Persistence
+## State Updates
 
-React Query cache is persisted to IndexedDB via `idb-keyval`, keyed by git commit SHA, cleared on user change. Handled automatically by `QueryProvider`.
+For this static 80-email dataset, prefer replacing the current inbox snapshot with the returned snapshot after an action. Do not add a client cache layer unless repeated stale reads become observable.
 
 ## Key Files
 
-- `packages/comcom/app-shared/src/hooks/use-sessions.ts` — sync reads + writes + mutation
-- `packages/comcom/app-shared/src/hooks/use-billing.ts` — React Query with key factory
-- `packages/comcom/app-core/src/hooks/use-member-mutations.ts` — full optimistic mutations
-- `packages/comcom/app-shared/src/lib/api-errors.ts` — toastApiError
-- `packages/comcom/sync/src/tables.ts` — syncTablesConfig (source of truth for sync decision)
+- `apps/web/src/lib/inbox/client.ts` — inbox API/SSE seam
+- `apps/web/src/lib/inbox/types.ts` — UI-facing inbox types
+- `apps/web/src/lib/chat/http-transport.ts` — chat SSE transport
+- `apps/web/src/lib/chat/adapter.ts` — transport-to-ai-ui adapter
+- `packages/api-core/src` — shared API schemas/contracts
+- `apps/api/src` — backend handlers and policies

@@ -88,8 +88,16 @@ const SHORTCUTS = {
     keys: 'Escape',
     label: 'Clear selection',
     category: 'navigation'
+  },
+  chat: {
+    id: 'inbox.chat',
+    keys: 'Mod+Alt+B',
+    label: 'Toggle chat panel',
+    category: 'navigation'
   }
 } satisfies Record<string, ShortcutDefinition>;
+
+const DEFAULT_SORT_KEY: SortKey = 'severity';
 
 /** Prior emails in the same thread as `item`, oldest first. */
 function threadContext(
@@ -278,7 +286,6 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
   } = useDetailClose();
   const { isResizing, startResizing } = usePanelResizing();
   const [activePane, setActivePane] = useState<'list' | 'detail'>('list');
-  const [sortKey, setSortKey] = useState<SortKey>('severity');
   const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
   const [mobileChatKey, setMobileChatKey] = useState(0);
   const [isMobileChatEmpty, setIsMobileChatEmpty] = useState(true);
@@ -338,8 +345,8 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
   const items = inbox?.items ?? [];
 
   const visibleItems = useMemo(
-    () => orderedItems(items, filters, sortKey),
-    [items, filters, sortKey]
+    () => orderedItems(items, filters, DEFAULT_SORT_KEY),
+    [items, filters]
   );
 
   const selectedItem = useMemo(
@@ -429,6 +436,7 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
   useShortcut(SHORTCUTS.next, () => moveSelection(1));
   useShortcut(SHORTCUTS.prev, () => moveSelection(-1));
   useShortcut(SHORTCUTS.clear, clearSelection, { enabled: !isMobile });
+  useShortcut(SHORTCUTS.chat, () => toggleChat(), { enabled: !isMobile });
   useShortcut(SHORTCUTS.open, () => {
     setActivePane('list');
     const targetId =
@@ -545,17 +553,7 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
       resizable
     >
       <div className="relative flex min-h-0 min-w-0 flex-1">
-        <CollapsedSidebarTrigger
-          peek={
-            <SidebarPeek
-              filters={filters}
-              items={items}
-              ledgerCount={ledger.length}
-              onFiltersChange={setFilters}
-              onRunAgent={() => setRunViewRequested(true)}
-            />
-          }
-        />
+        <CollapsedSidebarTrigger />
         <div className="pointer-events-none absolute inset-x-0 top-0 z-40 hidden md:block">
           <ChatHeaderSlice
             chatPeek={<ChatPeek />}
@@ -580,7 +578,6 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
           ledger={ledger}
           onFiltersChange={setFilters}
           onRunAgent={() => setRunViewRequested(true)}
-          title="Agentic Inbox"
         />
         <SidebarInset className="min-h-0 min-w-0 overflow-hidden">
           <div className="h-full min-w-0">
@@ -608,7 +605,7 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
                   onToggleChat={() => setIsMobileChatOpen(true)}
                   onUndo={(entryId, emailId) => void undo(entryId, emailId)}
                   selectedEmailId={selectedEmailId}
-                  sortKey={sortKey}
+                  sortKey={DEFAULT_SORT_KEY}
                   viewedEmailIds={viewedEmailIds}
                 />
               </div>
@@ -672,11 +669,14 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
             </div>
 
             <div className="hidden h-full flex-col overflow-hidden bg-sidebar md:flex">
-              <div
-                className="h-(--top-bar-height) shrink-0"
-                data-slot="inbox-top-bar"
-              />
-              <div className="flex min-h-0 flex-1 p-2">
+              <div className="relative flex min-h-0 flex-1 p-2">
+                {!isChatOpen ? (
+                  <div
+                    aria-hidden="true"
+                    className="chat-toggle-cutout pointer-events-none"
+                    data-slot="chat-toggle-cutout"
+                  />
+                ) : null}
                 <ResizablePanelGroup
                   className="min-w-0 flex-1"
                   data-resizing={isResizing || undefined}
@@ -720,13 +720,12 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
                               onFiltersChange={setFilters}
                               onRetriage={(emailId) => void retriage(emailId)}
                               onSelect={selectEmail}
-                              onSortChange={setSortKey}
                               onToggleChat={() => toggleChat()}
                               onUndo={(entryId, emailId) =>
                                 void undo(entryId, emailId)
                               }
                               selectedEmailId={selectedEmailId}
-                              sortKey={sortKey}
+                              sortKey={DEFAULT_SORT_KEY}
                               viewedEmailIds={viewedEmailIds}
                             />
                           </div>
@@ -752,11 +751,12 @@ export function InboxShell({ persistedWidth }: { persistedWidth?: number }) {
                       >
                         <div
                           className={cn(
-                            'flex h-full flex-col overflow-hidden rounded-xl border bg-card transition-opacity duration-150 ease-panel',
+                            'flex h-full translate-x-0 flex-col overflow-hidden rounded-xl border bg-card opacity-100 transition-[opacity,transform] duration-[var(--duration-panel-close)] ease-panel will-change-transform',
                             activePane === 'list' && !isDetailClosing
                               ? 'opacity-[0.93]'
                               : 'opacity-100',
-                            isDetailClosing && 'pointer-events-none opacity-0'
+                            isDetailClosing &&
+                              'pointer-events-none translate-x-2 opacity-0'
                           )}
                           data-slot="inbox-detail-panel"
                           data-state={isDetailClosing ? 'closing' : 'open'}

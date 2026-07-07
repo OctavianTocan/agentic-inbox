@@ -31,7 +31,7 @@ Table and data-list patterns — manual Table composition and DataTable (TanStac
 ## DataTable
 
 ```tsx
-import { DataTable } from '@ui/design-system/components/ui/data-table/data-table';
+import { DataTable } from '@/design-system/components/ui/data-table/data-table';
 
 <DataTable
   columns={columns}
@@ -67,7 +67,7 @@ const columns: ColumnDef<Item>[] = [
 
 ## Cell Components
 
-Pre-built cells in `@ui/design-system/components/ui/data-table/cells/`:
+Pre-built cells in `@/design-system/components/ui/data-table/cells/`:
 
 | Component | Use for |
 |-----------|---------|
@@ -115,7 +115,7 @@ function ItemRow({ item }: { item: Item }) {
 Two approaches:
 
 ```tsx
-import { DataTableSkeleton } from '@ui/design-system/components/ui/data-table/data-table-skeleton';
+import { DataTableSkeleton } from '@/design-system/components/ui/data-table/data-table-skeleton';
 <DataTableSkeleton columnCount={4} rowCount={10} />
 
 <div style={{ maskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)' }}>
@@ -148,7 +148,7 @@ function ItemsListContent() {
 
 ## Key Files
 
-- `packages/ui/design-system/src/components/ui/data-table/data-table.tsx` — DataTable
-- `packages/ui/design-system/src/components/ui/data-table/data-table-skeleton.tsx` — skeleton
-- `packages/ui/design-system/src/components/ui/data-table/cells/` — pre-built cells
-- `packages/ui/design-system/src/components/ui/table.tsx` — manual Table primitives
+- `apps/web/src/design-system/components/ui/data-table/data-table.tsx` — DataTable
+- `apps/web/src/design-system/components/ui/data-table/data-table-skeleton.tsx` — skeleton
+- `apps/web/src/design-system/components/ui/data-table/cells/` — pre-built cells
+- `apps/web/src/design-system/components/ui/table.tsx` — manual Table primitives

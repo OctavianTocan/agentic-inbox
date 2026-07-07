@@ -9,7 +9,8 @@ import {
   HistoryIcon,
   InboxIcon,
   ListFilterIcon,
-  RefreshCwIcon
+  RefreshCwIcon,
+  UserIcon
 } from '@/design-system/components/icons';
 import { Button } from '@/design-system/components/ui/button';
 import {
@@ -33,6 +34,7 @@ import {
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuBadge,
@@ -68,7 +70,6 @@ type InboxSidebarProps = {
   readonly onFiltersChange: (filters: InboxFilters) => void;
   readonly activeSection?: 'inbox' | 'audit';
   readonly showFilters?: boolean;
-  readonly title?: string;
   readonly headerPeek?: ReactNode;
   readonly onRunAgent?: () => void;
 };
@@ -188,7 +189,7 @@ function SidebarMetricSection({
         {metrics.map((metric) => (
           <Button
             className={cn(
-              'h-7 w-full justify-between px-2 hover:bg-sidebar-accent-hover hover:text-sidebar-accent-foreground',
+              'h-7 w-full justify-between px-2 hover:bg-sidebar-accent-hover hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:hidden',
               metric.isActive && 'bg-sidebar-accent-active'
             )}
             key={metric.label}
@@ -258,7 +259,7 @@ export function InboxFilterMenu({
       <DropdownMenuTrigger
         render={
           <Button
-            className="h-9 w-full justify-between px-2.5 hover:bg-sidebar-accent-hover hover:text-sidebar-accent-foreground aria-expanded:bg-sidebar-accent-hover aria-expanded:text-sidebar-accent-foreground"
+            className="h-9 w-full justify-between px-2 hover:bg-sidebar-accent-hover hover:text-sidebar-accent-foreground aria-expanded:bg-sidebar-accent-hover aria-expanded:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-2!"
             size="sm"
             variant="outline"
           />
@@ -266,9 +267,9 @@ export function InboxFilterMenu({
       >
         <span className="flex items-center gap-2">
           <ListFilterIcon className="size-4" />
-          Filters
+          <span className="group-data-[collapsible=icon]:sr-only">Filters</span>
         </span>
-        <span className="flex items-center gap-1 text-muted-foreground">
+        <span className="flex items-center gap-1 text-muted-foreground group-data-[collapsible=icon]:hidden">
           {hasActiveFilter ? (
             <span className="tabular-nums">{meta.activeCount}</span>
           ) : null}
@@ -490,6 +491,22 @@ function FacetButtonGroup<T extends string>({
   );
 }
 
+function SidebarProfile() {
+  return (
+    <div className="flex min-w-0 items-center gap-3 rounded-md px-2 py-2 transition-[background-color,color] duration-150 ease-panel hover:bg-sidebar-accent-hover hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:p-0">
+      <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-sidebar-accent-foreground group-data-[collapsible=icon]:size-10">
+        <UserIcon className="size-6 group-data-[collapsible=icon]:size-5" />
+      </span>
+      <span className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
+        <span className="block truncate font-medium text-sm">Project PM</span>
+        <span className="block truncate text-muted-foreground text-xs">
+          Reviewer
+        </span>
+      </span>
+    </div>
+  );
+}
+
 /**
  * Left mailbox rail: navigation, compact filter menu, and resize handle.
  *
@@ -507,7 +524,6 @@ export function InboxSidebar({
   onFiltersChange,
   activeSection = 'inbox',
   showFilters = true,
-  title,
   headerPeek,
   onRunAgent
 }: InboxSidebarProps) {
@@ -522,18 +538,19 @@ export function InboxSidebar({
   return (
     <Sidebar
       className="group/sidebar group-data-[side=left]:border-r-0"
-      collapsible="offcanvas"
+      collapsible="icon"
     >
-      {!isMobile && title !== undefined ? (
-        <SidebarHeaderSlice peek={headerPeek} title={title} />
+      {!isMobile && headerPeek !== undefined ? (
+        <SidebarHeaderSlice peek={headerPeek} />
       ) : null}
-      <SidebarHeader className="gap-3 px-3 py-3">
+      <SidebarHeader className="gap-3 px-2 py-3 group-data-[collapsible=icon]:items-center">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               isActive={activeSection === 'inbox'}
               onClick={() => setOpenMobile(false)}
               render={<Link href="/" />}
+              tooltip="Inbox"
             >
               <InboxIcon className="size-4" />
               <span>Inbox</span>
@@ -545,6 +562,7 @@ export function InboxSidebar({
               isActive={activeSection === 'audit'}
               onClick={() => setOpenMobile(false)}
               render={<Link href="/audit" />}
+              tooltip="Audit"
             >
               <HistoryIcon className="size-4" />
               <span>Audit</span>
@@ -558,6 +576,7 @@ export function InboxSidebar({
                   setOpenMobile(false);
                   onRunAgent();
                 }}
+                tooltip="Re-run triage"
               >
                 <RefreshCwIcon className="size-4" />
                 <span>Re-run triage</span>
@@ -581,7 +600,7 @@ export function InboxSidebar({
           )
         ) : null}
       </SidebarHeader>
-      <SidebarContent className="gap-5 px-3 py-3">
+      <SidebarContent className="gap-5 px-3 py-3 group-data-[collapsible=icon]:hidden">
         <SidebarMetricSection
           label="Queue"
           metrics={queue}
@@ -595,7 +614,10 @@ export function InboxSidebar({
           />
         ) : null}
       </SidebarContent>
-      <SidebarResizeHandle className="-right-2 top-[calc(var(--top-bar-height)+1.25rem)] bottom-5" />
+      <SidebarFooter className="mt-auto px-2 py-3 group-data-[collapsible=icon]:items-center">
+        <SidebarProfile />
+      </SidebarFooter>
+      <SidebarResizeHandle className="-right-2 top-2 bottom-2" />
     </Sidebar>
   );
 }

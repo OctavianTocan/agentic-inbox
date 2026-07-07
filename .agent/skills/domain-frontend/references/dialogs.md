@@ -100,7 +100,7 @@ const [deleteOpen, setDeleteOpen] = useState(false);
 Use a hidden `HybridDialogClose` with a ref:
 
 ```tsx
-// from: packages/comcom/app-core/src/pages/access-tokens/access-token-create-dialog.tsx
+// Example: multi-step create flow
 const closeRef = useRef<HTMLButtonElement>(null);
 
 <HybridDialogClose className="hidden" ref={closeRef} />
@@ -173,7 +173,7 @@ function handleDelete() {
 }
 ```
 
-Or with `useMutation` for non-synced data:
+Or with a backend-backed mutation helper:
 
 ```tsx
 const mutation = useRemoveMember();
@@ -190,7 +190,7 @@ function handleDelete() {
 Conditional rendering within `HybridDialogContent`:
 
 ```tsx
-// from: packages/comcom/app-core/src/pages/access-tokens/access-token-create-dialog.tsx
+// Example: multi-step create flow
 <HybridDialogContent>
   {step === 'create' ? (
     <>
@@ -252,6 +252,6 @@ function ApiKeyRow({ apiKey }: { apiKey: ApiKey }) {
 
 ## Key Files
 
-- `packages/ui/design-system/src/components/ui/hybrid-dialog.tsx` — HybridDialog component
-- `packages/ui/design-system/src/components/ui/hybrid-alert-dialog.tsx` — HybridAlertDialog
-- `packages/comcom/app-core/src/pages/access-tokens/access-token-create-dialog.tsx` — full create dialog with form + multi-step
+- `apps/web/src/design-system/components/ui/hybrid-dialog.tsx` — HybridDialog component
+- `apps/web/src/design-system/components/ui/hybrid-alert-dialog.tsx` — HybridAlertDialog
+- `apps/web/src/components/inbox/` — approval and action confirmation surfaces

@@ -76,13 +76,9 @@ describe('InboxShell', () => {
     expect(screen.getByLabelText('Hide chat')).toBeDefined();
     expect(screen.queryByLabelText('Stop generating')).toBeNull();
 
-    // Each column owns its own header slice, so the sidebar hosts the sole
-    // sidebar toggle and the only app title; the new-chat control lives in the
-    // chat header controls, mounted for layout stability but hidden while the
-    // thread is empty.
     expect(screen.getByLabelText('Hide sidebar')).toBeDefined();
     expect(screen.queryByLabelText('Toggle Sidebar')).toBeNull();
-    expect(screen.getAllByText('Agentic Inbox')).toHaveLength(1);
+    expect(screen.queryByText('Agentic Inbox')).toBeNull();
     const newChat = screen.getByLabelText('New chat');
     expect(newChat.getAttribute('aria-hidden')).toBe('true');
 

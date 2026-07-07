@@ -1,94 +1,71 @@
 # Next.js Patterns
 
-Patterns for `apps/web` (marketing site, port 3000) and `apps/admin` (admin dashboard, port 3008).
+Patterns for `apps/web`, the Next.js 16 App Router frontend for the Cogram Agentic Inbox.
 
-## Shared Config
+## Current Shape
 
-Both apps extend `@ui/next-config`:
+- One Next.js app: `apps/web`.
+- Route files live under `apps/web/src/app`.
+- Product UI lives under `apps/web/src/components`.
+- App-local design-system primitives live under `apps/web/src/design-system`.
+- Headless AI chat primitives live under `apps/web/src/ai-ui`.
 
-```typescript
-// apps/admin/next.config.ts — simple passthrough
-import { config } from '@ui/next-config';
-export default config;
+## Root Layout
 
-// apps/web/next.config.ts — with fumadocs MDX
-import { createMDX } from 'fumadocs-mdx/next';
-import { config } from '@ui/next-config';
-const withMDX = createMDX();
-export default withMDX(config);
-```
-
-## App Router Layout
-
-### Marketing Site (apps/web)
+`apps/web/src/app/layout.tsx` owns metadata, fonts, global colors, and `DesignSystemProvider`:
 
 ```tsx
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={cn(fonts, 'antialiased')}>
-        <AnalyticsProvider>
-          <PostHogSessionIdentifier />
-          <DesignSystemProvider>
-            <Providers>{children}</Providers>
-          </DesignSystemProvider>
-        </AnalyticsProvider>
+    <html className={fonts} lang="en" suppressHydrationWarning>
+      <body className="min-h-screen bg-background text-foreground">
+        <DesignSystemProvider>{children}</DesignSystemProvider>
       </body>
     </html>
   );
 }
 ```
 
-Provider order: Analytics -> PostHog -> DesignSystem -> App-specific.
+Keep app-wide providers here only when every route needs them. Feature-specific providers belong in the feature shell.
 
-### Admin (apps/admin)
+## Route Files
 
-Minimal — no analytics, no design system provider:
+Route files should stay small:
 
 ```tsx
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en">
-      <body className={fonts}>
-        <Providers>{children}</Providers>
-      </body>
-    </html>
-  );
+import { cookies } from 'next/headers';
+import { InboxShell } from '@/components/inbox/inbox-shell';
+
+export default async function InboxPage() {
+  const cookieStore = await cookies();
+  const persistedWidth = parseWidthCookie(cookieStore.get(SIDEBAR_WIDTH_COOKIE_NAME)?.value, 264, 220, 360);
+  return <InboxShell persistedWidth={persistedWidth} />;
 }
 ```
+
+Use server components by default. Push `'use client'` into product components that need browser state or interactions.
 
 ## Metadata
 
+Use the Next `Metadata` type in route/layout files:
+
 ```tsx
 export const metadata: Metadata = {
-  title: { default: 'The Company Company', template: '%s | TCC' },
-  description: '...',
-  openGraph: { title: '...', description: '...', url: '...' },
-  appleWebApp: { capable: true, statusBarStyle: 'default' },
+  title: siteConfig.name,
+  description: siteConfig.description,
 };
 ```
 
-## Fumadocs (Documentation)
+## API Routes and Backend Calls
 
-`apps/web` uses fumadocs for API documentation:
-
-- MDX pages in the docs directory
-- OpenAPI spec integration
-- Wraps Next.js config with `createMDX()`
-
-## When to Use Next.js vs Vite
-
-| Use case | Framework |
-|----------|-----------|
-| Marketing / public pages | Next.js (`apps/web`) |
-| Admin dashboard | Next.js (`apps/admin`) |
-| Main product dashboard | Vite + TanStack Router (`apps/app`) |
-| Desktop app | Vite + TanStack Router (`apps/desktop`) |
-
-Next.js apps are for content-heavy, SEO-relevant pages. The product app uses Vite for faster dev iteration and client-side routing.
+- Browser UI calls `/api/v1/...` through web-local clients under `apps/web/src/lib`.
+- Shared HTTP schemas belong in `packages/api-core`.
+- Effect backend handlers live in `apps/api`.
+- Web API route files should proxy/adapt, not duplicate backend policy.
 
 ## Anti-Patterns
 
-- Don't add heavy client-side state to Next.js pages — these should be mostly server-rendered
-- Don't duplicate `@ui/next-config` settings in individual apps
-- Don't use `'use client'` at the page level — push it down to the smallest component that needs it
+- Don't put large product UI directly in `app/*/page.tsx`.
+- Don't use `'use client'` at the route level unless the whole route must be client-only.
+- Don't import inbox/audit/chat code into `apps/web/src/design-system`.
+- Don't bypass `packages/api-core` when adding a new backend-backed endpoint.

@@ -2,25 +2,20 @@
 
 What already exists. Do not rebuild these. Grep this file before creating a new component.
 
-## Design System — `@ui/design-system/components/ui/`
+## Design System — `@/design-system/components/ui/`
 
-Import path: `@ui/design-system/components/ui/{kebab-case-filename}`.
+Import path: `@/design-system/components/ui/{kebab-case-filename}`.
 
 ### Layout
-- `AppShell` (+ Content, Footer)
-- `AppHeader` (+ Content, Actions, Group, Title, Description, Toolbar, Nav)
 - `Card` (+ Header, Title, Description, Action, Content, Footer)
-- `BorderGrid`, `Frame`, `GridPage`, `Section`
-- `SettingsCard` (+ Header, Title, Description, Action, Content, Footer, FooterText)
-- `AspectRatio`, `Separator`, `ResizablePanel`
+- `AspectRatio`, `Separator`, `ResizablePanelGroup`, `ResizablePanel`, `ResizableHandle`
+- `Sidebar` (+ Provider, Header, Footer, Content, Menu, MenuItem, MenuButton, ResizeHandle)
 
 ### Inputs
 - `Button` (+ `buttonVariants`)
 - `Input`, `Textarea`
-- `Select`, `Combobox` (searchable, multi-select with chips), `NativeSelect`
+- `Select`, `NativeSelect`
 - `Checkbox`, `Switch`, `Slider`, `RadioGroup`
-- `Calendar`, `InputOTP`
-- `InputGroup` (+ Addon, Button, Text, Input, Textarea)
 - `Toggle`, `ToggleGroup`
 
 ### Feedback
@@ -33,19 +28,15 @@ Import path: `@ui/design-system/components/ui/{kebab-case-filename}`.
 ### Navigation
 - `Breadcrumb` (+ List, Item, Link, Page, Separator, Ellipsis)
 - `Tabs` (+ List, Trigger, Content — variants: `default`/`line`)
-- `NavigationMenu`, `Menubar`, `Pagination`
-- `Sidebar` (+ Provider, Header, Footer, Content, Group, Menu, MenuItem, MenuButton, MenuAction, MenuSub, Rail, Trigger)
+- `Pagination`
 
 ### Data Display
 - `Table` (+ Header, Body, Row, Head, Cell)
-- `DataTable` (+ Toolbar, Pagination, ActionBar, FacetedFilter, DateFilter, Skeleton, ViewOptions)
-- `DataTable` cells: `Date`, `Boolean`, `Currency`, `Number`, `Duration`, `Link`, `Tags`
 - `Avatar` (+ Image, Fallback, Badge, Group)
-- `HoverCard`, `Tooltip`, `HybridTooltip`, `ShortcutTooltip`
+- `HoverCard`, `Tooltip`, `PointerTooltipContent`
 
 ### Overlay
-- `Dialog`, `HybridDialog` (responsive: Dialog desktop, Drawer mobile)
-- `HybridAlertDialog` (responsive confirmation)
+- `Dialog`
 - `Drawer`, `Sheet`, `Popover`
 - `DropdownMenu` (+ Group, Label, Item, CheckboxItem, RadioGroup, RadioItem, Separator, Shortcut, Sub)
 - `ContextMenu`
@@ -60,24 +51,16 @@ Import path: `@ui/design-system/components/ui/{kebab-case-filename}`.
 - `Form`, `FormField`, `FormItem`, `FormLabel`, `FormControl`, `FormDescription`, `FormMessage`
 - Re-exports `useForm` and `zodResolver`
 
-### Particles (`@ui/design-system/components/particles/`)
-- `CopyButton`, `ThemeToggle`
+### Particles
+- This repo currently keeps behavior-enhanced controls close to their owning feature or under `apps/web/src/design-system/hooks/`; do not assume a separate particles package exists.
 
-### Icons (`@ui/design-system/components/icons`)
-- Central Icon System + lucide fallback (import as `XIcon`, `PlusIcon`, etc.) + brand icons
+### Icons (`@/design-system/components/icons`)
+- Hugeicons registry exports app icons as `XIcon`, `PlusIcon`, `PanelRightIcon`, etc.; local brand SVGs live in the same registry.
 
-## Shared — `@comcom/app-shared/` (cross-platform)
+## Product components
 
-**Hooks** (`@comcom/app-shared/hooks/*`): Sessions, access tokens, organizations, automations, billing — see `packages/comcom/app-shared/src/hooks/`.
+**Inbox** (`apps/web/src/components/inbox/*`): `InboxShell`, `InboxSidebar`, `InboxList`, `DetailPane`, `ChatSlot`, `RunView`, `PanelPeek`, and supporting hooks/state.
 
-**Providers** (`@comcom/app-shared/providers/router`): `RouterProvider`, `RouterLink`, `useNavigate`, `usePathname`, `useParams`, `useSearchParams`, `useLink`.
+**Audit** (`apps/web/src/components/audit/*`): `AuditPage` composes the shared inbox sidebar, detail close behavior, and chat slot.
 
-**Components**: `PostHogSessionIdentifier`.
-
-## App Core — `@comcom/app-core/`
-
-**Layout** (`@comcom/app-core/components/layout/*`): `TopBarSidebarTrigger`, `TopBarBreadcrumbs`, `TopBarSessionPanelTrigger` (compose with `TopBar`/`TopBarActions`/`TopBarSeparator` from `@ui/design-system/components/ui/top-bar`), `OrganizationMenu`, `AppSidebar` (+ Provider), `UserMenu`, `LogoLink`.
-
-**Features** (`@comcom/app-core/features/{feature}/*`): `SearchDialog` (Cmd+K), `FeedbackDialog`, `ShortcutsHelpDialog`, `SessionPanel` (+ Trigger, Button, Root).
-
-**Hooks** (`@comcom/app-core/hooks/*`): Org members, invitations, integrations, account sessions, agent chat — see `packages/comcom/app-core/src/hooks/`.
+**Chat** (`apps/web/src/components/chat/*` + `apps/web/src/ai-ui/*`): product chat panel composed from headless AI primitives.

@@ -1,10 +1,10 @@
 # Visual Polish
 
-Tailwind + design-system techniques for radius, shadows, and button layering. Everything here assumes the tokens defined in `packages/ui/design-system/src/styles/globals.css` (`--radius`, `--radius-sm`/`-md`/`-lg`/`-xl`, OKLch color vars) and the primitives in `packages/ui/design-system/src/components/ui/`.
+Tailwind + design-system techniques for radius, shadows, and button layering. Everything here assumes the tokens defined in `apps/web/src/design-system/styles/globals.css` (`--radius`, `--radius-sm`/`-md`/`-lg`/`-xl`, sidebar vars, elevation vars, and motion vars) and the primitives in `apps/web/src/design-system/components/ui/`.
 
 The enforceable UI rules behind these techniques (concentric radius, default shadow scale, semi-transparent borders, hit-target sizing, never re-implementing a primitive) live in `domain-frontend`'s ui-constraints.md and design-system.md. This file is the design-side *why* plus the concrete Tailwind recipes; cite those for the rules rather than restating them.
 
-Before reaching for bespoke CSS: inspect `apps/design/` source and the design-system component source to confirm a primitive doesn't already encode the polish you need. Do not start a dev server or browser for UI review unless the user explicitly asks.
+Before reaching for bespoke CSS: inspect `apps/web/src/design-system/components/ui/` and the existing inbox/audit screens to confirm a primitive doesn't already encode the polish you need. Use browser QA after implementation because this product's layout depends on real panel geometry.
 
 ## Concentric Radius
 
@@ -53,10 +53,10 @@ Reach for the `border-black/10` / `border-white/10` fallback only when you need 
 
 ## Use the Real Button Before Hand-Rolling
 
-`packages/ui/design-system/src/components/ui/button.tsx` encodes the variants most pages need, and `domain-frontend` requires using it (never duplicate a primitive):
+`apps/web/src/design-system/components/ui/button.tsx` encodes the variants most pages need, and `domain-frontend` requires using it (never duplicate a primitive):
 
 ```tsx
-import { Button } from '@ui/design-system/components/ui/button';
+import { Button } from '@/design-system/components/ui/button';
 
 <Button>Save</Button>
 <Button variant="outline" size="sm">Cancel</Button>

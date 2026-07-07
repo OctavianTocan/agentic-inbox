@@ -6,7 +6,6 @@ import { useMemo, useState } from 'react';
 import {
   ChevronDownIcon,
   ExternalLinkIcon,
-  ListFilterIcon,
   MessageSquareIcon,
   XIcon
 } from '@/design-system/components/icons';
@@ -23,21 +22,9 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger
 } from '@/design-system/components/ui/context-menu';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuTrigger
-} from '@/design-system/components/ui/dropdown-menu';
 import { ItemGroup } from '@/design-system/components/ui/item';
 import { cn } from '@/design-system/lib/utils';
-import {
-  SORT_KEYS,
-  SORT_LABELS,
-  type SortKey,
-  toSortKey
-} from '@/lib/inbox/sort';
+import type { SortKey } from '@/lib/inbox/sort';
 import type { InboxItem } from '@/lib/inbox/types';
 import { EmailRow } from './email-row';
 import type { InboxFilters } from './filters';
@@ -60,45 +47,7 @@ type InboxListProps = {
   readonly onFiltersChange: (filters: InboxFilters) => void;
   readonly onClearSelection: () => void;
   readonly onToggleChat: () => void;
-  readonly onSortChange?: (key: SortKey) => void;
 };
-
-type SortMenuProps = {
-  readonly sortKey: SortKey;
-  readonly onSortChange: (key: SortKey) => void;
-};
-
-/** Compact sort-order menu anchored in the list column. */
-function SortMenu({ sortKey, onSortChange }: SortMenuProps) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button
-            className="h-7 gap-1.5 px-2 text-muted-foreground text-xs"
-            size="sm"
-            variant="ghost"
-          >
-            <ListFilterIcon className="size-3.5" />
-            {SORT_LABELS[sortKey]}
-          </Button>
-        }
-      />
-      <DropdownMenuContent align="end">
-        <DropdownMenuRadioGroup
-          onValueChange={(value) => onSortChange(toSortKey(value))}
-          value={sortKey}
-        >
-          {SORT_KEYS.map((key) => (
-            <DropdownMenuRadioItem key={key} value={key}>
-              {SORT_LABELS[key]}
-            </DropdownMenuRadioItem>
-          ))}
-        </DropdownMenuRadioGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
 
 type CollapsibleSectionProps = {
   readonly label: string;
@@ -148,7 +97,6 @@ function CollapsibleSection({ label, children }: CollapsibleSectionProps) {
  * @param onFiltersChange - Called with the next filters from a row's "Filter by" submenu.
  * @param onClearSelection - Called to clear the current selection from the background menu.
  * @param onToggleChat - Called to toggle the chat panel from the background menu.
- * @param onSortChange - Called with the next sort order; omit to hide the sort control.
  * @returns The sectioned, filtered email list.
  */
 export function InboxList({
@@ -165,8 +113,7 @@ export function InboxList({
   onRetriage,
   onFiltersChange,
   onClearSelection,
-  onToggleChat,
-  onSortChange
+  onToggleChat
 }: InboxListProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -244,13 +191,7 @@ export function InboxList({
       <ContextMenuTrigger
         render={<div className="flex min-h-full flex-col pb-8" />}
       >
-        {onSortChange ? (
-          <div className="hidden items-center justify-end px-4 pt-2 sm:px-6 md:flex">
-            <SortMenu onSortChange={onSortChange} sortKey={sortKey} />
-          </div>
-        ) : (
-          <div className="pt-2" />
-        )}
+        <div className="pt-2" />
         {pending.length > 0 ? (
           <CollapsibleSection label="Awaiting your approval">
             <ItemGroup className="gap-0 divide-y divide-border/70 px-0">

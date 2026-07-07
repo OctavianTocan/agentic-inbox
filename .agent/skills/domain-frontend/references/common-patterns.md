@@ -5,16 +5,15 @@ Copy-paste shapes for the most frequent frontend tasks. Match these exactly; do 
 ## Contents
 
 - Component skeleton (with variants)
-- Sync read via `useLiveQuery`
-- Sync write via `collection.update`
-- React Query mutation
+- API read via app-local client
+- API write via app-local client
 - Form with zod + react-hook-form
 - HybridDialog with form
 - Content state branching
 - Icons
 - Toasts
 - Navigation
-- URL state (TanStack Router `validateSearch`, `nuqs` fallback)
+- URL state (Next route/search params)
 - Zustand feature store
 - Keyboard shortcuts
 - Tooltip decision
@@ -23,7 +22,7 @@ Copy-paste shapes for the most frequent frontend tasks. Match these exactly; do 
 
 ```tsx
 import { cva, type VariantProps } from 'class-variance-authority';
-import { cn } from '@ui/design-system/lib/utils';
+import { cn } from '@/design-system/lib/utils';
 
 const myComponentVariants = cva('base-classes', {
   variants: { size: { default: '...', sm: '...' } },
@@ -47,47 +46,35 @@ export function MyComponent({
 
 For polymorphic (render prop), compound families, and useRender patterns, see [component-anatomy.md](component-anatomy.md).
 
-## Sync Read (useLiveQuery)
+## API Read
 
 ```tsx
-export function useSessions() {
-  const { sessions } = useCollections();
-  const { data, isLoading } = useLiveQuery(
-    (query) => query.from({ sessions }),
-    [sessions],
-  );
-  return { sessions: data ?? [], isLoading };
+export function useInboxSnapshot() {
+  const [inbox, setInbox] = useState<Inbox | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    getInbox().then((snapshot) => {
+      if (!cancelled) setInbox(snapshot);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return inbox;
 }
 ```
 
-## Sync Write (optimistic)
+## API Write
 
 ```tsx
-export function useSessionTerminate() {
-  const { sessions } = useCollections();
+export function useInboxUndo(client: InboxClient) {
   return useCallback(
-    (sessionId: string) =>
-      sessions.update(sessionId, (draft) => {
-        draft.status = 'terminated';
-      }),
-    [sessions],
-  );
-}
-```
-
-## React Query Mutation
-
-```tsx
-import { toastApiError } from '@comcom/app-shared/lib/api-errors';
-
-export function useApiKeyCreate() {
-  return useMutation({
-    mutationFn: async (body: CreateApiKeyPayload) => {
-      const { data } = await apiKeysCreate({ body, throwOnError: true });
-      return data;
+    async (ledgerEntryId: string, emailId: string) => {
+      const nextInbox = await client.undoAction(ledgerEntryId, emailId);
+      return nextInbox;
     },
-    onError: toastApiError,
-  });
+    [client]
+  );
 }
 ```
 
@@ -97,7 +84,7 @@ export function useApiKeyCreate() {
 import {
   Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
   useForm, zodResolver,
-} from '@ui/design-system/components/ui/form';
+} from '@/design-system/components/ui/form';
 
 const schema = z.object({
   name: z.string().min(1, 'Required').max(120),
@@ -165,10 +152,10 @@ function MyContent() {
 
 ## Icons
 
-Import from the design system re-exports (never from `lucide-react` or `@central-icons-react` directly). Use `size-*` classes. Icons inside a button with `aria-label` do not need `aria-hidden`.
+Import from the app-local design system icon registry (never from `@hugeicons/*` or `lucide-react` directly in app code). Use `size-*` classes. Icons inside a button with `aria-label` do not need `aria-hidden`.
 
 ```tsx
-import { PlusIcon, XIcon } from '@ui/design-system/components/icons';
+import { PlusIcon, XIcon } from '@/design-system/components/icons';
 
 <Button aria-label="Close" variant="ghost" size="icon-sm">
   <XIcon className="size-4" />
@@ -184,61 +171,40 @@ import { PlusIcon, XIcon } from '@ui/design-system/components/icons';
 
 ```tsx
 import { toast } from 'sonner';
-import { toastApiError } from '@comcom/app-shared/lib/api-errors';
 
 toast.success('Saved');
-
-try {
-  await apiCall();
-} catch (error) {
-  toastApiError(error);
-}
-
-useMutation({
-  mutationFn: updateSomething,
-  onSuccess: () => toast.success('Updated'),
-  onError: toastApiError,
-});
 ```
 
 ## Navigation
 
-Use the router abstraction from `@comcom/app-shared/providers/router`, not the raw TanStack/Next.js hooks. This keeps shared packages framework-agnostic.
+Use Next.js App Router primitives in route files and local product components. Keep navigation thin; the current inbox app is mostly route-light and panel-state driven.
 
 ```tsx
-import { RouterLink, useNavigate, usePathname, useParams } from '@comcom/app-shared/providers/router';
+import Link from 'next/link';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
-<RouterLink to="/items">Items</RouterLink>
+<Link href="/audit">Audit</Link>
 
-const navigate = useNavigate();
-navigate('/items/new');
+const router = useRouter();
+router.push('/audit');
 
 const pathname = usePathname();
-const { itemId } = useParams();
+const searchParams = useSearchParams();
 ```
 
 ## URL State
 
-Default to TanStack Router's `validateSearch` plus a page-local `useThingSearch()` hook for any URL-persisted filter/tab/pagination state on a route you own. The router serializes/deserializes the search object directly, so nested shapes (a filter array of objects) round-trip cleanly. See [data-table-filter.md](data-table-filter.md) for the canonical wiring; the Sessions settings page is the live precedent.
+Default to component state for review-workflow UI that does not need shareable links. Use Next route params/search params only for state a reviewer should be able to bookmark or send.
 
 ```ts
-// pages/<area>/lib/filter-schema.ts
+// components/<area>/lib/filter-schema.ts
 export const thingSearchSchema = z.object({
   q: z.string().catch('').default(''),
   page: z.number().int().min(1).catch(1).default(1),
-  filters: filterStateSchema.catch([]).default([]),
-});
-
-// routes/route-tree.tsx
-const thingRoute = createRoute({
-  getParentRoute: () => orgRoute,
-  path: '/things',
-  component: ThingPage,
-  validateSearch: thingSearchSchema,
 });
 ```
 
-Reach for `nuqs` only for primitive scalars (`q`, `page`, repeated string params) on routes you don't own (third-party route tree, static-generation pages without TanStack Router). Never use `nuqs` for an array of objects or any nested structure; the `URLSearchParams` round-trip coerces objects to `"[object Object]"` and silently collapses chips to default.
+Avoid nested object arrays in query strings unless the route has a tested parser/serializer. Primitive search, tab, and selected-id params are safe.
 
 ```tsx
 // nuqs: primitive-scalar fallback only
@@ -252,7 +218,7 @@ const [tab, setTab] = useQueryState(
 
 ## Zustand Feature Store
 
-Module-level store for feature UI state. Live in `features/{feature}/{feature}-store.ts`.
+Module-level store for feature UI state only when state must outlive one page shell. Prefer local state in `InboxShell`/`AuditPage` until sharing pressure appears.
 
 ```tsx
 'use client';
@@ -279,7 +245,7 @@ Consume: `const isOpen = useSearchStore((s) => s.isOpen);`
 ## Keyboard Shortcuts
 
 ```tsx
-import { useShortcut } from '@ui/design-system/hooks/use-shortcut';
+import { useShortcut } from '@/design-system/hooks/use-shortcut';
 
 const SEARCH_SHORTCUT = { keys: 'mod+k', label: 'Search' };
 
@@ -298,10 +264,11 @@ Key format: `mod+k` (mod = ⌘ on Mac, Ctrl on Windows/Linux). Other modifiers: 
 |-----------|----------|
 | `HybridTooltip` | Default. Responsive — shows on desktop, hides on mobile. |
 | `ShortcutTooltip` | When the action has a keyboard shortcut — renders label + kbd together. |
+| `PointerTooltipContent` | Pointer-following drag affordances such as resizable panel handles. |
 | `Tooltip` | Low-level, only when you need custom layout. Prefer one of the above. |
 
 ```tsx
-import { ShortcutTooltip } from '@ui/design-system/components/ui/shortcut-tooltip';
+import { ShortcutTooltip } from '@/design-system/components/ui/shortcut-tooltip';
 
 <ShortcutTooltip label="Search" shortcut={SEARCH_SHORTCUT}>
   <Button variant="ghost" size="icon" aria-label="Search">

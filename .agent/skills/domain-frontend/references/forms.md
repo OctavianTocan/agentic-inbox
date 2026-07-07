@@ -11,7 +11,7 @@ import {
   Form, FormControl, FormDescription, FormField,
   FormItem, FormLabel, FormMessage,
   useForm, zodResolver,
-} from '@ui/design-system/components/ui/form';
+} from '@/design-system/components/ui/form';
 ```
 
 ## Schema as Source of Truth
@@ -189,6 +189,6 @@ For form wiring inside dialogs (form id, submit button in footer, reset on close
 
 ## Key Files
 
-- `packages/ui/design-system/src/components/ui/form.tsx` — Form primitives + re-exports
-- `packages/comcom/app-core/src/pages/account/profile-section.tsx` — standalone form
-- `packages/comcom/app-core/src/pages/access-tokens/access-token-create-dialog.tsx` — form-in-dialog
+- `apps/web/src/design-system/components/ui/form.tsx` — Form primitives + re-exports
+- `apps/web/src/components/inbox/` — product forms and approval editing surfaces
+- `apps/web/src/components/audit/` — audit route forms and panel controls

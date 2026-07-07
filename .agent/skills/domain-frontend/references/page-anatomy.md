@@ -1,91 +1,57 @@
 # Page Anatomy
 
-How to add a new page — route registration, layout shell, and content state branching.
+How to add or modify a route-backed view in `apps/web`.
 
 ## Where Content Components Live
 
-Page content lives in `app-core/src/pages/{feature}/`, NOT in `apps/app/src/`. The app shell is thin — pages delegate to page components from `@comcom/app-core`.
+Next.js route files live in `apps/web/src/app`, but product content lives in `apps/web/src/components/{feature}`. Route files should be thin server/client boundaries, not large UI modules.
 
 ## Route Registration
 
-Add routes in `app-core/src/routes/route-tree.tsx`:
+Create folders under `apps/web/src/app` using App Router conventions:
 
 ```tsx
-// List page
-const itemsRoute = createRoute({
-  getParentRoute: () => orgRoute,
-  path: '/items',
-  component: ItemsContent,
-});
+// apps/web/src/app/review/page.tsx
+import { ReviewPage } from '@/components/review/review-page';
 
-// Detail page with route params
-const itemDetailRoute = createRoute({
-  getParentRoute: () => orgRoute,
-  path: '/items/$itemId',
-  component: ItemDetailContent,
-});
-
-function ItemDetailContent() {
-  const { itemId } = useParams({ strict: false });
-  // ...
+export default function ReviewRoute() {
+  return <ReviewPage />;
 }
 ```
 
-Routes nest: `rootRoute` → `authedRoute` → `appRoute` → `orgRoute` → your route. Org routes use the `/~/$orgSlug` prefix.
+Use server components for route files by default. Add `'use client'` only to the smallest component that needs hooks, state, event handlers, or browser APIs.
 
-## Page Shell Structure
+## Reading Server Context
 
-Every content page follows this canonical structure:
+When a route needs cookies or headers, read them in the route file and pass plain values to the product shell:
 
 ```tsx
-export function ItemsContent() {
+import { cookies } from 'next/headers';
+
+export default async function InboxPage() {
+  const cookieStore = await cookies();
+  const persistedWidth = parseWidthCookie(cookieStore.get(SIDEBAR_WIDTH_COOKIE_NAME)?.value, 264, 220, 360);
+  return <InboxShell persistedWidth={persistedWidth} />;
+}
+```
+
+## Product Page Structure
+
+Product shells compose existing design-system primitives and feature components:
+
+```tsx
+export function ReviewPage() {
   return (
-    <>
-      <AppTopBar breadcrumbs={[{ label: 'Items' }]} />
-      <AppShell maxWidth="default">
-        <AppHeader variant="title">
-          <AppHeaderContent>
-            <AppHeaderGroup>
-              <AppHeaderTitle>Items</AppHeaderTitle>
-              <AppHeaderDescription>Manage your items.</AppHeaderDescription>
-            </AppHeaderGroup>
-          </AppHeaderContent>
-          <AppHeaderActions>
-            <Button>Create Item</Button>
-          </AppHeaderActions>
-        </AppHeader>
-        <AppShellContent>
-          <ItemsList />
-        </AppShellContent>
-      </AppShell>
-    </>
+    <main className="min-h-dvh bg-background text-foreground">
+      <ReviewSidebar />
+      <ReviewContent />
+      <ReviewChat />
+    </main>
   );
 }
 ```
 
-`AppTopBar` (`app-core/src/components/layout/top-bar`) is the composed convenience wrapper over the design-system TopBar primitives — it bakes in the sidebar trigger, breadcrumbs, and session panel trigger so you pass only `breadcrumbs`.
-
-Do NOT skip `AppHeaderContent` or `AppHeaderGroup` — they provide the flex layout.
-
-## maxWidth
-
-Set `maxWidth` once on `AppShell`. `AppHeader`, `AppHeaderToolbar`, and `AppShellContent` inherit it via context. Per-primitive overrides still work for the rare case where a section needs a different width.
-
-| Variant | Use for |
-|---------|---------|
-| `"default"` | List/grid pages |
-| `"narrow"` | Settings/form pages |
-| `"2xl"`     | Detail pages with a narrow column (settings-style detail surfaces) |
-| `"full"` | Full-width dashboards |
-
-## AppHeader variants
-
-| Variant | Use for |
-|---------|---------|
-| `"compact"` (default) | Single-row breadcrumb-style header |
-| `"title"`   | Multi-line title block: `AppHeaderTitle` + `AppHeaderDescription` + `AppHeaderActions` |
-
-The `title` variant bakes in `h-auto min-h-16 py-3` and the gutter padding — never paste those classes via `className`.
+Keep state at the shell when multiple panels coordinate. Extract a child component when a section has its own loading/error/empty branching or event flow.
 
 ## Content State Branching
 
@@ -109,19 +75,17 @@ if (filtered.length === 0 && searchQuery) return <ItemsNoResults />;
 
 ## Skeleton Loading
 
-Mirror the final layout with `Skeleton` primitives. Use gradient mask for fade-out:
+Mirror the final layout with `Skeleton` primitives. Use gradient mask for long table/list fades:
 
 ```tsx
 <div style={{ maskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)' }}>
-  <Table>
-    {/* same structure as the real table, but Skeleton in each cell */}
-  </Table>
+  <Table>{/* same structure as the real table, but Skeleton in each cell */}</Table>
 </div>
 ```
 
 ## Empty States
 
-Use the `Empty` compound component with a clear next action:
+Use the `Empty` compound component with one clear next action:
 
 ```tsx
 <Empty>
@@ -136,35 +100,11 @@ Use the `Empty` compound component with a clear next action:
 </Empty>
 ```
 
-## Toolbar
-
-`AppHeaderToolbar` sits between the header and content for search, filters, or tabs:
-
-```tsx
-<AppShell maxWidth="default">
-  <Tabs defaultValue="all">
-    <AppHeader>
-      <AppHeaderContent>...</AppHeaderContent>
-    </AppHeader>
-    <AppHeaderToolbar>
-      <TabsList variant="line">
-        <TabsTrigger value="all">All</TabsTrigger>
-        <TabsTrigger value="active">Active</TabsTrigger>
-      </TabsList>
-    </AppHeaderToolbar>
-    <AppShellContent>
-      <TabsContent value="all">...</TabsContent>
-      <TabsContent value="active">...</TabsContent>
-    </AppShellContent>
-  </Tabs>
-</AppShell>
-```
-
 ## Key Files
 
-- `packages/comcom/app-core/src/pages/access-tokens/access-tokens-page.tsx` — canonical page
-- `packages/comcom/app-core/src/pages/members/` — tabs + toolbar
-- `packages/comcom/app-core/src/components/layout/top-bar.tsx` — AppTopBar wrapper
-- `packages/ui/design-system/src/components/ui/app-shell.tsx` — AppShell + AppShellContent
-- `packages/ui/design-system/src/components/ui/app-header.tsx` — AppHeader compound components
-- `packages/comcom/app-core/src/routes/route-tree.tsx` — route registration
+- `apps/web/src/app/page.tsx` — thin inbox route
+- `apps/web/src/app/audit/page.tsx` — thin audit route
+- `apps/web/src/components/inbox/inbox-shell.tsx` — route-backed product shell
+- `apps/web/src/components/audit/audit-page.tsx` — route-backed product shell
+- `apps/web/src/design-system/components/ui/app-shell.tsx` — generic app shell primitive
+- `apps/web/src/design-system/components/ui/app-header.tsx` — generic header primitives

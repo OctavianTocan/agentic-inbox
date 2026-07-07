@@ -1,18 +1,17 @@
 # Design System
 
-Architecture of `@ui/design-system` — how primitives are built, composed, and extended.
+Architecture of `apps/web/src/design-system` — how primitives are built, composed, and extended in this repo.
 
 ## Package Architecture
 
 ```
-packages/ui/design-system/src/
+apps/web/src/design-system/
   components/
     ui/           # Single-purpose primitives (Button, Card, Dialog, Tabs, etc.)
-    particles/    # Composed blocks (CopyButton, ThemeToggle)
-    icons/        # Central Icon System exports + lucide fallback + brand icons
-  hooks/          # useIsMobile, useDebounce, useModifierHeld
-  providers/      # DesignSystemProvider
-  lib/            # cn(), formatDate, handleError, shortcuts
+    icons/        # Hugeicons wrappers + local brand icons
+   hooks/          # useIsMobile, useDebounce, useModifierHeld
+   providers/      # DesignSystemProvider
+   lib/            # cn(), shortcuts, local utilities
   styles/         # globals.css
 ```
 
@@ -26,9 +25,9 @@ Primitives → Particles → Blocks → Features
 
 Single-element wrappers. One HTML element or Base UI primitive + cva + data-slot. No composition logic. Examples: Button, Input, Card, Badge, Dialog.
 
-### Particles (`particles/`)
+### Particles (`ui/` or `hooks/`)
 
-Behavior-enhanced controls. Combine 1-3 primitives with one hook or interaction. Still "one control" — not a layout structure. Examples: CopyButton (Button + clipboard hook), ThemeToggle (Button + DropdownMenu + useTheme).
+Behavior-enhanced controls. Combine 1-3 primitives with one hook or interaction. Still "one control" — not a layout structure. This repo keeps those controls in `components/ui/` when they render UI (`copy-button.tsx`, `shortcut-tooltip.tsx`) and in `hooks/` when they are behavior-only.
 
 **When to create a particle**: a primitive + behavior combination appears in 2+ places. If it's pure layout composition (no hook/logic), it's a block instead.
 
@@ -38,9 +37,9 @@ Multi-part compound families with layout contracts. 4-10 parts coordinated via `
 
 **When to create a block**: a structured layout pattern with parent-child coordination appears in 2+ places. Blocks own layout contracts; particles own behavior.
 
-### Features (`app-core/src/features/{feature}/`)
+### Features (`apps/web/src/components/{feature}/` and `apps/web/src/lib/{feature}/`)
 
-Full interactive units. Own a Zustand store, call APIs, register keyboard shortcuts, handle complex event flows. Examples: SearchDialog, FeedbackDialog, InspectorPanel, SessionPanel.
+Full interactive units. Own app-specific state, call APIs, register keyboard shortcuts, handle complex event flows. Examples: inbox, audit, chat panel.
 
 For component file conventions (props, cva, data-slot, cn(), exports), see [component-anatomy.md](component-anatomy.md).
 
@@ -100,16 +99,16 @@ For the full compound component file pattern, see [component-anatomy.md](compone
 
 ## Styling Conventions
 
-- **Semantic tokens**: `bg-primary`, `text-muted-foreground`, `border-border` — never raw colors
-- **No page spacing**: Components own internal spacing but never set external margins or page padding
+- **Semantic tokens**: `bg-primary`, `text-muted-foreground`, `border-border`, `bg-sidebar` — never raw colors
+- **No page spacing in primitives**: Components own internal spacing but generic primitives never set page margins. Product shells such as the inbox desktop work area may own their 8px backing/panel gutters.
 - **cn() always**: Every component accepting `className` must merge with `cn()`
 - **Semi-transparent borders**: `border-black/10`, `border-white/10` to adapt to any background
 - **Ring borders**: prefer `ring-1 ring-foreground/10` over `border` for subtle container edges
 
 ## Key Files
 
-- `packages/ui/design-system/src/components/ui/button.tsx` — cva + Base UI primitive
-- `packages/ui/design-system/src/components/ui/dialog.tsx` — Base UI wrapper pattern
-- `packages/ui/design-system/src/components/ui/card.tsx` — compound component with group modifiers
-- `packages/ui/design-system/src/components/ui/empty.tsx` — compound component with cva media variants
-- `packages/ui/design-system/src/providers/index.tsx` — DesignSystemProvider
+- `apps/web/src/design-system/components/ui/button.tsx` — cva + Base UI primitive
+- `apps/web/src/design-system/components/ui/sidebar.tsx` — collapsible/resizable sidebar compound family
+- `apps/web/src/design-system/components/ui/resizable.tsx` — panel separator with pointer-follow tooltip
+- `apps/web/src/design-system/components/ui/tooltip.tsx` — Base UI tooltip plus pointer tooltip layer
+- `apps/web/src/design-system/providers/index.tsx` — DesignSystemProvider

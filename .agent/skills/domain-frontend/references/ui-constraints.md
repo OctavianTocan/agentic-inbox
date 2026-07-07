@@ -41,17 +41,17 @@ Run through before opening a PR; each item maps to a section below.
 ## Stack
 
 - MUST use Tailwind CSS defaults unless custom values already exist or are explicitly requested
-- MUST use `motion/react` (formerly `framer-motion`) when JavaScript animation is required
+- MUST prefer CSS transitions and `tw-animate-css`; reach for `motion/react` only when JavaScript animation is explicitly required
 - SHOULD use `tw-animate-css` for entrance and micro-animations in Tailwind CSS
 - MUST use `cn` utility (`clsx` + `tailwind-merge`) for class logic
 
 ## Components
 
-- MUST use accessible component primitives for anything with keyboard or focus behavior (`@ui/design-system/components/*`)
+- MUST use accessible component primitives for anything with keyboard or focus behavior (`@/design-system/components/*`)
 - MUST use the project's existing component primitives first — check [component-catalog.md](component-catalog.md) before building anything new
 - MUST use default design system items (`DropdownMenuItem`, `CommandItem`, `SidebarMenuButton`, etc.) instead of custom-styled elements — never hand-write item styles that a component already provides
 - NEVER use raw HTML elements (`<button>`, `<input>`, `<select>`, `<dialog>`, `<textarea>`) in app code — always use design system components
-- NEVER import directly from `@base-ui/react`, `lucide-react`, or `@central-icons-react` in app code — use design system wrappers and icon re-exports (`@ui/design-system/components/icons`)
+- NEVER import directly from `@base-ui/react`, `@hugeicons/*`, or `lucide-react` in app code — use design system wrappers and icon re-exports (`@/design-system/components/icons`)
 - NEVER duplicate a component that already exists in the design system — if it looks like a Button, Card, Badge, Spinner, Skeleton, or Empty state, it already exists
 - MUST rely on built-in component spacing (e.g. `gap-1.5` in `DropdownMenuItem`, `gap-2` in `CommandItem`) instead of manual icon margins like `mr-2`
 - NEVER mix primitive systems within the same interaction surface
@@ -130,14 +130,14 @@ Run through before opening a PR; each item maps to a section below.
 
 ## Layout
 
-- MUST use a fixed `z-index` scale (no arbitrary `z-*`)
+- MUST use the documented z-index scale from `DESIGN.md`: sticky section headers `z-10`, panel controls `z-40`, overlays `z-50`, and pointer-follow tooltips `z-[80]`. Do not invent other z layers.
 - SHOULD use `size-*` for square elements instead of `w-*` + `h-*`
 
 ## Navigation & State
 
-- MUST reflect UI state in URL — filters, tabs, pagination via query params
-- MUST default to TanStack Router `validateSearch` plus a page-local search hook for URL state on routes you own; use `nuqs` only for primitive scalars when `validateSearch` is unavailable, and never use manual `useSearchParams` state sync
-- MUST use `<Link>` (or `RouterLink` from `@comcom/app-shared/providers/router`) for navigation — supports Cmd/Ctrl+click, middle-click
+- SHOULD reflect shareable route state in URL — filters, tabs, selected ids, or pagination via query params when a reviewer benefits from a link
+- MUST keep ephemeral review-workflow state local to the owning shell when it does not need to survive reloads or links
+- MUST use Next.js `<Link>` for navigation — supports Cmd/Ctrl+click and middle-click
 
 ## Touch & Interaction
 

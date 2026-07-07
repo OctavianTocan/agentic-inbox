@@ -61,6 +61,8 @@ import {
   SidebarProvider
 } from '@/design-system/components/ui/sidebar';
 import { useIsMobile } from '@/design-system/hooks/use-mobile';
+import { useShortcut } from '@/design-system/hooks/use-shortcut';
+import type { ShortcutDefinition } from '@/design-system/lib/shortcuts';
 import { cn } from '@/design-system/lib/utils';
 import {
   ACTION_LABELS,
@@ -76,6 +78,13 @@ const ACTION_ICON: Readonly<Record<ActionKind, typeof SendIcon>> = {
   flag_for_review: FilterXIcon,
   undo: RotateCcwIcon
 };
+
+const CHAT_SHORTCUT = {
+  id: 'audit.chat',
+  keys: 'Mod+Alt+B',
+  label: 'Toggle chat panel',
+  category: 'navigation'
+} satisfies ShortcutDefinition;
 
 type AuditRecord = {
   readonly entry: LedgerEntry;
@@ -361,6 +370,8 @@ export function AuditPage({ persistedWidth }: { persistedWidth?: number }) {
     setIsChatOpen(!isChatOpen);
   }, [isChatOpen, setIsChatOpen]);
 
+  useShortcut(CHAT_SHORTCUT, () => toggleChat(), { enabled: !isMobile });
+
   const handleNewChat = useCallback(() => {
     setChatKey((key) => key + 1);
     setIsChatEmpty(true);
@@ -376,18 +387,7 @@ export function AuditPage({ persistedWidth }: { persistedWidth?: number }) {
       resizable
     >
       <div className="relative flex min-h-0 min-w-0 flex-1">
-        <CollapsedSidebarTrigger
-          peek={
-            <SidebarPeek
-              filters={EMPTY_FILTERS}
-              items={items}
-              ledgerCount={ledger.length}
-              onFiltersChange={() => undefined}
-              onRunAgent={requestRerun}
-              showFilters={false}
-            />
-          }
-        />
+        <CollapsedSidebarTrigger />
         <div className="pointer-events-none absolute inset-x-0 top-0 z-40 hidden md:block">
           <ChatHeaderSlice
             chatPeek={<ChatPeek />}
@@ -415,11 +415,16 @@ export function AuditPage({ persistedWidth }: { persistedWidth?: number }) {
           onFiltersChange={() => undefined}
           onRunAgent={requestRerun}
           showFilters={false}
-          title="Audit"
         />
         <SidebarInset className="min-h-0 min-w-0 overflow-hidden bg-background md:bg-sidebar">
-          <div className="hidden h-(--top-bar-height) shrink-0 md:block" />
-          <div className="flex min-h-0 min-w-0 flex-1 md:p-2">
+          <div className="relative flex min-h-0 min-w-0 flex-1 md:p-2">
+            {!isChatOpen ? (
+              <div
+                aria-hidden="true"
+                className="chat-toggle-cutout pointer-events-none hidden md:block"
+                data-slot="chat-toggle-cutout"
+              />
+            ) : null}
             <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
               <header className="flex h-14 shrink-0 items-center justify-between gap-2 border-b bg-sidebar px-3 md:hidden">
                 <div className="flex min-w-0 items-center gap-2">
@@ -484,11 +489,12 @@ export function AuditPage({ persistedWidth }: { persistedWidth?: number }) {
                       >
                         <div
                           className={cn(
-                            'flex h-full flex-col overflow-hidden rounded-xl border bg-card transition-opacity duration-200 ease-[var(--ease-panel)]',
+                            'flex h-full translate-x-0 flex-col overflow-hidden rounded-xl border bg-card opacity-100 transition-[opacity,transform] duration-[var(--duration-panel-close)] ease-panel will-change-transform',
                             activePane === 'list' &&
                               !isDetailClosing &&
                               'opacity-[0.93]',
-                            isDetailClosing && 'pointer-events-none opacity-0'
+                            isDetailClosing &&
+                              'pointer-events-none translate-x-2 opacity-0'
                           )}
                           onPointerDownCapture={() => setActivePane('detail')}
                         >

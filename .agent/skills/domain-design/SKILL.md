@@ -13,11 +13,11 @@ Before proposing new visuals, check what the repo already has:
 
 | Artifact | Path | Purpose |
 |---|---|---|
-| Design tokens | `packages/ui/design-system/src/styles/globals.css` | OKLch color vars, `--radius` / `--radius-sm`/`-md`/`-lg`/`-xl`, `--font-family-sans` (Geist), `--sidebar-*`, `--chart-1..5`. Dark mode variants under `.dark`. |
-| Primitive components | `packages/ui/design-system/src/components/ui/<name>` | shadcn-style primitives (`button`, `card`, `dialog`, `input`, `popover`, `select`, `command`, `sheet`, `drawer`, `tooltip`, `data-table/*`, `accordion`, `avatar`, `badge`, `breadcrumb`, …). Import directly: `@ui/design-system/components/ui/button`. |
-| Icons | `@ui/design-system/components/icons` | Central icon exports. Direct `lucide-react` imports belong inside the design-system icon registry. |
-| Component catalog source | `apps/design/` | Browseable gallery source for primitives. Inspect source/catalog files instead of starting a dev server or browser unless explicitly requested. |
-| Dark mode | `packages/ui/design-system/src/providers/theme.tsx` | `next-themes` provider, `attribute="class"`, `.dark` toggles token overrides. |
+| Design tokens | `apps/web/src/design-system/styles/globals.css` | Warm light/dark CSS vars, `--radius`, `--top-bar-height`, `--sidebar-*`, `--chart-1..5`, elevation stacks, motion durations/easings, and Tailwind `@theme inline` exports. |
+| Primitive components | `apps/web/src/design-system/components/ui/<name>` | Base UI / shadcn-style primitives (`button`, `badge`, `drawer`, `dropdown-menu`, `hover-card`, `resizable`, `sidebar`, `tooltip`, etc.). Import app code through `@/design-system/components/ui/button`. |
+| Icons | `@/design-system/components/icons` | Hugeicons-backed registry plus local brand SVGs. Direct `@hugeicons/*` imports belong only inside the icon registry. |
+| Component catalog source | `apps/web/src/design-system/components/ui/` | There is no separate gallery app in this repo; inspect primitive source and existing product screens before adding new visuals. |
+| Dark mode | `apps/web/src/design-system/styles/globals.css` | `.dark` toggles token overrides; current app is light-first but dark tokens exist and should stay warm. |
 | Motion | see `domain-frontend`'s `references/animation.md` | Default to tw-animate-css `animate-in`/`animate-out` classes; reach for `motion/react` only when JS animation is explicitly required. No bespoke motion hooks. |
 
 Rule of thumb: any raw hex, pixel value, or hand-rolled primitive in a PR is a signal to check the above first.

@@ -52,6 +52,7 @@ export function PanelPeek({
     <Button
       aria-label={label}
       aria-pressed={isPanelOpen}
+      className="duration-150 ease-panel"
       onClick={onToggle}
       size="icon-sm"
       variant="ghost"

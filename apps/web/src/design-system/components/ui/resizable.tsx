@@ -1,9 +1,10 @@
 "use client";
 
 import * as ResizablePrimitive from "react-resizable-panels";
+import { useState } from "react";
 
 import { cn } from "../../lib/utils";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
+import { PointerTooltipContent, type PointerTooltipPoint } from "./tooltip";
 
 /** Container that lays out resizable panels in a row or column. */
 function ResizablePanelGroup({
@@ -31,10 +32,16 @@ function ResizablePanel({ ...props }: ResizablePrimitive.PanelProps) {
 function ResizableHandle({
   withHandle,
   className,
+  onPointerLeave,
+  onPointerMove,
   ...props
 }: ResizablePrimitive.SeparatorProps & {
   withHandle?: boolean;
 }) {
+  const [tooltipPoint, setTooltipPoint] = useState<PointerTooltipPoint | null>(
+    null,
+  );
+
   return (
     <ResizablePrimitive.Separator
       className={cn(
@@ -42,17 +49,23 @@ function ResizableHandle({
         className,
       )}
       data-slot="resizable-handle"
+      onPointerLeave={(event) => {
+        setTooltipPoint(null);
+        onPointerLeave?.(event);
+      }}
+      onPointerMove={(event) => {
+        setTooltipPoint({ x: event.clientX, y: event.clientY });
+        onPointerMove?.(event);
+      }}
       {...props}
     >
       {withHandle && (
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <div className="z-10 flex h-6 w-1 shrink-0 rounded-lg bg-border" />
-            }
-          />
-          <TooltipContent>Drag to resize</TooltipContent>
-        </Tooltip>
+        <>
+          <div className="z-10 flex h-6 w-1 shrink-0 rounded-lg bg-border" />
+          <PointerTooltipContent point={tooltipPoint}>
+            Drag to resize
+          </PointerTooltipContent>
+        </>
       )}
     </ResizablePrimitive.Separator>
   );

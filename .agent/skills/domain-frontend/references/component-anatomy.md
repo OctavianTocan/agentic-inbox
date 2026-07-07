@@ -202,7 +202,7 @@ Rules:
 - **The hook assertion is the contract.** Any `<Composer*>` part requires a `ComposerProvider` ancestor; the hook throws otherwise.
 - **Sibling sections share state for free.** A toolbar, footer, and textarea on different parts of the page all see the same draft via the same Provider.
 
-This is distinct from the design-system "Block" definition (`design-system.md`), which forbids stores and data fetching. The design-system layer stays stateless; stateful compound families live in `@ui/ai-ui` and feature folders.
+This is distinct from the design-system "Block" definition (`design-system.md`), which forbids stores and data fetching. The design-system layer stays stateless; stateful compound families live in `@/ai-ui` and feature folders.
 
 ## Twin Entry Points (Hook + Zero-DOM Component)
 
@@ -250,11 +250,11 @@ Add when the file uses hooks, state, event handlers, or browser APIs. Omit for p
 
 ## Key Files
 
-- `packages/ui/design-system/src/components/ui/button.tsx` — cva + Base UI primitive
-- `packages/ui/design-system/src/components/ui/card.tsx` — compound component with data-size
-- `packages/ui/design-system/src/components/ui/settings-card.tsx` — specialization pattern
-- `packages/ui/design-system/src/components/ui/badge.tsx` — useRender polymorphic pattern
-- `packages/ui/ai-ui/src/composer/composer-provider.tsx` — stateful compound family (Provider + `useComposer()`)
-- `packages/ui/ai-ui/src/providers/message-provider.tsx`, `thread-provider.tsx`, `part-provider.tsx` — same pattern for messages, threads, parts
-- `packages/comcom/app-core/src/components/composer/app-composer.tsx` — app-level composer wiring (ComposerProvider integration)
-- `packages/comcom/app-core/src/hooks/use-composer-submit-shortcut.ts` — keyboard shortcut hook for composer submission
+- `apps/web/src/design-system/components/ui/button.tsx` — cva + Base UI primitive
+- `apps/web/src/design-system/components/ui/card.tsx` — compound component with data-slot coordination
+- `apps/web/src/design-system/components/ui/settings-card.tsx` — specialization pattern
+- `apps/web/src/design-system/components/ui/badge.tsx` — variant component pattern
+- `apps/web/src/ai-ui/composer/composer-provider.tsx` — stateful compound family (Provider + `useComposer()`)
+- `apps/web/src/ai-ui/providers/message-provider.tsx`, `thread-provider.tsx`, `part-provider.tsx` — same pattern for messages, threads, parts
+- `apps/web/src/components/chat/chat-panel.tsx` — app-level chat wiring
+- `apps/web/src/components/inbox/inbox-shell.tsx` — product shell integration and keyboard shortcuts

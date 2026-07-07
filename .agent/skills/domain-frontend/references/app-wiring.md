@@ -1,99 +1,59 @@
 # App Wiring
 
-How the app is assembled — provider stack, layout hierarchy, router abstraction, sidebar, and route tree.
+How the current app is assembled: one Next.js 16 frontend, an app-local design system, product components, and API proxy routes.
 
 ## Boot Sequence
 
 ```
-main.tsx → App → DesignSystemProvider → RouterProvider (TanStack Router)
+apps/web/src/app/layout.tsx
+  └── DesignSystemProvider
+      ├── ReactGrabSetup in development
+      └── route content
 ```
 
-## Provider Layers
+`RootLayout` owns fonts, metadata, global background/text tokens, and the design-system provider. Keep feature providers closer to the feature shell unless they truly affect every route.
 
-### Design System Layer
-
-Nesting order: `Theme > Hotkeys > Tooltip`, with `Toaster` outside children.
-
-### App Layer
-
-Nesting order: `Analytics > RouterAdapter > QueryProvider` (with `Suspense` around `QueryProvider`).
-
-`QueryProvider` persists the React Query cache to IndexedDB and auto-clears on user change.
-
-## Layout Hierarchy
-
-Each layout is a route component with `<Outlet />` for nested children:
+## Route Hierarchy
 
 ```
-WebRootLayout          NuqsAdapter + Providers + fonts
-  └── WebAuthedLayout  AuthedSessionProvider + WaitlistRedirect
-      └── WebAppLayout AppCollectionsProvider + SessionsProvider + Sidebar + SessionPanel + global dialogs
-          └── WebOrgLayout  ActiveOrgSyncer
-              └── [page content]
+apps/web/src/app/page.tsx          → InboxShell
+apps/web/src/app/audit/page.tsx    → AuditPage
+apps/web/src/app/api/v1/*          → API proxy routes
+apps/web/src/app/design/*          → design-system preview/demo surfaces
+apps/web/src/app/traces/*          → traces/debug route surfaces
 ```
 
-- **WebRootLayout** — NuqsAdapter for primitive fallback URL state, analytics, query client; route-owned URL state still defaults to TanStack Router `validateSearch`
-- **WebAuthedLayout** — auth gate: redirects unauthenticated, provides session
-- **WebAppLayout** — app chrome: sidebar, session panel, search/feedback/shortcuts dialogs. Conditionally renders sidebar only for org routes (paths starting with `/~/`).
-- **WebOrgLayout** — syncs active org
+Route files should stay thin: read server-only request context such as cookies, parse persisted layout values, then delegate to product components under `apps/web/src/components`.
 
-## Router Abstraction
+## Product Shells
 
-Shared packages use a framework-agnostic router via `@comcom/app-shared/providers/router`:
+- `InboxShell` owns the main reviewer workflow: inbox list, detail pane, triage controls, chat panel, sidebar width, and keyboard shortcuts.
+- `AuditPage` reuses the inbox sidebar/detail/chat layout patterns for audit review.
+- `InboxSidebar` is the shared sidebar composition; design-system `Sidebar` remains generic and domain-free.
+- `ChatSlot` and `apps/web/src/ai-ui` compose headless chat primitives with app-specific transport logic under `apps/web/src/lib/chat`.
 
-```tsx
-// Available in shared packages — no router library dependency
-import { RouterLink, useNavigate, usePathname, useParams } from '@comcom/app-shared/providers/router';
-```
+## Data Seams
 
-Each app provides an adapter:
-- `apps/app/src/lib/router-adapter.tsx` — TanStack Router
-- `packages/comcom/app-shared/src/providers/next-router.tsx` — Next.js
-
-Always use `RouterLink` and `useNavigate` in shared/app-core packages, never import directly from a router library.
-
-## Sidebar
-
-```
-AppSidebar
-  ├── SidebarHeader     OrganizationMenu + SearchIconButton
-  ├── SidebarNavGroups  Navigation items with Mod+number shortcuts
-  └── SidebarFooter     UserMenu + SettingsIconButton
-```
-
-To add a nav item, edit the nav group definitions in `packages/comcom/app-core/src/components/layout/sidebar/constants.ts`.
-
-## Route Tree
-
-Routes are defined centrally in `app-core/src/routes/route-tree.tsx`. The layout routes are created by the app shell and passed in; the factory destructures them and attaches pages:
-
-```tsx
-export function createAppRouteTree(layouts, overrides) {
-  const { rootRoute, authedRoute, appRoute, orgRoute } = layouts;
-
-  // add org-scoped pages here
-  const itemsRoute = createRoute({
-    getParentRoute: () => orgRoute,
-    path: '/items',
-    component: ItemsContent,
-  });
-}
-```
-
-Platform-specific pages (sign-in, onboarding) are passed as overrides from the app shell.
+- UI-facing inbox calls go through `apps/web/src/lib/inbox/client.ts`.
+- UI-facing chat streaming goes through `apps/web/src/lib/chat/http-transport.ts`.
+- Shared HTTP schemas/contracts belong in `packages/api-core`.
+- Backend handlers live in `apps/api`; web API route files only proxy or adapt when needed.
 
 ## Adding a New Wired Feature
 
-1. **Create page component** in `app-core/src/pages/{feature}/`
-2. **Register route** in `app-core/src/routes/route-tree.tsx`
-3. **Add sidebar nav item** (if needed) in `sidebar/constants.ts`
-4. **Add provider** (if needed) at the appropriate layout level — add to `WebAppLayout` for org-scoped state, `WebAuthedLayout` for auth-scoped state
+1. Create route wiring under `apps/web/src/app/{route}/page.tsx` when the URL changes.
+2. Put product UI under `apps/web/src/components/{feature}/`.
+3. Put web-local adapters/helpers under `apps/web/src/lib/{feature}/`.
+4. Add shared API schemas in `packages/api-core` before adding backend/web callers.
+5. Keep reusable primitives in `apps/web/src/design-system`, with no product imports.
 
 ## Key Files
 
-- `apps/app/src/router.tsx` — layout components
-- `apps/app/src/components/providers.tsx` — app-level providers
-- `packages/comcom/app-shared/src/providers/router.tsx` — router abstraction
-- `packages/comcom/app-core/src/routes/route-tree.tsx` — route definitions
-- `packages/ui/design-system/src/providers/index.tsx` — DesignSystemProvider
-- `packages/comcom/app-core/src/components/layout/sidebar/constants.ts` — sidebar nav config
+- `apps/web/src/app/layout.tsx` — root provider/metadata/font shell
+- `apps/web/src/app/page.tsx` — inbox route wiring
+- `apps/web/src/app/audit/page.tsx` — audit route wiring
+- `apps/web/src/components/inbox/inbox-shell.tsx` — main inbox shell
+- `apps/web/src/components/audit/audit-page.tsx` — audit shell
+- `apps/web/src/lib/inbox/client.ts` — inbox API client seam
+- `apps/web/src/lib/chat/http-transport.ts` — chat SSE transport
+- `apps/web/src/design-system/providers/index.tsx` — DesignSystemProvider

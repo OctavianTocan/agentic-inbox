@@ -20,6 +20,17 @@ colors:
   border: "#ddd9d1"
   input: "#fffefa"
   ring: "#cc7d5e"
+  sidebar: "#f0efeb"
+  sidebar-foreground: "#2d2d2b"
+  sidebar-accent: "#ebe8e1"
+  sidebar-accent-hover: "#e7e4dc"
+  sidebar-border: "#d8d4cc"
+  dark-background: "#191815"
+  dark-foreground: "#f4f1eb"
+  dark-card: "#211f1b"
+  dark-sidebar: "#171612"
+  dark-sidebar-accent: "#2c2924"
+  dark-sidebar-accent-hover: "#27231e"
 typography:
   display:
     fontFamily: Manrope
@@ -61,6 +72,15 @@ spacing:
   md: 16px
   lg: 24px
   xl: 32px
+motion:
+  panelDuration: 220ms
+  interactionDuration: 150ms
+  panelEase: cubic-bezier(0.32, 0.72, 0, 1)
+zIndex:
+  sticky: 10
+  panelControls: 40
+  overlays: 50
+  pointerTooltip: 80
 components:
   button-primary:
     backgroundColor: "{colors.primary}"
@@ -69,6 +89,13 @@ components:
     rounded: "{rounded.md}"
     height: 32px
     padding: 12px
+  button-ghost:
+    backgroundColor: transparent
+    textColor: "{colors.foreground}"
+    hoverBackgroundColor: "{colors.muted}"
+    typography: "{typography.label}"
+    rounded: "{rounded.md}"
+    transition: 150ms
   button-secondary:
     backgroundColor: "{colors.secondary}"
     textColor: "{colors.secondary-foreground}"
@@ -128,6 +155,29 @@ components:
   focus-ring:
     backgroundColor: "{colors.ring}"
     height: 3px
+  sidebar-shell:
+    backgroundColor: "{colors.sidebar}"
+    textColor: "{colors.sidebar-foreground}"
+    accentColor: "{colors.sidebar-accent}"
+    hoverColor: "{colors.sidebar-accent-hover}"
+    collapsedWidth: 48px
+    expandedDefaultWidth: 264px
+  work-panel:
+    backgroundColor: "{colors.card}"
+    textColor: "{colors.card-foreground}"
+    rounded: "{rounded.lg}"
+    borderColor: "{colors.border}"
+    padding: 8px
+  chat-panel:
+    backgroundColor: "{colors.card}"
+    rounded: "{rounded.lg}"
+    minWidth: 320px
+    defaultWidth: 400px
+    maxWidth: 560px
+  pointer-tooltip:
+    backgroundColor: "{colors.foreground}"
+    textColor: "{colors.background}"
+    zIndex: 80
 ---
 
 ## Overview
@@ -143,9 +193,11 @@ Audit are the primary surfaces.
 The palette is neutral-first and follows the light Codex-like theme used in
 the app: warm off-white surfaces, deep ink text, a muted coral accent, and a
 deeper copper primary for filled controls with light text. There should be no
-blue UI chrome. `secondary`, `muted`, and `accent` remain close to the surface
-color so controls read as product chrome, not marketing decoration. Use
-`success` sparingly for completed checks and `destructive` only for real risk.
+blue UI chrome. `secondary`, `muted`, `accent`, and `sidebar` remain close to
+the surface color so controls read as product chrome, not marketing decoration.
+Use `success` sparingly for completed checks and `destructive` only for real
+risk. Dark mode is tokenized in `globals.css` and should stay warm, not pure
+black; shadows in dark mode use inset highlights plus low-opacity depth.
 
 ## Typography
 
@@ -160,15 +212,26 @@ headings compact and reserve display type for top-level pages.
 
 Prefer full-width product bands and resizable work panes over nested cards.
 The desktop shell uses a collapsible/resizable left sidebar, an inbox list, a
-pinned detail pane header, and a collapsible/resizable right agent panel.
-Audit keeps the left sidebar for navigation while hiding inbox filters. Mobile
-uses a compact top bar: menu, agent-search entry, and Audit icon.
+pinned detail pane header, and a collapsible/resizable right agent panel. The
+work panels sit high in the viewport on an 8px sidebar-colored backing; when
+chat is collapsed, the work area exposes a compact top-right circle cutout for the
+floating chat toggle. Audit keeps the left sidebar for navigation while hiding
+inbox filters. Mobile uses a compact top bar: menu, agent-search entry, and
+Audit icon.
 
 ## Elevation & Depth
 
 Use the CSS elevation variables in `globals.css` for subtle hierarchy:
-`--elevation-card`, `--elevation-card-sm`, and `--elevation-soft`. Shadows
-should clarify layering without making panels look floaty or promotional.
+`--elevation-card`, `--elevation-card-sm`, `--elevation-soft`, and
+`--elevation-soft-lifted`. The desktop chat cutout uses
+`--elevation-cutout-curve`, an inverted version of the panel shadow language, so
+the page chrome reads as carved into the right panel rather than pasted on top.
+The shadow belongs only on the curved edge that cuts into the panel; the straight
+right-side cover stays flat sidebar chrome. Keep the cutout centered around the
+toggle button instead of the full header band. Shadows should clarify layering
+without making panels look floaty or promotional. Pointer-follow resize tooltips
+and hover peeks intentionally sit above top chrome and sticky list headers on the
+overlay z-index layer.
 
 ## Shapes
 
@@ -192,12 +255,41 @@ primitives and local chat components. The default `/` route is the inbox
 experience. The first-run screen can appear every visit for now and must keep
 the page locked without stray mobile scroll.
 
+The active design-system package for this repo lives under
+`apps/web/src/design-system`; imports use the local `@/design-system/...` alias.
+Icons come only from `@/design-system/components/icons`, whose registry wraps
+Hugeicons plus local brand SVGs. Direct `@hugeicons/*`, `lucide-react`, or
+Base UI imports belong inside the design-system layer, not app components.
+
+Buttons use the Base UI-backed `Button` primitive with variants `default`,
+`outline`, `secondary`, `ghost`, and `destructive`; sizes are `xs`, `sm`,
+`default`, `lg`, `icon-xs`, `icon-sm`, `icon`, and `icon-lg`. Sidebar controls
+use `SidebarMenuButton`, not generic buttons, so collapsed rail geometry and
+tooltips stay consistent.
+
 Text controls that include inline icons must keep symmetric horizontal padding;
 use component `gap` for icon/text spacing instead of reducing only the icon
 side. Inline icons and logo marks that share a text line should size to
 `1lh`, not `1em`, so they track the element's line-height and remain visually
 aligned when leading changes. Keep standalone icon-only controls on explicit
 square sizes.
+
+Sidebar hover states must keep typography metrically stable. Use color,
+background, opacity, or transform for affordance; do not change font weight,
+letter spacing, or text-shadow on hover/active states because those shift dense
+navigation labels and make the rail feel jittery.
+
+Motion is CSS-first. Use explicit transition properties only, keep interaction
+feedback around 150ms, keep panel open/close around 220ms with `--ease-panel`,
+and animate compositor-friendly properties (`transform`, `opacity`) for panels.
+Layout-size animation is acceptable only for the existing resizable sidebar and
+chat panel width transitions, where the width itself is the user-controlled
+state.
+
+The sidebar footer always carries a default reviewer profile. In collapsed
+mode, the app icon, menu icons, profile avatar, and bottom reopen control share
+the same 48px rail centerline so icons do not shift between open and closed
+states.
 
 ## Do's and Don'ts
 

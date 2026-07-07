@@ -12,7 +12,7 @@ The single source for motion rules in this codebase. For the enforceable MUST/SH
 
 ## Current State
 
-`motion/react` is **not yet used** in application code. `tw-animate-css` **is used** for entrance animations via Tailwind classes. The patterns below are for new animation work when explicitly requested.
+`motion/react` is **not used** in application code. `tw-animate-css` is configured for entrance animations, while current inbox/audit motion is CSS-transition based: explicit `transform`, `opacity`, width/margin for the resizable chat/sidebar panels, and `--duration-panel-close`/`--ease-panel` tokens.
 
 ## tw-animate-css (What IS Used Today)
 
@@ -115,5 +115,6 @@ Or use `motion/react`'s built-in `useReducedMotion()` hook.
 
 ## Key Files
 
-- `packages/ui/design-system/src/styles/globals.css` — tw-animate-css configuration
-- `packages/ui/design-system/src/components/ui/navigation-menu.tsx` — one of few motion/react uses in design system
+- `apps/web/src/design-system/styles/globals.css` — tw-animate-css plus motion/easing tokens
+- `apps/web/src/components/inbox/use-detail-close.ts` — detail-panel close timing contract
+- `apps/web/src/components/inbox/chat-slot.tsx` — resizable chat width transition

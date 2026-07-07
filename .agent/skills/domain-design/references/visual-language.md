@@ -2,7 +2,7 @@
 
 The concrete aesthetic system. How the philosophy manifests in pixels.
 
-All tokens below map to CSS custom properties defined in `packages/ui/design-system/src/styles/globals.css` (Tailwind utility classes read those vars). When adjusting a value, go to the source file — don't hardcode a hex or pixel value inline.
+All tokens below map to CSS custom properties defined in `apps/web/src/design-system/styles/globals.css` (Tailwind utility classes read those vars). When adjusting a value, go to the source file — don't hardcode a hex or pixel value inline.
 
 ## Color
 
@@ -66,7 +66,7 @@ Icons are labels, not decoration. An icon without a purpose is noise.
 
 - MUST use icons to clarify meaning, not to fill space
 - MUST pair icons with text labels in navigation — icon-only nav requires memorization
-- MUST use a single icon family consistently: Central Icons via `@ui/design-system/components/icons`; Lucide is a fallback for icons Central does not ship
+- MUST use the local icon registry consistently: Hugeicons wrapped by `@/design-system/components/icons`, plus local brand SVGs. Direct provider imports stay inside that registry.
 - NEVER use icons larger than 20px in dense UI — 16px is the default for inline icons
 - NEVER use filled icons when outline variants exist (filled icons are visually heavier)
 - SHOULD use icons for status indicators (checkmark, warning, error) rather than colored dots alone

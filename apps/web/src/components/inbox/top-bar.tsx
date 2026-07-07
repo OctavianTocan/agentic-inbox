@@ -2,54 +2,46 @@
 
 import type { ReactNode } from 'react';
 import {
+  ArrowRightIcon,
   ChevronsLeftIcon,
-  MenuIcon,
   PanelRightCloseIcon,
   PanelRightIcon,
   SquarePenIcon
 } from '@/design-system/components/icons';
 import { Button } from '@/design-system/components/ui/button';
 import { useSidebar } from '@/design-system/components/ui/sidebar';
-import { cn } from '@/design-system/lib/utils';
 import { PanelPeek } from './panel-peek';
 
 const SIDEBAR_PEEK_WIDTH = 300;
 const CHAT_PEEK_WIDTH = 400;
 
 type SidebarHeaderSliceProps = {
-  readonly title: string;
   readonly peek: ReactNode;
 };
 
 /**
- * Top-of-sidebar header band: the app icon, the collapsing page title, and the
- * sidebar toggle pinned to the sidebar's right edge so it tracks resizing. The
+ * Top-of-sidebar header band: the app icon and the sidebar toggle pinned to the
+ * sidebar's right edge so it tracks resizing. The
  * band shares the sidebar's surface and border, so both continue unbroken up
- * through the chrome. It slides off-screen with the sidebar on collapse; the
- * collapsed rail is served by CollapsedSidebarTrigger.
+ * through the chrome. In icon-collapse mode the close control hides, leaving
+ * the app icon aligned with the collapsed rail actions.
  *
- * @param title - Page title shown next to the app icon; hidden when collapsed.
- * @param peek - Sidebar content shown when peeking the collapsed rail.
+ * @param peek - Sidebar content shown when hovering the expanded close control.
  * @returns The sidebar header slice.
  */
-export function SidebarHeaderSlice({ title, peek }: SidebarHeaderSliceProps) {
+export function SidebarHeaderSlice({ peek }: SidebarHeaderSliceProps) {
   const { open, toggleSidebar } = useSidebar();
 
   return (
-    <div className="flex h-(--top-bar-height) shrink-0 items-center gap-2 px-3">
-      <span
-        aria-hidden="true"
-        className="size-5 shrink-0 rounded-sm bg-[url('/app-icon.svg')] bg-cover bg-center"
-      />
-      <span
-        className={cn(
-          'min-w-0 flex-1 truncate font-display font-medium text-sm transition-opacity duration-200 ease-panel',
-          open ? 'opacity-100' : 'opacity-0'
-        )}
-      >
-        {title}
+    <div className="flex h-(--top-bar-height) shrink-0 items-center gap-2 px-2 group-data-[collapsible=icon]:justify-center">
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-md">
+        <span
+          aria-hidden="true"
+          className="size-5 shrink-0 rounded-sm bg-[url('/app-icon.svg')] bg-cover bg-center"
+        />
       </span>
-      <span className="shrink-0 opacity-0 transition-opacity duration-150 focus-within:opacity-100 group-hover/sidebar:opacity-100">
+      <span className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden" />
+      <span className="shrink-0 opacity-0 transition-opacity duration-150 focus-within:opacity-100 group-hover/sidebar:opacity-100 group-data-[collapsible=icon]:hidden">
         <PanelPeek
           icon={<ChevronsLeftIcon className="size-4" />}
           isPanelOpen={open}
@@ -65,21 +57,14 @@ export function SidebarHeaderSlice({ title, peek }: SidebarHeaderSliceProps) {
   );
 }
 
-type CollapsedSidebarTriggerProps = {
-  readonly peek: ReactNode;
-};
-
 /**
- * Far-left chrome trigger shown only while the sidebar is collapsed: the app
- * icon doubles as the peek/expand affordance the collapsed rail otherwise
- * lacks. Hovering reveals the sidebar peek; clicking reopens the sidebar.
+ * Bottom rail trigger shown only while the sidebar is collapsed. The sidebar's
+ * own icon buttons remain clickable above it; this control only reopens the
+ * full sidebar.
  *
- * @param peek - Sidebar content shown when peeking the collapsed rail.
  * @returns The collapsed-state trigger, or nothing while the sidebar is open.
  */
-export function CollapsedSidebarTrigger({
-  peek
-}: CollapsedSidebarTriggerProps) {
+export function CollapsedSidebarTrigger() {
   const { open, toggleSidebar } = useSidebar();
 
   if (open) {
@@ -87,17 +72,17 @@ export function CollapsedSidebarTrigger({
   }
 
   return (
-    <div className="absolute top-0 left-0 z-40 flex h-(--top-bar-height) items-center pl-3">
-      <PanelPeek
-        icon={<MenuIcon className="size-4" />}
-        isPanelOpen={false}
-        label="Show sidebar"
-        onToggle={toggleSidebar}
-        peekWidth={SIDEBAR_PEEK_WIDTH}
-        side="left"
+    <div className="pointer-events-none absolute bottom-16 left-0 z-40 hidden w-(--sidebar-width-icon) justify-center md:flex">
+      <Button
+        aria-label="Show sidebar"
+        aria-pressed={false}
+        className="pointer-events-auto duration-150 ease-panel"
+        onClick={toggleSidebar}
+        size="icon-sm"
+        variant="ghost"
       >
-        {peek}
-      </PanelPeek>
+        <ArrowRightIcon className="size-4" />
+      </Button>
     </div>
   );
 }
@@ -134,11 +119,11 @@ export function ChatHeaderSlice({
   const ChatIcon = isChatOpen ? PanelRightCloseIcon : PanelRightIcon;
 
   return (
-    <div className="pointer-events-none absolute top-0 right-0 z-40 flex h-(--top-bar-height) items-center justify-end gap-1 pr-3 pl-4">
+    <div className="pointer-events-none absolute top-2 right-4 z-40 flex h-11 items-center justify-end gap-1">
       <Button
         aria-hidden={isChatEmpty}
         aria-label="New chat"
-        className="pointer-events-auto data-[hidden]:pointer-events-none data-[hidden]:invisible"
+        className="pointer-events-auto duration-150 ease-panel data-[hidden]:pointer-events-none data-[hidden]:invisible"
         data-hidden={isChatEmpty ? '' : undefined}
         onClick={onNewChat}
         size="icon-sm"

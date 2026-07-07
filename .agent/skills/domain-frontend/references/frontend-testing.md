@@ -1,38 +1,25 @@
 # Frontend Testing
 
-Testing patterns for React components and hooks.
+Testing patterns for the `apps/web` React/Next.js frontend.
 
 ## Current State
 
-Frontend tests are minimal — the codebase is backend-heavy with 120+ Effect-TS test files. `@tooling/testing` ships a jsdom + React vitest config ready for use.
+Frontend tests live under `apps/web/test` and run through the workspace Vitest command:
 
-## Vitest Config
-
-Frontend packages use the shared config with jsdom:
-
-```typescript
-// vitest.config.ts
-import sharedConfig from '@tooling/testing';
-import { mergeConfig, defineConfig } from 'vitest/config';
-
-export default mergeConfig(sharedConfig, defineConfig({
-  test: {
-    environment: 'jsdom',
-    include: ['test/**/*.test.ts', 'test/**/*.test.tsx'],
-  },
-}));
+```bash
+bun run test
 ```
+
+Use targeted tests while iterating, then the workspace command before calling work complete.
 
 ## Test Location
 
-Following AGENTS.md conventions:
-- Tests live in `test/` directory at package level
-- File pattern: `test/**/*.test.ts` or `test/**/*.test.tsx`
-- Never co-located with source files
+Following `AGENTS.md` conventions:
 
-## Test File Naming
-
-Frontend packages: test filenames mirror their source filename casing (kebab-case `feature-name.test.tsx` for a kebab `feature-name.tsx` source). Effect-TS backend packages use PascalCase test filenames (see `domain-effect/references/code-style.md`); the test directory is **not** a monorepo-wide PascalCase island.
+- Tests live in `apps/web/test/`.
+- File pattern: `*.test.ts` or `*.test.tsx`.
+- Never co-locate tests with source files.
+- Frontend test filenames mirror source filenames in kebab-case.
 
 ## Component Testing
 
@@ -63,28 +50,29 @@ describe('useMyHook', () => {
 
 ## Mocking
 
+Mock app-local modules by their `@/...` import path:
+
 ```tsx
 import { vi } from 'vitest';
 
-// Mock a module
-vi.mock('@platform/auth/hooks', () => ({
-  useSession: () => ({ data: mockSession, isPending: false }),
+vi.mock('@/lib/inbox/client', () => ({
+  createInboxClient: () => mockInboxClient,
 }));
 ```
 
 ## What to Test
 
 | Priority | What | How |
-|----------|------|-----|
-| High | Data transformation hooks | `renderHook` + assertions |
-| High | Form validation logic | Unit test schemas directly |
-| Medium | Component rendering | `render` + `screen.getByText` |
+| --- | --- | --- |
+| High | Sensitive/action policy display and reversibility | Component test with mocked inbox snapshots |
+| High | Data transformation helpers | Unit tests with fixed email/action fixtures |
+| Medium | Component rendering | `render` + semantic queries |
 | Medium | User interactions | `@testing-library/user-event` |
-| Low | Layout/styling | Visual regression (not in vitest) |
+| Low | Layout/styling | Browser/visual QA, not Vitest |
 
 ## What NOT to Test
 
-- Don't test shadcn/ui components — they're maintained upstream
-- Don't test TanStack Router navigation — integration concern
-- Don't test React Query caching — trust the library
-- Don't test simple prop passthrough components
+- Don't test design-system primitives as if they were product logic.
+- Don't test Next.js routing internals.
+- Don't test simple prop passthrough components.
+- Don't weaken tests around sensitive emails just to fit current UI behavior; sensitive mail must never be auto-actioned.

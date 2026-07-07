@@ -111,6 +111,10 @@
     0 0 0 1px rgba(0, 0, 0, 0.06), 0 1px 1px -0.5px rgba(0, 0, 0, 0.04);
   --elevation-mark:
     0 0 0 1px rgba(63, 70, 75, 0.1), 0 1px 3px 0 rgba(63, 70, 75, 0.1);
+  --elevation-cutout-curve:
+    inset 1px 0 0 rgba(0, 0, 0, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.06),
+    inset 3px -3px 4px -3px rgba(0, 0, 0, 0.05);
 }
 
 .dark {
@@ -211,6 +215,10 @@
   --elevation-mark:
     inset 0 1px 0 0 rgb(255 255 255 / 0.05),
     inset 0 0 0 1px rgb(255 255 255 / 0.06), 0 1px 3px 0 rgb(0 0 0 / 0.3);
+  --elevation-cutout-curve:
+    inset 1px 0 0 rgb(255 255 255 / 0.04),
+    inset 0 -1px 0 rgb(255 255 255 / 0.04),
+    inset 3px -3px 5px -3px rgb(0 0 0 / 0.22);
 }
 
 @theme inline {
@@ -911,6 +919,283 @@
 
 [data-slot="resizable-panel"][data-closing] {
   flex-grow: 0 !important;
+}
+
+.chat-toggle-cutout {
+  --chat-cutout-radius: 2.65rem;
+  --chat-cutout-cover-width: 1.1rem;
+
+  position: absolute;
+  top: 0.5rem;
+  right: 0;
+  z-index: 20;
+  width: calc(var(--chat-cutout-radius) + var(--chat-cutout-cover-width));
+  height: var(--chat-cutout-radius);
+}
+
+.chat-toggle-cutout::before,
+.chat-toggle-cutout::after {
+  position: absolute;
+  top: 0;
+  height: var(--chat-cutout-radius);
+  content: "";
+  background: var(--sidebar);
+}
+
+.chat-toggle-cutout::before {
+  left: 0;
+  width: var(--chat-cutout-radius);
+  border-bottom-left-radius: 9999px;
+  box-shadow: var(--elevation-cutout-curve);
+}
+
+.chat-toggle-cutout::after {
+  right: 0;
+  width: var(--chat-cutout-cover-width);
+}
+
+.cutout-demo-mockup {
+  --cutout-demo-chrome: var(--sidebar);
+  --cutout-demo-panel: var(--card);
+  --cutout-demo-radius: 2.45rem;
+  --cutout-demo-cover: 1.35rem;
+  --cutout-demo-rim-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+    inset 0 1px 1px -0.5px rgba(0, 0, 0, 0.04),
+    0 1px 1px -0.5px rgba(0, 0, 0, 0.04);
+  --cutout-demo-shape-shadow: drop-shadow(0 0 0 rgba(0, 0, 0, 0.06))
+    drop-shadow(0 1px 1px rgba(0, 0, 0, 0.04))
+    drop-shadow(0 3px 3px rgba(0, 0, 0, 0.03));
+  --cutout-demo-button-shell-size: 2.5rem;
+  --cutout-demo-button-center-x: calc(
+    100% - ((var(--cutout-demo-radius) + var(--cutout-demo-cover)) / 2)
+  );
+  --cutout-demo-button-center-y: calc(0.5rem + (var(--cutout-demo-radius) / 2));
+
+  position: relative;
+  min-height: 18rem;
+  overflow: hidden;
+  border-radius: 0.875rem;
+  background: var(--cutout-demo-chrome);
+  box-shadow: var(--elevation-card-sm);
+}
+
+.cutout-demo-sidebar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4rem;
+  border-right: 1px solid var(--sidebar-border);
+  padding: 0.875rem;
+}
+
+.cutout-demo-dot {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 0.35rem;
+  background: var(--primary);
+}
+
+.cutout-demo-rail {
+  width: 2rem;
+  height: 0.375rem;
+  margin-top: 1.5rem;
+  border-radius: 9999px;
+  background: color-mix(in oklab, var(--sidebar-foreground) 16%, transparent);
+}
+
+.cutout-demo-rail--short {
+  width: 1.35rem;
+  margin-top: 0.75rem;
+}
+
+.cutout-demo-work {
+  position: absolute;
+  inset: 0.5rem 0 0.5rem 4.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  gap: 0.5rem;
+}
+
+.cutout-demo-list,
+.cutout-demo-detail {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--cutout-demo-panel);
+}
+
+.cutout-demo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 1rem;
+}
+
+.cutout-demo-list span,
+.cutout-demo-detail span {
+  display: block;
+  height: 0.625rem;
+  border-radius: 9999px;
+  background: color-mix(in oklab, var(--foreground) 9%, transparent);
+}
+
+.cutout-demo-list span:nth-child(2) {
+  width: 72%;
+}
+
+.cutout-demo-list span:nth-child(3) {
+  width: 54%;
+}
+
+.cutout-demo-detail {
+  padding: 3.75rem 1rem 1rem;
+}
+
+.cutout-demo-detail span + span {
+  width: 64%;
+  margin-top: 0.75rem;
+}
+
+.cutout-demo-corner {
+  position: absolute;
+  top: 0.5rem;
+  right: 0;
+  z-index: 3;
+  width: calc(var(--cutout-demo-radius) + var(--cutout-demo-cover));
+  height: var(--cutout-demo-radius);
+  pointer-events: none;
+}
+
+.cutout-demo-button-shell {
+  position: absolute;
+  top: calc(
+    var(--cutout-demo-button-center-y) - (var(--cutout-demo-button-shell-size) / 2)
+  );
+  left: calc(
+    var(--cutout-demo-button-center-x) - (var(--cutout-demo-button-shell-size) / 2)
+  );
+  z-index: 5;
+  display: grid;
+  width: var(--cutout-demo-button-shell-size);
+  height: var(--cutout-demo-button-shell-size);
+  place-items: center;
+  border-radius: 9999px;
+}
+
+.cutout-demo-button-shell::before {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  content: "";
+}
+
+.cutout-demo-button {
+  position: relative;
+  z-index: 1;
+}
+
+.cutout-demo--cradle .cutout-demo-corner::before,
+.cutout-demo--cradle .cutout-demo-corner::after,
+.cutout-demo--scoop .cutout-demo-corner::before,
+.cutout-demo--scoop .cutout-demo-corner::after,
+.cutout-demo--flat .cutout-demo-corner::before,
+.cutout-demo--flat .cutout-demo-corner::after {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  content: "";
+  background: var(--cutout-demo-chrome);
+}
+
+.cutout-demo--cradle .cutout-demo-corner::before,
+.cutout-demo--flat .cutout-demo-corner::before {
+  left: 0;
+  width: var(--cutout-demo-radius);
+  border-bottom-left-radius: 9999px;
+}
+
+.cutout-demo--cradle .cutout-demo-corner,
+.cutout-demo--scoop .cutout-demo-corner {
+  filter: var(--cutout-demo-shape-shadow);
+}
+
+.cutout-demo--cradle .cutout-demo-corner::before {
+  box-shadow: var(--cutout-demo-rim-shadow);
+}
+
+.cutout-demo--cradle .cutout-demo-corner::after,
+.cutout-demo--flat .cutout-demo-corner::after {
+  right: 0;
+  width: var(--cutout-demo-cover);
+  box-shadow: var(--cutout-demo-rim-shadow);
+}
+
+.cutout-demo--mask .cutout-demo-corner {
+  background: var(--cutout-demo-chrome);
+  filter: var(--cutout-demo-shape-shadow);
+  mask: radial-gradient(
+      circle at calc(100% - var(--cutout-demo-cover) - (var(--cutout-demo-radius) / 2))
+        50%,
+      transparent calc((var(--cutout-demo-radius) / 2) - 0.5px),
+      black calc(var(--cutout-demo-radius) / 2)
+    ),
+    linear-gradient(black, black);
+  mask-composite: subtract;
+}
+
+.cutout-demo--scoop {
+  --cutout-demo-radius: 2.25rem;
+  --cutout-demo-cover: 1.45rem;
+}
+
+.cutout-demo--scoop .cutout-demo-corner::before {
+  left: 0;
+  width: var(--cutout-demo-radius);
+  border-bottom-left-radius: 1.75rem 2.5rem;
+  box-shadow: var(--cutout-demo-rim-shadow);
+}
+
+.cutout-demo--scoop .cutout-demo-corner::after {
+  right: 0;
+  width: var(--cutout-demo-cover);
+  box-shadow: var(--cutout-demo-rim-shadow);
+}
+
+.cutout-demo--flat .cutout-demo-corner::before {
+  box-shadow: var(--cutout-demo-rim-shadow);
+}
+
+.cutout-demo--flat {
+  --cutout-demo-radius: 2.35rem;
+  --cutout-demo-cover: 1.35rem;
+}
+
+.cutout-demo--flat .cutout-demo-corner {
+  filter: var(--cutout-demo-shape-shadow);
+}
+
+.cutout-demo--raised-ring {
+  --cutout-demo-button-shell-size: 2.75rem;
+}
+
+.cutout-demo--raised-disc {
+  --cutout-demo-button-shell-size: 3rem;
+}
+
+.cutout-demo--raised-ring .cutout-demo-button-shell::before,
+.cutout-demo--raised-disc .cutout-demo-button-shell::before {
+  background: var(--cutout-demo-panel);
+  box-shadow: var(--elevation-card);
+}
+
+.cutout-demo--raised-disc .cutout-demo-button-shell::before {
+  inset: -0.1875rem;
+}
+
+.cutout-demo--raised-ring .cutout-demo-button,
+.cutout-demo--raised-disc .cutout-demo-button {
+  background: color-mix(in oklab, var(--cutout-demo-panel) 82%, var(--muted));
+  box-shadow: var(--elevation-card-sm);
 }
 
 @media (prefers-reduced-motion: reduce) {

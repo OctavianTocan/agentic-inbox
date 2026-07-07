@@ -20,7 +20,13 @@ import {
 } from "./sheet";
 import { SIDEBAR_WIDTH_COOKIE_NAME } from "./sidebar-width";
 import { Skeleton } from "./skeleton";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
+import {
+  PointerTooltipContent,
+  type PointerTooltipPoint,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "./tooltip";
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state";
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
@@ -228,7 +234,23 @@ function Sidebar({
   variant?: "sidebar" | "floating" | "inset";
   collapsible?: "offcanvas" | "icon" | "none";
 }) {
-  const { isMobile, state, openMobile, setOpenMobile } = useSidebar();
+  const { isMobile, state, openMobile, setOpen, setOpenMobile } = useSidebar();
+
+  const handleCollapsedSurfaceClick = React.useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      if (state !== "collapsed") {
+        return;
+      }
+      const target = event.target;
+      const isInteractiveTarget =
+        target instanceof Element &&
+        target.closest('a, button, [role="button"], [data-sidebar="menu-button"], [data-slot="button"]') !== null;
+      if (!isInteractiveTarget) {
+        setOpen(true);
+      }
+    },
+    [setOpen, state],
+  );
 
   if (collapsible === "none") {
     return (
@@ -304,9 +326,10 @@ function Sidebar({
         {...props}
       >
         <div
-          className="flex size-full flex-col bg-sidebar group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:shadow-sm group-data-[variant=floating]:ring-1 group-data-[variant=floating]:ring-sidebar-border"
+          className="flex size-full flex-col bg-sidebar group-data-[collapsible=icon]:cursor-pointer group-data-[collapsible=icon]:transition-colors group-data-[collapsible=icon]:duration-150 group-data-[collapsible=icon]:ease-panel group-data-[collapsible=icon]:hover:bg-sidebar-accent/35 group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:shadow-sm group-data-[variant=floating]:ring-1 group-data-[variant=floating]:ring-sidebar-border"
           data-sidebar="sidebar"
           data-slot="sidebar-inner"
+          onClick={handleCollapsedSurfaceClick}
         >
           {children}
         </div>
@@ -563,7 +586,7 @@ function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
 }
 
 const sidebarMenuButtonVariants = cva(
-  "peer/menu-button group/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent-hover hover:text-sidebar-accent-foreground hover:[text-shadow:0.5px_0_0_currentColor] group-has-[[data-sidebar=menu-action]:hover]/menu-item:bg-sidebar-accent-hover group-has-[[data-sidebar=menu-action]:hover]/menu-item:text-sidebar-accent-foreground group-has-[[data-sidebar=menu-action]:hover]/menu-item:[text-shadow:0.5px_0_0_currentColor] focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-active:bg-sidebar-accent-active data-active:text-sidebar-accent-foreground data-active:[text-shadow:0.5px_0_0_currentColor] data-active:hover:bg-sidebar-accent-active data-active:group-has-[[data-sidebar=menu-action]:hover]/menu-item:bg-sidebar-accent-active data-open:hover:bg-sidebar-accent-hover data-active:hover:text-sidebar-accent-foreground data-active:group-has-[[data-sidebar=menu-action]:hover]/menu-item:text-sidebar-accent-foreground data-active:hover:[text-shadow:0.5px_0_0_currentColor] data-open:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:opacity-60 [&_svg]:transition-opacity hover:[&_svg]:opacity-100 group-has-[[data-sidebar=menu-action]:hover]/menu-item:[&_svg]:opacity-100 data-active:[&_svg]:opacity-100",
+  "peer/menu-button group/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-hidden ring-sidebar-ring transition-[background-color,color,width,height,padding] hover:bg-sidebar-accent-hover hover:text-sidebar-accent-foreground group-has-[[data-sidebar=menu-action]:hover]/menu-item:bg-sidebar-accent-hover group-has-[[data-sidebar=menu-action]:hover]/menu-item:text-sidebar-accent-foreground focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-active:bg-sidebar-accent-active data-active:text-sidebar-accent-foreground data-active:hover:bg-sidebar-accent-active data-active:group-has-[[data-sidebar=menu-action]:hover]/menu-item:bg-sidebar-accent-active data-open:hover:bg-sidebar-accent-hover data-active:hover:text-sidebar-accent-foreground data-active:group-has-[[data-sidebar=menu-action]:hover]/menu-item:text-sidebar-accent-foreground data-open:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:p-2! group-data-[collapsible=icon]:[&>span]:hidden [&>span:last-child]:truncate [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:opacity-60 [&_svg]:transition-opacity hover:[&_svg]:opacity-100 group-has-[[data-sidebar=menu-action]:hover]/menu-item:[&_svg]:opacity-100 data-active:[&_svg]:opacity-100",
   {
     variants: {
       variant: {
@@ -786,7 +809,7 @@ function SidebarMenuSubButton({
     props: mergeProps<"a">(
       {
         className: cn(
-          "flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sidebar-foreground outline-hidden ring-sidebar-ring hover:bg-sidebar-accent-hover hover:text-sidebar-accent-foreground hover:[text-shadow:0.5px_0_0_currentColor] focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-active:bg-sidebar-accent-active data-[size=md]:text-sm data-[size=sm]:text-xs data-active:text-sidebar-accent-foreground data-active:[text-shadow:0.5px_0_0_currentColor] data-active:hover:bg-sidebar-accent-active data-active:hover:text-sidebar-accent-foreground data-active:hover:[text-shadow:0.5px_0_0_currentColor] group-data-[collapsible=icon]:hidden [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-sidebar-accent-foreground",
+          "flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sidebar-foreground outline-hidden ring-sidebar-ring transition-[background-color,color] hover:bg-sidebar-accent-hover hover:text-sidebar-accent-foreground focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-active:bg-sidebar-accent-active data-[size=md]:text-sm data-[size=sm]:text-xs data-active:text-sidebar-accent-foreground data-active:hover:bg-sidebar-accent-active data-active:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:hidden [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-sidebar-accent-foreground",
           className,
         ),
       },
@@ -821,6 +844,8 @@ function SidebarResizeHandle({
   } = useSidebar();
 
   const isCollapsed = state === "collapsed";
+  const [tooltipPoint, setTooltipPoint] =
+    React.useState<PointerTooltipPoint | null>(null);
 
   const onResize = React.useCallback(
     (widthPx: number) => {
@@ -882,26 +907,28 @@ function SidebarResizeHandle({
   }
 
   return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <button
-            aria-label="Resize sidebar"
-            className={cn(
-              "absolute inset-y-0 right-0 z-20 w-1 cursor-col-resize border-none bg-transparent p-0 transition-colors",
-              isDragging ? "bg-border" : "hover:bg-border/50",
-              className,
-            )}
-            data-slot="sidebar-resize-handle"
-            onDoubleClick={handleDoubleClick}
-            onMouseDown={handleMouseDown}
-            type="button"
-            {...props}
-          />
+    <>
+      <button
+        aria-label="Resize sidebar"
+        className={cn(
+          "absolute inset-y-0 right-0 z-20 w-1 cursor-col-resize border-none bg-transparent p-0 transition-colors",
+          isDragging ? "bg-border" : "hover:bg-border/50",
+          className,
+        )}
+        data-slot="sidebar-resize-handle"
+        onDoubleClick={handleDoubleClick}
+        onMouseDown={handleMouseDown}
+        onPointerLeave={() => setTooltipPoint(null)}
+        onPointerMove={(event) =>
+          setTooltipPoint({ x: event.clientX, y: event.clientY })
         }
+        type="button"
+        {...props}
       />
-      <TooltipContent side="right">Drag to resize</TooltipContent>
-    </Tooltip>
+      <PointerTooltipContent hidden={isDragging} point={tooltipPoint}>
+        Drag to resize
+      </PointerTooltipContent>
+    </>
   );
 }
 
