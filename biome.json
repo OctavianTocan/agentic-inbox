@@ -67,6 +67,7 @@
       "includes": [
         "apps/api/src/App.ts",
         "apps/api/src/Main.ts",
+        "apps/api/src/WebHandler.ts",
         "apps/api/src/Infrastructure/**/*.ts",
         "apps/api/src/Lib/**/*.ts",
         "apps/api/src/Modules/**/*.ts",
