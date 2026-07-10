@@ -19,6 +19,11 @@ ledger entry.
 - PostgreSQL 17 for decisions, actions, and conversation history.
 - OpenRouter-backed model calls, configured through `.env`.
 
+## Architecture
+
+<!-- project-structure-gen:start -->
+<!-- project-structure-gen:end -->
+
 ## Run locally
 
 ```bash

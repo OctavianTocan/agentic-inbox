@@ -30,7 +30,8 @@ const markerEnd = '<!-- project-structure-gen:end -->';
 // - `bun run openapi:generate` / `bun run openapi:check`
 // - `bun run skills:generate` / `bun run skills:check`
 //
-// `bun run check:generated` must stay green in CI.
+// CI runs `bun run check:generated:portable` (workflows + openapi). Full
+// `bun run check:generated` (skills + structure) is local-only because `.agent/*` is gitignored.
 //</skill-gen>
 
 /** Project-structure generator configuration loaded from project-structure.json. */
