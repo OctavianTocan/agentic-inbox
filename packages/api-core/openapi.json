@@ -1,0 +1,1856 @@
+{
+  "components": {
+    "schemas": {
+      "ActionKind": {
+        "description": "The mutating tool executed for a ledger entry.",
+        "enum": [
+          "send_reply",
+          "archive",
+          "flag_for_review",
+          "undo"
+        ],
+        "type": "string"
+      },
+      "ActionNotFound": {
+        "additionalProperties": false,
+        "properties": {
+          "_tag": {
+            "enum": [
+              "ActionNotFound"
+            ],
+            "type": "string"
+          },
+          "entryId": {
+            "$ref": "#/components/schemas/LedgerEntryId"
+          }
+        },
+        "required": [
+          "_tag",
+          "entryId"
+        ],
+        "type": "object"
+      },
+      "ActionNotUndoable": {
+        "additionalProperties": false,
+        "properties": {
+          "_tag": {
+            "enum": [
+              "ActionNotUndoable"
+            ],
+            "type": "string"
+          },
+          "entryId": {
+            "$ref": "#/components/schemas/LedgerEntryId"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "_tag",
+          "entryId"
+        ],
+        "type": "object"
+      },
+      "Actor": {
+        "description": "Originator of an action: the batch triage agent, the chat agent, or the human.",
+        "enum": [
+          "batch_agent",
+          "chat_agent",
+          "user"
+        ],
+        "type": "string"
+      },
+      "ApprovalAlreadyResolved": {
+        "additionalProperties": false,
+        "properties": {
+          "_tag": {
+            "enum": [
+              "ApprovalAlreadyResolved"
+            ],
+            "type": "string"
+          },
+          "approvalId": {
+            "$ref": "#/components/schemas/ApprovalId"
+          }
+        },
+        "required": [
+          "_tag",
+          "approvalId"
+        ],
+        "type": "object"
+      },
+      "ApprovalDecisionRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "editedBody": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional edited reply body to send instead of the agent draft on approve."
+          },
+          "verdict": {
+            "$ref": "#/components/schemas/ApprovalVerdict"
+          }
+        },
+        "required": [
+          "verdict"
+        ],
+        "type": "object"
+      },
+      "ApprovalId": {
+        "allOf": [
+          {
+            "description": "Unique id of a pending approval request.",
+            "minLength": 1
+          }
+        ],
+        "type": "string"
+      },
+      "ApprovalNotFound": {
+        "additionalProperties": false,
+        "properties": {
+          "_tag": {
+            "enum": [
+              "ApprovalNotFound"
+            ],
+            "type": "string"
+          },
+          "approvalId": {
+            "$ref": "#/components/schemas/ApprovalId"
+          }
+        },
+        "required": [
+          "_tag",
+          "approvalId"
+        ],
+        "type": "object"
+      },
+      "ApprovalRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/ActionKind"
+          },
+          "createdAt": {
+            "description": "ISO-8601 UTC timestamp the approval was requested.",
+            "type": "string"
+          },
+          "emailId": {
+            "$ref": "#/components/schemas/EmailId"
+          },
+          "id": {
+            "$ref": "#/components/schemas/ApprovalId"
+          },
+          "payload": {
+            "description": "Proposed tool arguments (e.g. the draft reply body).",
+            "type": "object"
+          },
+          "summary": {
+            "description": "What the agent proposes to do if approved.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "emailId",
+          "action",
+          "summary",
+          "payload",
+          "createdAt"
+        ],
+        "type": "object"
+      },
+      "ApprovalVerdict": {
+        "description": "Human verdict on a pending sensitive action.",
+        "enum": [
+          "approve",
+          "deny"
+        ],
+        "type": "string"
+      },
+      "Category": {
+        "description": "Email category. The last four (financial, dispute, safety, escalation) are always sensitive.",
+        "enum": [
+          "request",
+          "activity_update",
+          "document_review",
+          "supplier_update",
+          "schedule",
+          "status_update",
+          "financial",
+          "dispute",
+          "safety",
+          "escalation",
+          "other"
+        ],
+        "type": "string"
+      },
+      "ChatFailed": {
+        "additionalProperties": false,
+        "properties": {
+          "_tag": {
+            "enum": [
+              "ChatFailed"
+            ],
+            "type": "string"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "_tag"
+        ],
+        "type": "object"
+      },
+      "ChatFailed1": {
+        "additionalProperties": false,
+        "properties": {
+          "_tag": {
+            "enum": [
+              "ChatFailed"
+            ],
+            "type": "string"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "_tag"
+        ],
+        "type": "object"
+      },
+      "ChatRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "conversationId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Existing conversation to continue, or omit to start a new one."
+          },
+          "message": {
+            "allOf": [
+              {
+                "description": "The user prompt to send to the chat agent.",
+                "minLength": 1
+              }
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object"
+      },
+      "ChatStreamEvent": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "delta": {
+                "type": "string"
+              },
+              "type": {
+                "enum": [
+                  "text_delta"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "delta"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "delta": {
+                "type": "string"
+              },
+              "type": {
+                "enum": [
+                  "reasoning_delta"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "delta"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "input": {
+                "type": "object"
+              },
+              "toolCallId": {
+                "type": "string"
+              },
+              "toolName": {
+                "type": "string"
+              },
+              "type": {
+                "enum": [
+                  "tool_call"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "toolCallId",
+              "toolName",
+              "input"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "output": {},
+              "toolCallId": {
+                "type": "string"
+              },
+              "type": {
+                "enum": [
+                  "tool_result"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "toolCallId",
+              "output"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "conversationId": {
+                "type": "string"
+              },
+              "type": {
+                "enum": [
+                  "done"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "conversationId"
+            ],
+            "type": "object"
+          }
+        ],
+        "description": "Discriminated event emitted over the chat SSE stream."
+      },
+      "ChatStreamEventJsonString": {
+        "contentMediaType": "application/json",
+        "contentSchema": {
+          "$ref": "#/components/schemas/ChatStreamEvent"
+        },
+        "type": "string"
+      },
+      "Confidence": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "enum": [
+              "NaN"
+            ],
+            "type": "string"
+          },
+          {
+            "enum": [
+              "Infinity"
+            ],
+            "type": "string"
+          },
+          {
+            "enum": [
+              "-Infinity"
+            ],
+            "type": "string"
+          }
+        ],
+        "description": "Model confidence in the decision, between 0 and 1 inclusive."
+      },
+      "Confidence1": {
+        "anyOf": [
+          {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "enum": [
+                  "NaN"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "Infinity"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "-Infinity"
+                ],
+                "type": "string"
+              }
+            ]
+          },
+          {
+            "enum": [
+              "Infinity",
+              "-Infinity",
+              "NaN"
+            ],
+            "type": "string"
+          }
+        ]
+      },
+      "Decision": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "$ref": "#/components/schemas/Category"
+          },
+          "confidence": {
+            "$ref": "#/components/schemas/Confidence1"
+          },
+          "emailId": {
+            "$ref": "#/components/schemas/EmailId"
+          },
+          "isSensitive": {
+            "description": "Whether the policy classifies this email as sensitive (never auto-actioned).",
+            "type": "boolean"
+          },
+          "keyFacts": {
+            "description": "Extracted salient facts the reviewer should see (amounts, dates, parties).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "rationale": {
+            "description": "Full plain-language explanation of the decision, rendered as markdown.",
+            "type": "string"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/Severity"
+          },
+          "whyPreview": {
+            "$ref": "#/components/schemas/WhyPreview"
+          }
+        },
+        "required": [
+          "emailId",
+          "category",
+          "severity",
+          "confidence",
+          "whyPreview",
+          "rationale",
+          "keyFacts",
+          "isSensitive"
+        ],
+        "type": "object"
+      },
+      "Email": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "description": "Plain-text email body.",
+            "type": "string"
+          },
+          "cc": {
+            "description": "Carbon-copy recipients.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "from": {
+            "description": "Sender display name and address.",
+            "type": "string"
+          },
+          "id": {
+            "$ref": "#/components/schemas/EmailId"
+          },
+          "inReplyTo": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EmailId"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Id of the email this one replies to, or null when it starts a thread."
+          },
+          "subject": {
+            "description": "Email subject line.",
+            "type": "string"
+          },
+          "timestamp": {
+            "description": "ISO-8601 UTC timestamp the email was received.",
+            "type": "string"
+          },
+          "to": {
+            "description": "Primary recipients.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "from",
+          "to",
+          "cc",
+          "subject",
+          "body",
+          "timestamp",
+          "inReplyTo"
+        ],
+        "type": "object"
+      },
+      "EmailId": {
+        "allOf": [
+          {
+            "description": "Dataset email identifier such as `e-001`.",
+            "minLength": 1
+          }
+        ],
+        "type": "string"
+      },
+      "EmailNotFound": {
+        "additionalProperties": false,
+        "properties": {
+          "_tag": {
+            "enum": [
+              "EmailNotFound"
+            ],
+            "type": "string"
+          },
+          "emailId": {
+            "$ref": "#/components/schemas/EmailId"
+          }
+        },
+        "required": [
+          "_tag",
+          "emailId"
+        ],
+        "type": "object"
+      },
+      "EmailStatus": {
+        "description": "Review bucket: `needs_attention` (human required), `done_for_you` (auto-handled), or `filed` (archived).",
+        "enum": [
+          "needs_attention",
+          "done_for_you",
+          "filed"
+        ],
+        "type": "string"
+      },
+      "Inbox": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/InboxItem"
+            },
+            "type": "array"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/InboxSummary"
+          }
+        },
+        "required": [
+          "summary",
+          "items"
+        ],
+        "type": "object"
+      },
+      "InboxItem": {
+        "additionalProperties": false,
+        "properties": {
+          "actions": {
+            "description": "Ledger entries recorded for this email, newest first.",
+            "items": {
+              "$ref": "#/components/schemas/LedgerEntry"
+            },
+            "type": "array"
+          },
+          "decision": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Decision"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The agent verdict, or null if this email has not been triaged yet."
+          },
+          "email": {
+            "$ref": "#/components/schemas/Email"
+          },
+          "pendingApproval": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ApprovalRequest"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A sensitive action awaiting approval, or null when none is pending."
+          },
+          "status": {
+            "$ref": "#/components/schemas/EmailStatus"
+          }
+        },
+        "required": [
+          "email",
+          "status",
+          "decision",
+          "pendingApproval",
+          "actions"
+        ],
+        "type": "object"
+      },
+      "InboxSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "filed": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "enum": [
+                      "NaN"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "enum": [
+                      "Infinity"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "enum": [
+                      "-Infinity"
+                    ],
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "enum": [
+                  "Infinity",
+                  "-Infinity",
+                  "NaN"
+                ],
+                "type": "string"
+              }
+            ]
+          },
+          "handled": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "enum": [
+                      "NaN"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "enum": [
+                      "Infinity"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "enum": [
+                      "-Infinity"
+                    ],
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "enum": [
+                  "Infinity",
+                  "-Infinity",
+                  "NaN"
+                ],
+                "type": "string"
+              }
+            ]
+          },
+          "needsAttention": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "enum": [
+                      "NaN"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "enum": [
+                      "Infinity"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "enum": [
+                      "-Infinity"
+                    ],
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "enum": [
+                  "Infinity",
+                  "-Infinity",
+                  "NaN"
+                ],
+                "type": "string"
+              }
+            ]
+          },
+          "processed": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "enum": [
+                      "NaN"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "enum": [
+                      "Infinity"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "enum": [
+                      "-Infinity"
+                    ],
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "enum": [
+                  "Infinity",
+                  "-Infinity",
+                  "NaN"
+                ],
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "required": [
+          "processed",
+          "handled",
+          "needsAttention",
+          "filed"
+        ],
+        "type": "object"
+      },
+      "LedgerEntry": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/ActionKind"
+          },
+          "actor": {
+            "$ref": "#/components/schemas/Actor"
+          },
+          "createdAt": {
+            "description": "ISO-8601 UTC timestamp the action was recorded.",
+            "type": "string"
+          },
+          "emailId": {
+            "$ref": "#/components/schemas/EmailId"
+          },
+          "id": {
+            "$ref": "#/components/schemas/LedgerEntryId"
+          },
+          "payload": {
+            "description": "Tool arguments captured at execution time (e.g. draft body).",
+            "type": "object"
+          },
+          "summary": {
+            "description": "Human-readable one-line description of what happened.",
+            "type": "string"
+          },
+          "undoes": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LedgerEntryId"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "For an undo action, the id of the entry it reverses; otherwise null."
+          },
+          "undoneBy": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LedgerEntryId"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Id of the ledger entry that undid this action, or null if still in effect."
+          }
+        },
+        "required": [
+          "id",
+          "actor",
+          "emailId",
+          "action",
+          "summary",
+          "payload",
+          "undoneBy",
+          "undoes",
+          "createdAt"
+        ],
+        "type": "object"
+      },
+      "LedgerEntryId": {
+        "allOf": [
+          {
+            "description": "Unique id of an action-ledger entry.",
+            "minLength": 1
+          }
+        ],
+        "type": "string"
+      },
+      "Severity": {
+        "description": "Urgency of the email, from low to critical.",
+        "enum": [
+          "low",
+          "medium",
+          "high",
+          "critical"
+        ],
+        "type": "string"
+      },
+      "TriageRunFailed": {
+        "additionalProperties": false,
+        "properties": {
+          "_tag": {
+            "enum": [
+              "TriageRunFailed"
+            ],
+            "type": "string"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "_tag"
+        ],
+        "type": "object"
+      },
+      "TriageRunFailed1": {
+        "additionalProperties": false,
+        "properties": {
+          "_tag": {
+            "enum": [
+              "TriageRunFailed"
+            ],
+            "type": "string"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "_tag"
+        ],
+        "type": "object"
+      },
+      "TriageRunRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "fresh": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "When true, clear all prior decisions, actions, and triage conversations, then re-triage every email."
+          }
+        },
+        "type": "object"
+      },
+      "TriageStreamEvent": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "emailId": {
+                "$ref": "#/components/schemas/EmailId"
+              },
+              "type": {
+                "enum": [
+                  "started"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "emailId"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "decision": {
+                "additionalProperties": false,
+                "properties": {
+                  "category": {
+                    "$ref": "#/components/schemas/Category"
+                  },
+                  "confidence": {
+                    "$ref": "#/components/schemas/Confidence"
+                  },
+                  "emailId": {
+                    "$ref": "#/components/schemas/EmailId"
+                  },
+                  "isSensitive": {
+                    "description": "Whether the policy classifies this email as sensitive (never auto-actioned).",
+                    "type": "boolean"
+                  },
+                  "keyFacts": {
+                    "description": "Extracted salient facts the reviewer should see (amounts, dates, parties).",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "rationale": {
+                    "description": "Full plain-language explanation of the decision, rendered as markdown.",
+                    "type": "string"
+                  },
+                  "severity": {
+                    "$ref": "#/components/schemas/Severity"
+                  },
+                  "whyPreview": {
+                    "$ref": "#/components/schemas/WhyPreview"
+                  }
+                },
+                "required": [
+                  "emailId",
+                  "category",
+                  "severity",
+                  "confidence",
+                  "whyPreview",
+                  "rationale",
+                  "keyFacts",
+                  "isSensitive"
+                ],
+                "type": "object"
+              },
+              "type": {
+                "enum": [
+                  "decision"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "decision"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "entry": {
+                "additionalProperties": false,
+                "properties": {
+                  "action": {
+                    "$ref": "#/components/schemas/ActionKind"
+                  },
+                  "actor": {
+                    "$ref": "#/components/schemas/Actor"
+                  },
+                  "createdAt": {
+                    "description": "ISO-8601 UTC timestamp the action was recorded.",
+                    "type": "string"
+                  },
+                  "emailId": {
+                    "$ref": "#/components/schemas/EmailId"
+                  },
+                  "id": {
+                    "$ref": "#/components/schemas/LedgerEntryId"
+                  },
+                  "payload": {
+                    "description": "Tool arguments captured at execution time (e.g. draft body).",
+                    "type": "object"
+                  },
+                  "summary": {
+                    "description": "Human-readable one-line description of what happened.",
+                    "type": "string"
+                  },
+                  "undoes": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/components/schemas/LedgerEntryId"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "For an undo action, the id of the entry it reverses; otherwise null."
+                  },
+                  "undoneBy": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/components/schemas/LedgerEntryId"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Id of the ledger entry that undid this action, or null if still in effect."
+                  }
+                },
+                "required": [
+                  "id",
+                  "actor",
+                  "emailId",
+                  "action",
+                  "summary",
+                  "payload",
+                  "undoneBy",
+                  "undoes",
+                  "createdAt"
+                ],
+                "type": "object"
+              },
+              "type": {
+                "enum": [
+                  "action"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "entry"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "approval": {
+                "additionalProperties": false,
+                "properties": {
+                  "action": {
+                    "$ref": "#/components/schemas/ActionKind"
+                  },
+                  "createdAt": {
+                    "description": "ISO-8601 UTC timestamp the approval was requested.",
+                    "type": "string"
+                  },
+                  "emailId": {
+                    "$ref": "#/components/schemas/EmailId"
+                  },
+                  "id": {
+                    "$ref": "#/components/schemas/ApprovalId"
+                  },
+                  "payload": {
+                    "description": "Proposed tool arguments (e.g. the draft reply body).",
+                    "type": "object"
+                  },
+                  "summary": {
+                    "description": "What the agent proposes to do if approved.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "emailId",
+                  "action",
+                  "summary",
+                  "payload",
+                  "createdAt"
+                ],
+                "type": "object"
+              },
+              "type": {
+                "enum": [
+                  "approval_pending"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "approval"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "emailId": {
+                "$ref": "#/components/schemas/EmailId"
+              },
+              "reason": {
+                "type": "string"
+              },
+              "type": {
+                "enum": [
+                  "failed"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "emailId",
+              "reason"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "processed": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "enum": [
+                      "NaN"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "enum": [
+                      "Infinity"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "enum": [
+                      "-Infinity"
+                    ],
+                    "type": "string"
+                  }
+                ],
+                "description": "Count of emails processed."
+              },
+              "type": {
+                "enum": [
+                  "done"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "processed"
+            ],
+            "type": "object"
+          }
+        ],
+        "description": "Discriminated event emitted over the triage-run SSE stream."
+      },
+      "TriageStreamEventJsonString": {
+        "contentMediaType": "application/json",
+        "contentSchema": {
+          "$ref": "#/components/schemas/TriageStreamEvent"
+        },
+        "type": "string"
+      },
+      "WhyPreview": {
+        "description": "At-a-glance rationale for the list row, at most 65 characters.",
+        "type": "string"
+      }
+    },
+    "securitySchemes": {}
+  },
+  "info": {
+    "description": "Effect v4 backend contract for the Agentic Inbox app.",
+    "title": "Agentic Inbox API",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/actions/{id}/undo": {
+      "post": {
+        "description": "Reverse an auto-executed action; appends an undo entry to the ledger and returns it.",
+        "operationId": "actions.undo",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LedgerEntry"
+                }
+              }
+            },
+            "description": "LedgerEntry"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionNotFound"
+                }
+              }
+            },
+            "description": "ActionNotFound"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionNotUndoable"
+                }
+              }
+            },
+            "description": "ActionNotUndoable"
+          }
+        },
+        "security": [],
+        "summary": "Undo an action",
+        "tags": [
+          "actions"
+        ]
+      }
+    },
+    "/api/v1/approvals/{id}": {
+      "post": {
+        "description": "Approve or deny a paused sensitive action, resuming the agent and recording the outcome in the ledger.",
+        "operationId": "actions.resolveApproval",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApprovalDecisionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LedgerEntry"
+                }
+              }
+            },
+            "description": "LedgerEntry"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalNotFound"
+                }
+              }
+            },
+            "description": "ApprovalNotFound"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalAlreadyResolved"
+                }
+              }
+            },
+            "description": "ApprovalAlreadyResolved"
+          }
+        },
+        "security": [],
+        "summary": "Resolve an approval",
+        "tags": [
+          "actions"
+        ]
+      }
+    },
+    "/api/v1/chat": {
+      "post": {
+        "description": "Send a message and stream text deltas, reasoning, and tool-call events as Server-Sent Events.",
+        "operationId": "chat.send",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ChatStreamEventJsonString"
+                    },
+                    "event": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "event",
+                    "data"
+                  ],
+                  "type": "object"
+                },
+                "x-effect-stream": {
+                  "causeSchema": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "_tag": {
+                              "enum": [
+                                "Fail"
+                              ],
+                              "type": "string"
+                            },
+                            "error": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "_tag": {
+                                  "enum": [
+                                    "ChatFailed"
+                                  ],
+                                  "type": "string"
+                                },
+                                "detail": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "_tag"
+                              ],
+                              "type": "object"
+                            }
+                          },
+                          "required": [
+                            "_tag",
+                            "error"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "_tag": {
+                              "enum": [
+                                "Die"
+                              ],
+                              "type": "string"
+                            },
+                            "defect": {}
+                          },
+                          "required": [
+                            "_tag",
+                            "defect"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "_tag": {
+                              "enum": [
+                                "Interrupt"
+                              ],
+                              "type": "string"
+                            },
+                            "fiberId": {
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "_tag",
+                            "fiberId"
+                          ],
+                          "type": "object"
+                        }
+                      ]
+                    },
+                    "type": "array"
+                  },
+                  "encoding": "sse",
+                  "errorSchema": {
+                    "$ref": "#/components/schemas/ChatFailed"
+                  },
+                  "failureEvent": "effect/httpapi/stream/failure"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatFailed1"
+                }
+              }
+            },
+            "description": "ChatFailed"
+          }
+        },
+        "security": [],
+        "summary": "Chat with the agent",
+        "tags": [
+          "chat"
+        ]
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "description": "Check if the backend is running.",
+        "operationId": "health",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "<No Content>"
+          }
+        },
+        "security": [],
+        "summary": "Health check",
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    "/api/v1/inbox": {
+      "get": {
+        "description": "Return the summary roll-up and every email joined with its decision, status, pending approval, and actions.",
+        "operationId": "triage.inbox",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Inbox"
+                }
+              }
+            },
+            "description": "Inbox"
+          }
+        },
+        "security": [],
+        "summary": "Get the inbox",
+        "tags": [
+          "triage"
+        ]
+      }
+    },
+    "/api/v1/ledger": {
+      "get": {
+        "description": "Return every recorded action, newest first, for the agent-trace timeline.",
+        "operationId": "actions.ledger",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LedgerEntry"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "security": [],
+        "summary": "Get the action ledger",
+        "tags": [
+          "actions"
+        ]
+      }
+    },
+    "/api/v1/triage/{id}/retriage": {
+      "post": {
+        "description": "Clear one email's decision, active ledger entries, and triage conversation, re-run the agent on just that email, and return the refreshed inbox.",
+        "operationId": "triage.retriage",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Inbox"
+                }
+              }
+            },
+            "description": "Inbox"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailNotFound"
+                }
+              }
+            },
+            "description": "EmailNotFound"
+          }
+        },
+        "security": [],
+        "summary": "Re-triage one email",
+        "tags": [
+          "triage"
+        ]
+      }
+    },
+    "/api/v1/triage/run": {
+      "post": {
+        "description": "Process the inbox and stream per-email events (started, decision, action, approval_pending, failed, done) as Server-Sent Events. Pass fresh=true to clear all prior triage state and re-process every email.",
+        "operationId": "triage.run",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TriageRunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/TriageStreamEventJsonString"
+                    },
+                    "event": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "event",
+                    "data"
+                  ],
+                  "type": "object"
+                },
+                "x-effect-stream": {
+                  "causeSchema": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "_tag": {
+                              "enum": [
+                                "Fail"
+                              ],
+                              "type": "string"
+                            },
+                            "error": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "_tag": {
+                                  "enum": [
+                                    "TriageRunFailed"
+                                  ],
+                                  "type": "string"
+                                },
+                                "detail": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "_tag"
+                              ],
+                              "type": "object"
+                            }
+                          },
+                          "required": [
+                            "_tag",
+                            "error"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "_tag": {
+                              "enum": [
+                                "Die"
+                              ],
+                              "type": "string"
+                            },
+                            "defect": {}
+                          },
+                          "required": [
+                            "_tag",
+                            "defect"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "_tag": {
+                              "enum": [
+                                "Interrupt"
+                              ],
+                              "type": "string"
+                            },
+                            "fiberId": {
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "_tag",
+                            "fiberId"
+                          ],
+                          "type": "object"
+                        }
+                      ]
+                    },
+                    "type": "array"
+                  },
+                  "encoding": "sse",
+                  "errorSchema": {
+                    "$ref": "#/components/schemas/TriageRunFailed"
+                  },
+                  "failureEvent": "effect/httpapi/stream/failure"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TriageRunFailed1"
+                }
+              }
+            },
+            "description": "TriageRunFailed"
+          }
+        },
+        "security": [],
+        "summary": "Run batch triage",
+        "tags": [
+          "triage"
+        ]
+      }
+    }
+  },
+  "security": [],
+  "tags": [
+    {
+      "name": "system"
+    },
+    {
+      "name": "triage"
+    },
+    {
+      "name": "actions"
+    },
+    {
+      "name": "chat"
+    }
+  ]
+}
