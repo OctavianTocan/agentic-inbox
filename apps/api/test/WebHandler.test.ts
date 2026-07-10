@@ -7,22 +7,17 @@ const DEFAULT_DATABASE_URL =
 describe('createApiWebHandler', () => {
   let handler: (request: Request) => Promise<Response>;
   let dispose: () => Promise<void>;
+  let previousDatabaseUrl: string | undefined;
+  let previousOpenRouterKey: string | undefined;
 
   beforeAll(() => {
-    if (
-      process.env.DATABASE_URL === undefined ||
-      process.env.DATABASE_URL.length === 0
-    ) {
-      process.env.DATABASE_URL = DEFAULT_DATABASE_URL;
-    }
-    // AppLive builds the OpenRouter model layer at construction; health/docs
-    // never call it, but Config still requires a non-empty string.
-    if (
-      process.env.OPENROUTER_API_KEY === undefined ||
-      process.env.OPENROUTER_API_KEY.length === 0
-    ) {
-      process.env.OPENROUTER_API_KEY = 'test-openrouter-key';
-    }
+    previousDatabaseUrl = process.env.DATABASE_URL;
+    previousOpenRouterKey = process.env.OPENROUTER_API_KEY;
+    process.env.DATABASE_URL = DEFAULT_DATABASE_URL;
+    process.env.OPENROUTER_API_KEY =
+      previousOpenRouterKey && previousOpenRouterKey.length > 0
+        ? previousOpenRouterKey
+        : 'test-openrouter-key';
     const api = createApiWebHandler({ disableLogger: true });
     handler = api.handler;
     dispose = api.dispose;
@@ -30,6 +25,16 @@ describe('createApiWebHandler', () => {
 
   afterAll(async () => {
     await dispose();
+    if (previousDatabaseUrl === undefined) {
+      delete process.env.DATABASE_URL;
+    } else {
+      process.env.DATABASE_URL = previousDatabaseUrl;
+    }
+    if (previousOpenRouterKey === undefined) {
+      delete process.env.OPENROUTER_API_KEY;
+    } else {
+      process.env.OPENROUTER_API_KEY = previousOpenRouterKey;
+    }
   });
 
   it('returns 204 for GET /api/v1/health', async () => {
@@ -62,5 +67,63 @@ describe('createApiWebHandler', () => {
     expect(
       contentType.includes('text/html') || contentType.includes('json')
     ).toBe(true);
+  });
+});
+
+describe('createApiWebHandler demo mode', () => {
+  let handler: (request: Request) => Promise<Response>;
+  let dispose: () => Promise<void>;
+  let previousDatabaseUrl: string | undefined;
+  let previousOpenRouterKey: string | undefined;
+
+  beforeAll(() => {
+    previousDatabaseUrl = process.env.DATABASE_URL;
+    previousOpenRouterKey = process.env.OPENROUTER_API_KEY;
+    delete process.env.DATABASE_URL;
+    delete process.env.OPENROUTER_API_KEY;
+    const api = createApiWebHandler({ disableLogger: true });
+    handler = api.handler;
+    dispose = api.dispose;
+  });
+
+  afterAll(async () => {
+    await dispose();
+    if (previousDatabaseUrl === undefined) {
+      delete process.env.DATABASE_URL;
+    } else {
+      process.env.DATABASE_URL = previousDatabaseUrl;
+    }
+    if (previousOpenRouterKey === undefined) {
+      delete process.env.OPENROUTER_API_KEY;
+    } else {
+      process.env.OPENROUTER_API_KEY = previousOpenRouterKey;
+    }
+  });
+
+  it('returns 204 for GET /api/v1/health without env', async () => {
+    const response = await handler(
+      new Request('http://localhost/api/v1/health', { method: 'GET' })
+    );
+    expect(response.status).toBe(204);
+  });
+
+  it('returns the seeded showcase inbox', async () => {
+    const response = await handler(
+      new Request('http://localhost/api/v1/inbox', { method: 'GET' })
+    );
+    expect(response.status).toBe(200);
+    const body: unknown = await response.json();
+    expect(body).toBeTypeOf('object');
+    expect(body).not.toBeNull();
+    if (body === null || typeof body !== 'object') {
+      throw new Error('expected inbox object');
+    }
+    const record = body as {
+      summary?: { processed?: number };
+      items?: unknown[];
+    };
+    expect(Array.isArray(record.items)).toBe(true);
+    expect((record.items ?? []).length).toBeGreaterThan(0);
+    expect(record.summary?.processed).toBeGreaterThan(0);
   });
 });

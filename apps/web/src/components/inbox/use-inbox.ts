@@ -40,20 +40,32 @@ export function useInbox(client: InboxClient = inboxClient): UseInbox {
   const resolvingApprovalIdsRef = useRef(new Set<string>());
 
   const refresh = useCallback(async () => {
-    const next = await client.getInbox();
-    setInbox(next);
-    setIsLoading(false);
+    try {
+      const next = await client.getInbox();
+      setInbox(next);
+    } finally {
+      setIsLoading(false);
+    }
   }, [client]);
 
   useEffect(() => {
     let isActive = true;
     setIsLoading(true);
-    void client.getInbox().then((next) => {
-      if (isActive) {
-        setInbox(next);
-        setIsLoading(false);
-      }
-    });
+    void client
+      .getInbox()
+      .then((next) => {
+        if (isActive) {
+          setInbox(next);
+        }
+      })
+      .catch(() => {
+        // Leave inbox null; stop the spinner so a failed fetch cannot hang the UI.
+      })
+      .finally(() => {
+        if (isActive) {
+          setIsLoading(false);
+        }
+      });
     return () => {
       isActive = false;
     };

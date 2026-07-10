@@ -43,6 +43,18 @@ function deferred<T>(): {
 }
 
 describe('useInbox approval resolution', () => {
+  it('stops loading when the initial inbox fetch rejects', async () => {
+    const client = makeClient({
+      getInbox: () => Promise.reject(new Error('Internal Server Error'))
+    });
+    const { result } = renderHook(() => useInbox(client));
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+    expect(result.current.inbox).toBeNull();
+  });
+
   it('ignores duplicate resolves for the same pending approval while one is in flight', async () => {
     const inbox = buildMockInbox();
     const pendingResolve = deferred<Inbox>();

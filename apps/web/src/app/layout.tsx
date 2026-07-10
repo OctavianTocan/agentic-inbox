@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { DemoModeSticker } from '@/components/demo-mode-sticker';
 import { ReactGrabSetup } from '@/components/dev/react-grab';
 import { siteConfig } from '@/config/site';
 import { fonts } from '@/design-system/lib/fonts';
@@ -17,17 +18,26 @@ export const metadata: Metadata = {
   }
 };
 
+/** True when either live dependency is missing (same rule as the API demo path). */
+function isDemoMode(): boolean {
+  const databaseUrl = process.env.DATABASE_URL?.trim() ?? '';
+  const openRouterKey = process.env.OPENROUTER_API_KEY?.trim() ?? '';
+  return databaseUrl.length === 0 || openRouterKey.length === 0;
+}
+
 export default function RootLayout({
   children
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const demoMode = isDemoMode();
   return (
     <html className={fonts} lang="en" suppressHydrationWarning>
       <body className="min-h-screen bg-background text-foreground">
         <DesignSystemProvider>
           {process.env.NODE_ENV === 'development' ? <ReactGrabSetup /> : null}
           {children}
+          {demoMode ? <DemoModeSticker /> : null}
         </DesignSystemProvider>
       </body>
     </html>

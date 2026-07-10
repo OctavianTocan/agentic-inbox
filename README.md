@@ -117,9 +117,13 @@ Copy [`.env.example`](.env.example). On Vercel, set at least:
 
 | Variable | Required |
 |----------|----------|
-| `DATABASE_URL` | Yes (Neon pooled URL for runtime) |
-| `OPENROUTER_API_KEY` | Yes for live agent |
+| `DATABASE_URL` | Yes for live mode (Neon pooled URL for runtime) |
+| `OPENROUTER_API_KEY` | Yes for live mode |
 | `OPENROUTER_MODEL` | Optional |
+
+If either `DATABASE_URL` or `OPENROUTER_API_KEY` is unset, the app runs in
+**demo mode**: a seeded showcase inbox and a bottom-left “Demo mode” sticker
+(no Postgres or OpenRouter required).
 
 Do **not** set `AGENTIC_INBOX_API_ORIGIN`, `TEST_DATABASE_URL`, `WEB_PORT`, or
 `PORT` on Vercel after the API fold.
@@ -159,6 +163,6 @@ curl -sS -o /dev/null -w '%{http_code}\n' "$ORIGIN/docs"
 ```
 
 Pass criteria: health `204`; `/openapi.json` and `/docs` `200`. Inbox UI at
-`$ORIGIN` should load without a proxy-to-localhost failure. Live triage/chat
-also needs `OPENROUTER_API_KEY` + a migrated Neon DB — if those are missing,
-expect clear API errors, not a blank Next crash.
+`$ORIGIN` should load without a proxy-to-localhost failure. Without Neon or
+`OPENROUTER_API_KEY`, expect demo mode (seeded inbox + sticker). With both set
+and a migrated DB, live triage/chat work.
