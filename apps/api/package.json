@@ -5,15 +5,18 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./WebHandler": "./src/WebHandler.ts",
     "./*": "./src/*.ts"
   },
   "scripts": {
     "dev": "bun --watch run src/Main.ts",
     "migrate": "bun run src/Infrastructure/Database/Migrate.ts",
     "start": "bun run src/Main.ts",
+    "sync-emails-dataset": "bun run ./scripts/sync-emails-dataset.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests"
   },
+
   "dependencies": {
     "@app/api-core": "workspace:*",
     "@effect/ai-openrouter": "catalog:",

@@ -19,7 +19,10 @@
       "!vendor",
       "!apps/web/public",
       "!apps/web/src/design-system",
-      "!apps/web/src/ai-ui"
+      "!apps/web/src/ai-ui",
+      "!packages/api-core/openapi.json",
+      "!apps/api/src/Modules/Emails/emails.dataset.ts",
+      "!required-workflows.json"
     ]
   },
   "formatter": {
@@ -65,6 +68,7 @@
       "includes": [
         "apps/api/src/App.ts",
         "apps/api/src/Main.ts",
+        "apps/api/src/WebHandler.ts",
         "apps/api/src/Infrastructure/**/*.ts",
         "apps/api/src/Lib/**/*.ts",
         "apps/api/src/Modules/**/*.ts",
@@ -98,6 +102,22 @@
                 "filenameCases": ["snake_case"]
               }
             }
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "**/*.generated.ts",
+        "apps/api/src/Modules/Emails/emails.dataset.ts"
+      ],
+      "formatter": {
+        "enabled": false
+      },
+      "linter": {
+        "rules": {
+          "style": {
+            "useFilenamingConvention": "off"
           }
         }
       }

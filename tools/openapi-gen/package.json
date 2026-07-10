@@ -1,0 +1,20 @@
+{
+  "name": "openapi-gen",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate": "bun run src/index.ts generate",
+    "check": "bun run src/index.ts check",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@app/api-core": "workspace:*",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@tooling/typescript-config": "workspace:*",
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
+  }
+}

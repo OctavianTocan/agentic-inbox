@@ -1,0 +1,65 @@
+{
+  "targets": [".agent/AGENTS.md", "README.md"],
+  "sections": [
+    {
+      "path": "apps/web",
+      "description": "Next.js 16 App Router frontend, design-system, and ai-ui surfaces."
+    },
+    {
+      "path": "apps/api",
+      "description": "Effect v4 backend API (local Bun listener; folded into Next on Vercel)."
+    },
+    {
+      "path": "packages/api-core",
+      "description": "Effect HttpApi contract and schemas for `/api/v1`."
+    },
+    {
+      "path": "packages/tooling/typescript-config",
+      "description": "Shared TypeScript config presets for workspace packages."
+    },
+    {
+      "path": "data/emails.json",
+      "description": "Static sample inbox dataset (ids e-001..e-080)."
+    },
+    {
+      "path": "tools/openapi-gen",
+      "description": "Deterministic OpenAPI artifact generator/checker."
+    },
+    {
+      "path": "tools/project-structure-gen",
+      "description": "Updates marked project-structure blocks in .agent/AGENTS.md and README.md."
+    },
+    {
+      "path": "tools/skill-gen",
+      "description": "Generates repo-local skills from //<skill-gen> fragments."
+    },
+    {
+      "path": "tools/gen-github-workflow",
+      "description": "Generates GitHub Actions workflows from marked YAML fragments."
+    },
+    {
+      "path": "tools/workflow-fragments",
+      "description": "CI workflow fragments and required-workflows sync source."
+    },
+    {
+      "path": "docs",
+      "description": "Operator notes and plans when tracked under docs/plans/."
+    },
+    {
+      "path": ".agent/skills",
+      "description": "Repo-local agent brain skills. Do not hand-edit generated SKILL.md files directly."
+    },
+    {
+      "path": ".agent/memory",
+      "description": "Project-local working, semantic, episodic, and preference memory."
+    },
+    {
+      "path": ".agent/protocols",
+      "description": "Tool, permission, and delegation protocols shared across agent harnesses."
+    },
+    {
+      "path": ".agent/tools",
+      "description": "Agent memory, recall, and skill support utilities (Python CLIs under the brain)."
+    }
+  ]
+}

@@ -4,14 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "dev": "bun run --bun next dev",
+    "build": "bun run --bun next build",
+    "start": "bun run --bun next start",
     "typecheck": "bun ./scripts/typecheck-owned.mjs",
     "test": "vitest run --passWithNoTests ../../apps/web/test",
     "lint": "biome check ."
   },
   "dependencies": {
+    "@apps/api": "workspace:*",
     "@base-ui/react": "catalog:",
     "@fontsource-variable/dm-sans": "^5.2.8",
     "@fontsource-variable/fira-code": "^5.2.7",
@@ -44,7 +45,7 @@
     "react": "catalog:",
     "react-day-picker": "catalog:",
     "react-dom": "catalog:",
-    "react-grab": "^0.1.47",
+    "react-grab": "^0.1.48",
     "react-hook-form": "catalog:",
     "react-markdown": "catalog:",
     "react-resizable-panels": "catalog:",

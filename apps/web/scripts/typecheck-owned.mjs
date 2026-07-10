@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const appRoot = fileURLToPath(new URL('..', import.meta.url));
-const externalPrefixes = ['src/ai-ui/'];
+const externalPrefixes = ['src/ai-ui/', '../api/'];
 const diagnosticPattern = /^(.+?)\(\d+,\d+\): error TS\d+:/;
 
 const result = spawnSync('bunx', ['tsc', '--noEmit', '--pretty', 'false'], {
@@ -24,7 +24,7 @@ if (ownedDiagnostics.length > 0) {
 }
 
 console.log(
-  'Web typecheck passed for owned source; external template diagnostics are excluded: src/ai-ui.'
+  'Web typecheck passed for owned source; external template diagnostics are excluded: src/ai-ui, ../api.'
 );
 
 /**

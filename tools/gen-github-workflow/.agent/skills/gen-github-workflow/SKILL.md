@@ -1,0 +1,113 @@
+---
+name: gen-github-workflow
+description: "Use when creating, modifying, generating, checking, or debugging CI workflow fragments embedded in source code with //<gen-github-workflow> markers."
+---
+
+# gen-github-workflow
+
+Scans source files for `//<gen-github-workflow>` markers, extracts YAML fragments, deep-merges them by workflow name, and writes `.github/workflows/<name>.yml` files.
+
+**Full specification:** `SPEC.md`
+
+## How to Create a CI Workflow
+
+Embed a workflow fragment in any source file using comment markers:
+
+```ts
+//<gen-github-workflow>
+// name: my-workflow
+// required: true
+// on:
+//   push:
+//     branches: [main]
+//   pull_request: {}
+// permissions:
+//   contents: read
+// concurrency:
+//   group: my-workflow-${{ github.ref }}
+//   cancel-in-progress: true
+// jobs:
+//   build:
+//     name: Build
+//     timeout-minutes: 10
+//     steps:
+//       - uses: actions/checkout@v5
+//       - uses: oven-sh/setup-bun@v2
+//       - name: Build
+//         run: bun run build
+//</gen-github-workflow>
+```
+
+### Top-Level Fields
+
+| Field | Purpose |
+|-------|---------|
+| `name` | **Required.** Determines the output filename and merge key. |
+| `required` | If `true`, added to `required-workflows.json`. Stripped from output YAML. |
+| `on` | GitHub Actions trigger configuration. |
+
+### Template Variables
+
+Expanded before YAML parsing:
+
+| Variable | Expands to |
+|----------|------------|
+| `$$file` | Relative path from repo root to the source file |
+| `$$directory` | Relative path from repo root to the source file's directory |
+
+Useful for `paths:` triggers:
+
+```ts
+//<gen-github-workflow>
+// name: e2e-test-my-tool
+// on:
+//   push:
+//     paths: ["$$directory/**"]
+//   pull_request:
+//     paths: ["$$directory/**"]
+//</gen-github-workflow>
+```
+
+### Multi-Source Merging
+
+Fragments sharing the same `name` are deep-merged:
+
+| Key | Strategy |
+|-----|----------|
+| `on` | Union of trigger definitions |
+| `env`, `permissions` | Shallow merge, later wins |
+| `concurrency` | Last writer wins |
+| `jobs` | Merge by job id; `steps` arrays concatenated |
+
+### Common Patterns
+
+**Bun-based CI check:**
+
+```ts
+//<gen-github-workflow>
+// name: my-check
+// required: true
+// on:
+//   push:
+//     branches: [main]
+//   pull_request: {}
+// jobs:
+//   check:
+//     steps:
+//       - uses: actions/checkout@v5
+//       - uses: oven-sh/setup-bun@v2
+//       - run: cd $$directory && bun run src/index.ts check
+//</gen-github-workflow>
+```
+
+## CLI Commands
+
+```bash
+bun run src/index.ts generate  # write workflow files
+bun run src/index.ts check     # dry-run, exit 1 on diff
+bun run src/index.ts e2e-test  # run against fixtures
+```
+
+After editing fragments, run `generate` and commit the regenerated `.github/workflows/*.yml`. Workflows with `required: true` also write to `required-workflows.json` (used by branch protection IaC). Hand-written workflow files without the `AUTO-GENERATED` header are never overwritten.
+
+Tooling shape (markers, comment stripping, source headers, hand-written file detection) mirrors [gen-skills](https://github.com/OctavianTocan/gen-skills).

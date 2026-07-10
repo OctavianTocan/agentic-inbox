@@ -1,8 +1,0 @@
-.DS_Store
-*.log
-node_modules/
-.env
-.env.local
-# never commit secrets
-*linear-key*
-*.key
