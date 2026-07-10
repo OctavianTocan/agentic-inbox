@@ -1,15 +1,10 @@
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import {
   type Email,
   EmailFromDataset
 } from '@app/api-core/Modules/Emails/Domain';
 import { Context, Effect, Layer, Schema } from 'effect';
 import type { EmailIdType } from '@/Lib/Ids';
-
-const DATASET_PATH = fileURLToPath(
-  new URL('../../../../../data/emails.json', import.meta.url)
-);
+import { emailDataset } from './emails.dataset';
 
 const decodeDataset = Schema.decodeUnknownSync(Schema.Array(EmailFromDataset));
 
@@ -43,10 +38,7 @@ export class EmailsService extends Context.Service<
 export const EmailsServiceLive: Layer.Layer<EmailsService> = Layer.effect(
   EmailsService,
   Effect.gen(function* () {
-    const raw = yield* Effect.sync(() =>
-      JSON.parse(readFileSync(DATASET_PATH, 'utf8'))
-    );
-    const emails = decodeDataset(raw);
+    const emails = decodeDataset(emailDataset);
     const byId = new Map(emails.map((email) => [email.id, email] as const));
     const threads = buildThreadMap(emails);
 
