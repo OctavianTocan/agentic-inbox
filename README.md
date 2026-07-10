@@ -84,12 +84,14 @@ Postgres is hosted on Neon; set `DATABASE_URL` in the Vercel project env.
 |---------|--------|
 | Root Directory | `apps/web` |
 | Include source outside Root Directory | On |
-| Install | from `apps/web/vercel.json`: `cd ../.. && bun install --frozen-lockfile` |
+| Install | from `apps/web/vercel.json`: `cd ../.. && bun install --frozen-lockfile --ignore-scripts` |
 | Build | from `apps/web/vercel.json`: `bun run --bun next build` |
 | Bun | `bunVersion: "1.x"` in `apps/web/vercel.json` |
 
-Config file: [`apps/web/vercel.json`](apps/web/vercel.json). Do not add a root
-`vercel.json` while Root Directory is `apps/web`.
+Dashboard Root Directory uses [`apps/web/vercel.json`](apps/web/vercel.json).
+Root [`vercel.json`](vercel.json) is for CLI deploys without Root Directory
+(same Bun install/build contract, including `--ignore-scripts` so lefthook
+`prepare` does not run on Vercel).
 
 ### Neon database
 
