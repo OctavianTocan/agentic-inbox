@@ -71,3 +71,92 @@ bun run typecheck
 bun run lint
 bun run test
 ```
+
+## Deploy (Vercel)
+
+One Vercel project. Effect API is folded into the Next app (Approach A) — no
+second API project and no `AGENTIC_INBOX_API_ORIGIN` proxy in production.
+Postgres is hosted on Neon; set `DATABASE_URL` in the Vercel project env.
+
+### Project settings
+
+| Setting | Value |
+|---------|--------|
+| Root Directory | `apps/web` |
+| Include source outside Root Directory | On |
+| Install | from `apps/web/vercel.json`: `cd ../.. && bun install --frozen-lockfile` |
+| Build | from `apps/web/vercel.json`: `bun run --bun next build` |
+| Bun | `bunVersion: "1.x"` in `apps/web/vercel.json` |
+
+Config file: [`apps/web/vercel.json`](apps/web/vercel.json). Do not add a root
+`vercel.json` while Root Directory is `apps/web`.
+
+### Neon database
+
+1. Create a Neon project (operator Dashboard — agents do not provision this).
+2. Set Vercel env `DATABASE_URL` (Production + Preview) to Neon’s **pooled /
+   serverless** URL — that is the runtime connection for the folded Next API.
+3. Apply migrations once with Neon’s **direct (non-pooler)** URL (from a
+   machine with the repo — not during `next build`). Do not run migrate through
+   the pooler:
+
+```bash
+# One-shot migrate against Neon (operator). Direct/non-pooler URL only.
+DATABASE_URL='postgres://…@….neon.tech/neondb?sslmode=require' \
+  bun run --cwd apps/api migrate
+```
+
+After migrate succeeds, leave Vercel `DATABASE_URL` on the **pooled** URL.
+Local Docker migrate remains `just db-migrate` (reads `.env`).
+
+### Environment
+
+Copy [`.env.example`](.env.example). On Vercel, set at least:
+
+| Variable | Required |
+|----------|----------|
+| `DATABASE_URL` | Yes (Neon pooled URL for runtime) |
+| `OPENROUTER_API_KEY` | Yes for live agent |
+| `OPENROUTER_MODEL` | Optional |
+
+Do **not** set `AGENTIC_INBOX_API_ORIGIN`, `TEST_DATABASE_URL`, `WEB_PORT`, or
+`PORT` on Vercel after the API fold.
+
+### Git vs CLI
+
+- **Preferred:** connect the GitHub repo in the Vercel Dashboard; pushes to
+  `main` deploy Production; PRs get Preview URLs. GitHub Actions
+  (`.github/workflows/ci.yml`) stay lint/typecheck/test only — they do not
+  deploy.
+- **CLI (operator only, do not run from agents unless asked):**
+
+```bash
+# From monorepo root — link the repo/project once
+vercel link --repo
+
+# Preview deploy (explicit human request only)
+vercel
+
+# Production deploy (explicit human request only)
+vercel --prod
+```
+
+### Production smoke checklist
+
+Replace `$ORIGIN` with the deployment URL (no trailing slash).
+
+```bash
+# Health (SystemApi top-level) — expect HTTP 204
+curl -sS -o /dev/null -w '%{http_code}\n' "$ORIGIN/api/v1/health"
+
+# OpenAPI — expect 200 + JSON with openapi/info
+curl -sS "$ORIGIN/openapi.json" | head -c 200
+
+# Scalar docs — expect 200 HTML
+curl -sS -o /dev/null -w '%{http_code}\n' "$ORIGIN/docs"
+```
+
+Pass criteria: health `204`; `/openapi.json` and `/docs` `200`. Inbox UI at
+`$ORIGIN` should load without a proxy-to-localhost failure. Live triage/chat
+also needs `OPENROUTER_API_KEY` + a migrated Neon DB — if those are missing,
+expect clear API errors, not a blank Next crash.
