@@ -19,7 +19,9 @@
       "!vendor",
       "!apps/web/public",
       "!apps/web/src/design-system",
-      "!apps/web/src/ai-ui"
+      "!apps/web/src/ai-ui",
+      "!packages/api-core/openapi.json",
+      "!required-workflows.json"
     ]
   },
   "formatter": {
@@ -98,6 +100,19 @@
                 "filenameCases": ["snake_case"]
               }
             }
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "**/*.generated.ts",
+        "apps/api/src/Modules/Emails/emails.dataset.ts"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "useFilenamingConvention": "off"
           }
         }
       }
