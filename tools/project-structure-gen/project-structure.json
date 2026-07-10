@@ -1,0 +1,89 @@
+{
+  "targets": [".agent/AGENTS.md", "README.md"],
+  "sections": [
+    {
+      "path": "apps/api",
+      "description": "Bun runtime, HTTP server, MCP transports, and the shared `execute` tool host."
+    },
+    {
+      "path": "apps/cli",
+      "description": "Operator CLI for status checks, configured skill inspection, and Agent Vault probe delegation."
+    },
+    {
+      "path": "apps/docs",
+      "description": "Local Holocron docs gateway for Contract guides and synced OpenAPI reference."
+    },
+    {
+      "path": "packages/core",
+      "description": "Shared Contract metadata, branded scalar types, and domain schemas used across packages."
+    },
+    {
+      "path": "packages/mcp-core",
+      "description": "Pure MCP contract schemas, diagnostics, and execute-tool metadata."
+    },
+    {
+      "path": "packages/runtime",
+      "description": "Runtime services for execute workers, filesystem skill reads, Agent Vault integration, sessions, catalog, and storage."
+    },
+    {
+      "path": "packages/api-core",
+      "description": "Effect HttpApi contract for health/docs/OpenAPI."
+    },
+    {
+      "path": "packages/execute-sdk",
+      "description": "Model-facing Effect v4 execute helpers and `GatewayContext` types."
+    },
+    {
+      "path": "packages/turso",
+      "description": "Effect-shaped Turso client and migration helpers used by runtime storage."
+    },
+    {
+      "path": "tools/openapi-gen",
+      "description": "Deterministic OpenAPI artifact generator/checker."
+    },
+    {
+      "path": "tools/project-structure-gen",
+      "description": "Updates marked project-structure blocks in .agent/AGENTS.md and README.md."
+    },
+    {
+      "path": "tools/probes",
+      "description": "Local smoke probes for HTTP health, MCP HTTP execute, MCP stdio execute, and Agent Vault live checks."
+    },
+    {
+      "path": "tools/skill-gen",
+      "description": "Git submodule that generates repo-local skills from //<skill-gen> fragments."
+    },
+    {
+      "path": "tools/gen-github-workflow",
+      "description": "Git submodule that generates GitHub Actions workflows from marked YAML fragments."
+    },
+    {
+      "path": "deploy",
+      "description": "Systemd unit and env templates for service operation."
+    },
+    {
+      "path": "docs",
+      "description": "Deployment, Agent Vault, and operation notes for this repo."
+    },
+    {
+      "path": ".agent/skills",
+      "description": "Repo-local agent brain skills. Do not hand-edit generated SKILL.md files directly."
+    },
+    {
+      "path": ".agent/memory",
+      "description": "Project-local working, semantic, episodic, and preference memory."
+    },
+    {
+      "path": ".agent/protocols",
+      "description": "Tool, permission, and delegation protocols shared across agent harnesses."
+    },
+    {
+      "path": ".agent/rules",
+      "description": "Project-local review and style rules."
+    },
+    {
+      "path": ".agent/tools",
+      "description": "Agent memory, recall, and skill support utilities."
+    }
+  ]
+}

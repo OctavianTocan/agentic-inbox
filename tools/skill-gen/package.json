@@ -1,0 +1,24 @@
+{
+  "name": "skill-gen",
+  "version": "0.1.0",
+  "description": "Generate agent SKILL.md files from markdown fragments embedded in source code",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "generate": "bun run src/index.ts generate",
+    "check": "bun run src/index.ts check",
+    "e2e-test": "bun run src/index.ts e2e-test",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@effect/platform-node": "catalog:",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@tooling/typescript-config": "workspace:*",
+    "@types/bun": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

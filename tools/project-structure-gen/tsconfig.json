@@ -1,0 +1,7 @@
+{
+  "extends": "@tooling/typescript-config/bun",
+  "compilerOptions": {
+    "rootDir": "."
+  },
+  "include": ["src/**/*.ts"]
+}
