@@ -4,6 +4,11 @@
   "workspaces": {
     "": {
       "name": "agentic-inbox",
+      "dependencies": {
+        "next": "catalog:",
+        "react": "catalog:",
+        "react-dom": "catalog:",
+      },
       "devDependencies": {
         "@biomejs/biome": "catalog:",
         "@effect/platform-node": "catalog:",
