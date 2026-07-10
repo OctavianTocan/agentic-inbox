@@ -18,3 +18,7 @@ coverage
 dist
 .turbo
 .cache
+# Never ship local secrets into serverless bundles (Bun auto-loads `.env`).
+.env
+.env.*
+!.env.example

@@ -33,6 +33,12 @@ const nextConfig: NextConfig = {
   // Web tsconfig also maps api-only `@/Lib|Modules|Infrastructure` prefixes
   // so Next's build typecheck and Turbopack tracing resolve correctly.
   serverExternalPackages: ['@apps/api', '@app/api-core'],
+  // Keep local dotenv files out of serverless NFT traces. Bun auto-loads
+  // `.env` when present in the function bundle, which would force live DB mode
+  // on Vercel even with no dashboard env vars.
+  outputFileTracingExcludes: {
+    '*': ['.env', '.env.*', '../../.env', '../../.env.*']
+  },
   // Empty turbopack config: Next 16 defaults to Turbopack and errors when a
   // webpack() hook exists without a turbopack key. Workspace externals still
   // need the webpack hook (request-name externalization); prefer
