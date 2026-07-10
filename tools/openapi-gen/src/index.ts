@@ -1,4 +1,4 @@
-import { ReferenceApi } from '@contract/api-core';
+import { Api } from '@app/api-core';
 import { OpenApi } from 'effect/unstable/httpapi';
 
 const outputPath = new URL(
@@ -43,7 +43,7 @@ const main = async (): Promise<void> => {
     process.exit(1);
   }
 
-  const spec = OpenApi.fromApi(ReferenceApi);
+  const spec = OpenApi.fromApi(Api);
   const rendered = `${stableStringify(spec)}\n`;
 
   if (command === 'generate') {
@@ -59,7 +59,7 @@ const main = async (): Promise<void> => {
         error &&
         typeof error === 'object' &&
         'code' in error &&
-        (error as { code?: unknown }).code === 'ENOENT'
+        error.code === 'ENOENT'
       ) {
         return undefined;
       }

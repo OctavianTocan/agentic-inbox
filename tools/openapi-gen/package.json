@@ -9,7 +9,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@contract/api-core": "workspace:*",
+    "@app/api-core": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {
