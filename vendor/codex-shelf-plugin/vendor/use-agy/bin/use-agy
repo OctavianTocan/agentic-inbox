@@ -1,2 +1,0 @@
-#!/usr/bin/env bun
-import '../packages/agent-dev/use-agy/src/Main';

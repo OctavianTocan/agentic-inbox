@@ -1,5 +1,0 @@
-{
-  "extends": "@tooling/typescript-config/bun.json",
-  "include": ["./index.ts"],
-  "exclude": ["node_modules"]
-}

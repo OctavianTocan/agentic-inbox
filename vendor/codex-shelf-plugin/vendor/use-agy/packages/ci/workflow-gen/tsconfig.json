@@ -1,5 +1,0 @@
-{
-  "extends": "@tooling/typescript-config/bun.json",
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "e2e-test", "e2e-test-expected"]
-}
