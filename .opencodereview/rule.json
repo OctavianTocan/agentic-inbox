@@ -1,0 +1,97 @@
+{
+  "rules": [
+    {
+      "path": "packages/api-core/**/*.{ts,tsx}",
+      "rule": ".opencodereview/rules/api-core.md",
+      "merge_system_rule": true
+    },
+    {
+      "path": "apps/api/**/*.{ts,tsx}",
+      "rule": ".opencodereview/rules/api.md",
+      "merge_system_rule": true
+    },
+    {
+      "path": "apps/web/src/design-system/**/*.{ts,tsx,css}",
+      "rule": ".opencodereview/rules/design-system.md",
+      "merge_system_rule": true
+    },
+    {
+      "path": "apps/web/**/*.{ts,tsx}",
+      "rule": ".opencodereview/rules/web.md",
+      "merge_system_rule": true
+    },
+    {
+      "path": "data/**/*.{json,md}",
+      "rule": ".opencodereview/rules/data.md",
+      "merge_system_rule": true
+    },
+    {
+      "path": "packages/**/README.md",
+      "rule": ".opencodereview/rules/package-docs.md",
+      "merge_system_rule": true
+    },
+    {
+      "path": "packages/**/AGENTS.md",
+      "rule": ".opencodereview/rules/package-docs.md",
+      "merge_system_rule": true
+    },
+    {
+      "path": "apps/**/README.md",
+      "rule": ".opencodereview/rules/package-docs.md",
+      "merge_system_rule": true
+    },
+    {
+      "path": "apps/**/AGENTS.md",
+      "rule": ".opencodereview/rules/package-docs.md",
+      "merge_system_rule": true
+    },
+    {
+      "path": "README.md",
+      "rule": ".opencodereview/rules/package-docs.md",
+      "merge_system_rule": true
+    },
+    {
+      "path": "AGENTS.md",
+      "rule": ".opencodereview/rules/package-docs.md",
+      "merge_system_rule": true
+    },
+    {
+      "path": "DESIGN.md",
+      "rule": ".opencodereview/rules/package-docs.md",
+      "merge_system_rule": true
+    },
+    {
+      "path": "packages/**/*.{ts,tsx}",
+      "rule": ".opencodereview/rules/base.md",
+      "merge_system_rule": true
+    },
+    {
+      "path": "apps/**/*.{ts,tsx}",
+      "rule": ".opencodereview/rules/base.md",
+      "merge_system_rule": true
+    },
+    {
+      "path": "*.{json,yml,yaml,toml}",
+      "rule": ".opencodereview/rules/base.md",
+      "merge_system_rule": true
+    }
+  ],
+  "exclude": [
+    ".agent/**",
+    ".codex/**",
+    ".context/**",
+    ".cursor/**",
+    ".claude/**",
+    ".sentrux/**",
+    ".serena/**",
+    ".superpowers/**",
+    "vendor/**",
+    "**/node_modules/**",
+    ".codegraph/**",
+    "bun.lock",
+    "**/*.lock",
+    "apps/web/.next/**",
+    "apps/**/dist/**",
+    "packages/**/dist/**"
+  ]
+}
