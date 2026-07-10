@@ -53,8 +53,8 @@ const COMPOSER_ID = 'inbox-chat';
 
 const SUGGESTED_PROMPTS: readonly SuggestionItem[] = [
   { label: 'What needs my attention?' },
-  { label: 'Undo the reply to the vendor quote' },
-  { label: 'Draft an approval for the PCO #14 change order' }
+  { label: 'Undo the reply to the supplier update' },
+  { label: 'Draft a response to the billing dispute' }
 ];
 
 const toolRegistry = createToolRegistry(

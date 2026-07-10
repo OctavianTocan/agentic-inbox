@@ -8,16 +8,16 @@
 export type EmailStatus = 'needs_attention' | 'done_for_you' | 'filed';
 
 export type Category =
-  | 'rfi'
-  | 'daily_report'
-  | 'submittal'
-  | 'vendor_quote'
+  | 'request'
+  | 'activity_update'
+  | 'document_review'
+  | 'supplier_update'
   | 'schedule'
   | 'status_update'
-  | 'change_order'
-  | 'claim_dispute'
+  | 'financial'
+  | 'dispute'
   | 'safety'
-  | 'owner_escalation'
+  | 'escalation'
   | 'other';
 
 export type Severity = 'low' | 'medium' | 'high' | 'critical';
@@ -28,7 +28,7 @@ export type ActionKind = 'send_reply' | 'archive' | 'flag_for_review' | 'undo';
 
 export type ApprovalVerdict = 'approve' | 'deny';
 
-/** A single email from the static AEC inbox dataset. */
+/** A single email from the static inbox dataset. */
 export type Email = {
   readonly id: string;
   readonly from: string;

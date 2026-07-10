@@ -8,16 +8,16 @@ import type {
 
 /** Human-readable label for each triage category. */
 export const CATEGORY_LABELS: Readonly<Record<Category, string>> = {
-  rfi: 'RFI',
-  daily_report: 'Daily report',
-  submittal: 'Submittal',
-  vendor_quote: 'Vendor quote',
+  request: 'Request',
+  activity_update: 'Activity update',
+  document_review: 'Document review',
+  supplier_update: 'Supplier update',
   schedule: 'Schedule',
   status_update: 'Status update',
-  change_order: 'Change order',
-  claim_dispute: 'Claim / dispute',
+  financial: 'Financial',
+  dispute: 'Dispute',
   safety: 'Safety',
-  owner_escalation: 'Owner escalation',
+  escalation: 'Escalation',
   other: 'Other'
 };
 
@@ -85,11 +85,11 @@ export function bySeverityDesc(a: InboxItem, b: InboxItem): number {
 /** Best-effort project name inferred from an email subject for grouping chips. */
 export function projectOf(subject: string): string {
   const known = [
-    'Riverside Tower',
-    'Bay Street',
-    'Westfield',
-    'Highland Campus',
-    'Maplewood'
+    'Paper Birch Studio',
+    'Workshop Desk',
+    'Supplier Updates',
+    'Customer Care',
+    'Community Events'
   ];
   const match = known.find((name) => subject.includes(name));
   return match ?? 'Other';

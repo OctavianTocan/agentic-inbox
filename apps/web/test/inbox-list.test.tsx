@@ -8,10 +8,10 @@ import type { InboxItem } from '@/lib/inbox/types';
 const untriagedItem: InboxItem = {
   email: {
     id: 'e-untriaged',
-    from: 'Casey Wu <c.wu@meridianarch.com>',
+    from: 'Casey Wu <casey@paperbirch.example>',
     to: ['pm@firm.com'],
     cc: [],
-    subject: 'Weekly schedule ping — Riverside Tower',
+    subject: 'Weekly studio schedule update',
     body: 'Any update on the level 4 pour date?',
     timestamp: '2026-05-14T10:00:00Z',
     inReplyTo: null

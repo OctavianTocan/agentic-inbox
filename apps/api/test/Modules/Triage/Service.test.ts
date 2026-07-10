@@ -26,19 +26,19 @@ const EMAIL = new EmailSchema({
   from: 'Sam Builder <sam@example.com>',
   to: ['pm@example.com'],
   cc: [],
-  subject: 'RFI-001: confirm slab edge detail',
-  body: 'Please confirm the slab edge detail before concrete layout.',
+  subject: 'Question about order PB-001',
+  body: 'Please confirm the delivery note before packing.',
   timestamp: '2026-05-01T12:00:00Z',
   inReplyTo: null
 });
 const DECISION = new Decision({
   emailId: EMAIL_ID,
-  category: 'rfi',
+  category: 'request',
   severity: 'medium',
   confidence: 0.95,
-  whyPreview: 'RFI needs slab edge confirmation',
-  rationale: 'The sender asks for a design clarification before layout.',
-  keyFacts: ['RFI-001', 'slab edge detail', 'before concrete layout'],
+  whyPreview: 'Customer request needs confirmation',
+  rationale: 'The sender asks for a routine clarification before packing.',
+  keyFacts: ['Order PB-001', 'delivery note', 'before packing'],
   isSensitive: false
 });
 
@@ -106,7 +106,7 @@ const ServiceLayer = TriageServiceBody.pipe(
 const decisionFor = (emailId: EmailIdType): Decision =>
   new Decision({
     emailId,
-    category: 'rfi',
+    category: 'request',
     severity: 'medium',
     confidence: 0.9,
     whyPreview: 'needs confirmation',
@@ -121,7 +121,7 @@ const emailFor = (id: EmailIdType): Email =>
     from: 'Sam Builder <sam@example.com>',
     to: ['pm@example.com'],
     cc: [],
-    subject: `RFI ${id}`,
+    subject: `Question about ${id}`,
     body: 'Please confirm the detail.',
     timestamp: '2026-05-01T12:00:00Z',
     inReplyTo: null
@@ -243,12 +243,12 @@ const ledgerEntryFor = (
 const sensitiveDecisionFor = (emailId: EmailIdType): Decision =>
   new Decision({
     emailId,
-    category: 'change_order',
+    category: 'financial',
     severity: 'high',
     confidence: 0.9,
-    whyPreview: 'change order carries cost exposure',
-    rationale: 'A change order can cost real money; defer to the human.',
-    keyFacts: ['change order'],
+    whyPreview: 'Billing request carries financial exposure',
+    rationale: 'A billing request can cost real money; defer to the human.',
+    keyFacts: ['billing request'],
     isSensitive: true
   });
 
@@ -301,8 +301,6 @@ const inboxWithLedger = (
 
 describe('TriageService inbox status mapping', () => {
   it('marks a sensitive email with a flag_for_review entry as needs_attention', async () => {
-    // The flag documents the deferral in the audit trail; it must not read as
-    // handled, or sensitive emails vanish from "Needs attention" (TASK req 2).
     const emailId: EmailIdType = 'e-flagged-sensitive';
     const inbox = await inboxWithLedger(sensitiveDecisionFor(emailId), [
       ledgerEntryFor(emailId, 'flag_for_review')
@@ -560,7 +558,7 @@ describe('TriageService per-email re-triage', () => {
     const otherItem = result.inbox.items.find(
       (item) => item.email.id === otherId
     );
-    expect(otherItem?.decision?.category).toBe('rfi');
+    expect(otherItem?.decision?.category).toBe('request');
   });
 
   it('fails with EmailNotFound for an id outside the dataset', async () => {

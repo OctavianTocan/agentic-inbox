@@ -17,7 +17,7 @@ export const EmailStatus: Schema.Literals<
     'Review bucket: `needs_attention` (human required), `done_for_you` (auto-handled), or `filed` (archived).'
 });
 
-/** A single email from the static AEC inbox dataset. */
+/** A single email from the static inbox dataset. */
 export class Email extends Schema.Class<Email>('Email')({
   id: EmailId,
   from: Schema.String.annotate({

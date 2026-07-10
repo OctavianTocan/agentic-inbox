@@ -26,11 +26,11 @@ afterEach(cleanup);
 
 const baseEmail = {
   id: 'e-042',
-  from: 'Casey Wu <c.wu@meridianarch.com>',
+  from: 'Casey Wu <casey@paperbirch.example>',
   to: ['pm@firm.com'],
   cc: [],
-  subject: 'RFI-187: Lobby east wall finish',
-  body: 'Please confirm the level 4 pour date.',
+  subject: 'Question about moon journal restock',
+  body: 'Please confirm the expected restock date.',
   timestamp: '2026-05-14T10:00:00Z',
   inReplyTo: null
 } as const;
@@ -40,11 +40,11 @@ const pendingItem: InboxItem = {
   status: 'needs_attention',
   decision: {
     emailId: 'e-042',
-    category: 'rfi',
+    category: 'request',
     severity: 'high',
     confidence: 0.9,
-    whyPreview: 'RFI needing a reply.',
-    rationale: 'Routine RFI.',
+    whyPreview: 'Customer request needing a reply.',
+    rationale: 'Routine customer request.',
     keyFacts: [],
     isSensitive: false
   },
@@ -82,7 +82,7 @@ const deferral: LedgerEntry = {
   actor: 'batch_agent',
   emailId: 'e-042',
   action: 'flag_for_review',
-  summary: 'Change order — money implications, needs a human.',
+  summary: 'Billing request needs a human review.',
   payload: {},
   undoneBy: null,
   undoes: null,
@@ -168,7 +168,7 @@ describe('EmailRow context menu', () => {
     expect(screen.queryByRole('menuitem', { name: /Deny/ })).toBeNull();
   });
 
-  it('shows inline Approve and Deny buttons on a pending row and fires the right handler, so a reviewer can act without opening the menu (TASK req 3)', () => {
+  it('shows inline Approve and Deny buttons on a pending row and fires the right handler', () => {
     const onApprove = vi.fn();
     const onDeny = vi.fn();
     renderRow(pendingItem, { onApprove, onDeny });
@@ -206,7 +206,9 @@ describe('EmailRow context menu', () => {
       await screen.findByRole('menuitem', { name: /Copy subject/ })
     );
     await waitFor(() =>
-      expect(writeText).toHaveBeenCalledWith('RFI-187: Lobby east wall finish')
+      expect(writeText).toHaveBeenCalledWith(
+        'Question about moon journal restock'
+      )
     );
 
     openRowMenu(container);
@@ -306,7 +308,7 @@ describe('EmailRow preview markdown', () => {
   it('renders whyPreview through the same inline pipeline when a decision exists', () => {
     const { container } = renderRow(plainItem);
     const desc = container.querySelector('[data-slot="item-description"]');
-    expect(desc?.textContent).toContain('RFI needing a reply.');
+    expect(desc?.textContent).toContain('Customer request needing a reply.');
   });
 });
 
@@ -371,7 +373,7 @@ describe('DetailPane context menu', () => {
 });
 
 describe('DetailPane approval affordances', () => {
-  it('renders the agent draft in an editable textarea so the reviewer can act on it themselves (TASK req 3)', () => {
+  it('renders the agent draft in an editable textarea so the reviewer can act on it themselves', () => {
     renderDetail(pendingWithDraft);
 
     const textarea = screen.getByRole('textbox');
@@ -416,7 +418,7 @@ describe('DetailPane approval affordances', () => {
 });
 
 describe('DetailPane deferral framing', () => {
-  it('frames a flag_for_review entry as deferred, not as a completed action, so a held email never reads as done (TASK req 2)', () => {
+  it('frames a flag_for_review entry as deferred, not as a completed action', () => {
     renderDetail({
       ...plainItem,
       status: 'needs_attention',

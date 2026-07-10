@@ -38,9 +38,9 @@ const SCRIPT: readonly ScriptStep[] = [
       toolCallId: TOOL_CALL_ID,
       output: {
         matches: [
-          { id: 'e-014', subject: 'PCO #14 — added excavation scope' },
-          { id: 'e-016', subject: 'Safety incident report — Level 3 slab' },
-          { id: 'e-031', subject: 'Owner escalation — schedule slip' }
+          { id: 'e-014', subject: 'Refund request for a duplicate charge' },
+          { id: 'e-016', subject: 'Safety incident at the print studio' },
+          { id: 'e-031', subject: 'Customer escalation about a late order' }
         ]
       }
     }
@@ -56,7 +56,7 @@ const SCRIPT: readonly ScriptStep[] = [
     kind: 'event',
     event: {
       type: 'text-delta',
-      delta: '1. **PCO #14** — a change order adding excavation scope.\n'
+      delta: '1. **Duplicate charge** — a customer asks for a refund.\n'
     }
   },
   { kind: 'delay', ms: 160 },
@@ -64,7 +64,7 @@ const SCRIPT: readonly ScriptStep[] = [
     kind: 'event',
     event: {
       type: 'text-delta',
-      delta: '2. **Safety incident** on the Level 3 slab.\n'
+      delta: '2. **Safety incident** at the print studio.\n'
     }
   },
   { kind: 'delay', ms: 160 },
@@ -72,7 +72,7 @@ const SCRIPT: readonly ScriptStep[] = [
     kind: 'event',
     event: {
       type: 'text-delta',
-      delta: '3. **Owner escalation** about the schedule slip.\n'
+      delta: '3. **Customer escalation** about a late order.\n'
     }
   },
   { kind: 'delay', ms: 180 },

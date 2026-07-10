@@ -1,4 +1,4 @@
-# Dev stack for the Cogram Agentic Inbox.
+# Dev stack for Agentic Inbox.
 #
 # Default (`docker compose up -d` / `just up`) starts only Postgres. The api and
 # web apps run on the host via Bun (`bun run dev:api`, `bun run dev`) against
@@ -6,15 +6,15 @@
 #
 # The optional `full` profile containerizes api + web too:
 #   docker compose --profile full up -d --build
-name: cogram-agentic-inbox
+name: agentic-inbox
 
 services:
   db:
     image: postgres:17-alpine
     environment:
-      POSTGRES_USER: cogram
-      POSTGRES_PASSWORD: cogram
-      POSTGRES_DB: cogram
+      POSTGRES_USER: agentic_inbox
+      POSTGRES_PASSWORD: agentic_inbox
+      POSTGRES_DB: agentic_inbox
     ports:
       # Host port is 5442 by default to avoid clashing with other local
       # Postgres instances; the URL in .env.example matches. Override with
@@ -22,11 +22,11 @@ services:
       - "${DB_PORT:-5442}:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
-      # Runs once on first boot to create the dedicated `cogram_test` database
-      # the api test suite truncates against (never the live `cogram`).
+      # Runs once on first boot to create the dedicated `agentic_inbox_test` database
+      # the api test suite truncates against (never the live `agentic_inbox`).
       - ./docker/postgres-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U cogram -d cogram"]
+      test: ["CMD-SHELL", "pg_isready -U agentic_inbox -d agentic_inbox"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -38,7 +38,7 @@ services:
     working_dir: /app
     command: sh -c "bun install --ignore-scripts && bun run dev:api"
     environment:
-      DATABASE_URL: postgres://cogram:cogram@db:5432/cogram
+      DATABASE_URL: postgres://agentic_inbox:agentic_inbox@db:5432/agentic_inbox
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       OPENROUTER_MODEL: ${OPENROUTER_MODEL:-openai/gpt-5.5}
       API_HOST: 0.0.0.0
@@ -57,7 +57,7 @@ services:
     working_dir: /app
     command: sh -c "bun install --ignore-scripts && bun run dev"
     environment:
-      COGRAM_API_ORIGIN: http://api:8001
+      AGENTIC_INBOX_API_ORIGIN: http://api:8001
       PORT: "3003"
     ports:
       - "3003:3003"

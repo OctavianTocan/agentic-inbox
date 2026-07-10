@@ -62,11 +62,8 @@ describe('InboxShell', () => {
     const { container } = renderInboxShell();
 
     expect(
-      (
-        await screen.findAllByText(
-          /RFI-187: Lobby east wall finish at Riverside Tower/
-        )
-      ).length
+      (await screen.findAllByText(/Question about the moon journal restock/))
+        .length
     ).toBeGreaterThan(0);
 
     expect(screen.queryByText('Run the agent across the inbox?')).toBeNull();
@@ -97,9 +94,7 @@ describe('InboxShell', () => {
   it('opens the detail panel on email select and closes it from its header control', async () => {
     const { container } = renderInboxShell();
 
-    await screen.findAllByText(
-      /RFI-187: Lobby east wall finish at Riverside Tower/
-    );
+    await screen.findAllByText(/Question about the moon journal restock/);
 
     // No detail panel until an email is opened.
     expect(screen.queryByLabelText('Close email')).toBeNull();

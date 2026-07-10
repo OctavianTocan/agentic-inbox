@@ -171,7 +171,7 @@ export default function ComponentShowcase() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Input defaultValue="Cogram take-home evaluator" />
+                <Input defaultValue="Inbox workspace reviewer" />
                 <Textarea
                   defaultValue="Turn a messy transcript into a clean project brief with action items, risks, owners, and a follow-up plan."
                   rows={5}

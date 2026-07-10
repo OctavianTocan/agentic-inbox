@@ -4,7 +4,7 @@ import type { Schema } from 'effect';
 /** Categories that are always sensitive and can never be auto-actioned. */
 export const SENSITIVE_CATEGORIES: ReadonlySet<
   Schema.Schema.Type<typeof Category>
-> = new Set(['change_order', 'claim_dispute', 'safety', 'owner_escalation']);
+> = new Set(['financial', 'dispute', 'safety', 'escalation']);
 
 /** Confidence at or below this is too low to auto-execute. */
 export const MIN_AUTO_CONFIDENCE = 0.75;
@@ -24,10 +24,10 @@ export const LEGAL_KEYWORDS: ReadonlyArray<string> = [
   'damages',
   'indemnif',
   'lien',
-  'change order',
-  'delay claim',
-  'back charge',
-  'backcharge'
+  'chargeback',
+  'unauthorized charge',
+  'refund demand',
+  'billing dispute'
 ];
 
 /**
@@ -43,7 +43,6 @@ export const SAFETY_KEYWORDS: ReadonlyArray<string> = [
   'incident report',
   'near-miss',
   'near miss',
-  'osha',
   'first aid',
   'first-aid',
   'ambulance',
@@ -52,12 +51,8 @@ export const SAFETY_KEYWORDS: ReadonlyArray<string> = [
   'stand down',
   'standdown',
   'unsafe',
-  'fall arrest',
-  'fall-arrest',
   'fatal',
   'fatality',
-  'struck by',
-  'struck in',
   'laceration',
   'fracture',
   'concussion',
@@ -68,7 +63,7 @@ export const SAFETY_KEYWORDS: ReadonlyArray<string> = [
 
 /**
  * Escalation / litigation-hold keywords that force human review when found in an
- * email body: owner complaints, document-preservation demands, and outside-counsel
+ * email body: serious complaints, document-preservation demands, and outside-counsel
  * contact all warrant a human even when the model's category reads routine.
  */
 export const ESCALATION_KEYWORDS: ReadonlyArray<string> = [

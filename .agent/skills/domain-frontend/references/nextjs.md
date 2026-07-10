@@ -1,6 +1,6 @@
 # Next.js Patterns
 
-Patterns for `apps/web`, the Next.js 16 App Router frontend for the Cogram Agentic Inbox.
+Patterns for `apps/web`, the Next.js 16 App Router frontend for Agentic Inbox.
 
 ## Current Shape
 

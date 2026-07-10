@@ -24,7 +24,7 @@ describe('EmailsService', () => {
       service.get('e-001' as EmailIdType)
     );
     expect(email?.id).toBe('e-001');
-    expect(email?.subject).toContain('RFI-187');
+    expect(email?.subject).toContain('moon journal restock');
   });
 
   it('returns null for an unknown id', async () => {

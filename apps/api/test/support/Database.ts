@@ -3,7 +3,7 @@ import { Effect, Redacted } from 'effect';
 import initialMigration from '../../migrations/0001_initial';
 
 const DEFAULT_TEST_DATABASE_URL =
-  'postgres://cogram:cogram@localhost:5442/cogram_test';
+  'postgres://agentic_inbox:agentic_inbox@localhost:5442/agentic_inbox_test';
 
 /**
  * Resolves the test database URL and refuses any URL that could destroy real data.

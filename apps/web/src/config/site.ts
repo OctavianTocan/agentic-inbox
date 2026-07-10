@@ -1,5 +1,5 @@
 export const siteConfig = {
-  name: 'Cogram Agentic Inbox',
+  name: 'Agentic Inbox',
   description:
-    'An AI agent that autonomously triages an AEC project email inbox.'
+    'An AI agent that organizes a shared inbox with clear, reviewable actions.'
 };

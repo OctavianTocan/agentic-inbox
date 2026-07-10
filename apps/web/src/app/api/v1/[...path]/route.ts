@@ -25,7 +25,9 @@ function trimTrailingSlash(value: string): string {
 
 /** Builds the backend origin for local and tailnet dev previews. */
 function apiOrigin(): string {
-  return trimTrailingSlash(process.env.COGRAM_API_ORIGIN ?? DEFAULT_API_ORIGIN);
+  return trimTrailingSlash(
+    process.env.AGENTIC_INBOX_API_ORIGIN ?? DEFAULT_API_ORIGIN
+  );
 }
 
 /**

@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "cogram-ai-app-template",
+      "name": "agentic-inbox",
       "devDependencies": {
         "@biomejs/biome": "catalog:",
         "@google/design.md": "catalog:",

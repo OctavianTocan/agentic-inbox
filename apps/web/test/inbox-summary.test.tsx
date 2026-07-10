@@ -7,22 +7,22 @@ import type { InboxItem, InboxSummary } from '@/lib/inbox/types';
 const triagedItem: InboxItem = {
   email: {
     id: 'e-001',
-    from: 'Casey Wu <c.wu@meridianarch.com>',
+    from: 'Casey Wu <casey@paperbirch.example>',
     to: ['pm@firm.com'],
     cc: [],
-    subject: 'RFI — Riverside Tower level 4 pour',
-    body: 'Please confirm the pour date.',
+    subject: 'Question about moon journal delivery',
+    body: 'Please confirm the delivery date.',
     timestamp: '2026-05-14T10:00:00Z',
     inReplyTo: null
   },
   status: 'done_for_you',
   decision: {
     emailId: 'e-001',
-    category: 'rfi',
+    category: 'request',
     severity: 'high',
     confidence: 0.9,
-    whyPreview: 'Routine RFI',
-    rationale: 'Standard request for information.',
+    whyPreview: 'Routine customer request',
+    rationale: 'Standard customer request.',
     keyFacts: [],
     isSensitive: false
   },
@@ -52,7 +52,7 @@ describe('InboxSummaryBlock content', () => {
 
     expect(screen.getByRole('button', { name: /at a glance/i })).toBeDefined();
     expect(screen.getByText(/The agent reviewed 1 emails/)).toBeDefined();
-    expect(screen.queryByText('Riverside Tower')).toBeNull();
+    expect(screen.queryByText('Paper Birch Studio')).toBeNull();
     expect(screen.queryByText('high')).toBeNull();
   });
 });

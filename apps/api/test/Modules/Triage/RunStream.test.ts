@@ -29,12 +29,12 @@ type TriageEvent = Schema.Schema.Type<typeof TriageStreamEvent>;
 
 const routineDecisionJson = JSON.stringify({
   emailId: 'placeholder',
-  category: 'daily_report',
+  category: 'activity_update',
   severity: 'low',
   confidence: 0.95,
-  whyPreview: 'Daily report needs no reply',
-  rationale: 'A daily report is informational; archive it.',
-  keyFacts: ['daily report'],
+  whyPreview: 'Activity update needs no reply',
+  rationale: 'An activity update is informational; archive it.',
+  keyFacts: ['activity update'],
   isSensitive: false
 });
 
@@ -56,7 +56,7 @@ const routineEmailFor = (id: EmailIdType): Email =>
     from: 'Sam Builder <sam@example.com>',
     to: ['pm@example.com'],
     cc: [],
-    subject: `Daily report ${id}`,
+    subject: `Studio update ${id}`,
     body: 'Crew poured the north footings and cleaned the staging area.',
     timestamp: '2026-05-01T12:00:00Z',
     inReplyTo: null
@@ -66,10 +66,10 @@ const routineEmailFor = (id: EmailIdType): Email =>
 const sensitiveEmailFor = (id: EmailIdType): Email =>
   new EmailSchema({
     id,
-    from: 'Owner <owner@example.com>',
+    from: 'Customer <customer@example.com>',
     to: ['pm@example.com'],
     cc: [],
-    subject: `Change order ${id}`,
+    subject: `Billing request ${id}`,
     body: 'We need to formally change the lobby scope before proceeding.',
     timestamp: '2026-05-01T12:00:00Z',
     inReplyTo: null
@@ -94,7 +94,7 @@ const sensitiveSendScript: GenerateTextScript = (prompt) => [
     name: 'send_reply',
     params: {
       emailId: emailIdFromPrompt(prompt),
-      body: 'Proposed change order response for your review.'
+      body: 'Proposed billing response for your review.'
     }
   })
 ];
@@ -184,9 +184,6 @@ const eventsByEmail = (
 
 describe('TriageService.run SSE ordering (real agent, fake models)', () => {
   it('emits started then decision then the action event per routine email, and done.processed equals the untriaged count', async () => {
-    // TASK req 3 (legible progress): the run stream must open each email with a
-    // started, follow with its decision, then its action, so the UI can render
-    // per-email progress in order. Seeding one pre-decided email proves the run
     // skips already-triaged mail and reports only the remaining count as done.
     const emailIds: readonly EmailIdType[] = ['e-run-1', 'e-run-2', 'e-run-3'];
     const emails = emailIds.map(routineEmailFor);
@@ -198,7 +195,7 @@ describe('TriageService.run SSE ordering (real agent, fake models)', () => {
         yield* decisions.upsert(
           new Decision({
             emailId: 'e-run-1',
-            category: 'daily_report',
+            category: 'activity_update',
             severity: 'low',
             confidence: 0.95,
             whyPreview: 'already decided',
@@ -246,8 +243,6 @@ describe('TriageService.run SSE ordering (real agent, fake models)', () => {
   });
 
   it('emits started then decision then approval_pending for a sensitive email', async () => {
-    // TASK req 2: a sensitive email must surface an approval_pending event rather
-    // than an executed action, so the human sees it was deferred, not sent.
     const email = sensitiveEmailFor('e-sensitive-1');
 
     const result = await runDb(
@@ -276,9 +271,6 @@ describe('TriageService.run SSE ordering (real agent, fake models)', () => {
   });
 
   it('fresh=true clears prior decisions and reprocesses every email', async () => {
-    // TASK req 3 (re-triage): a fresh run must wipe stale decisions and process
-    // the whole inbox again, so done.processed equals the full email count even
-    // when some emails were already decided.
     const emailIds: readonly EmailIdType[] = ['e-fresh-a', 'e-fresh-b'];
     const emails = emailIds.map(routineEmailFor);
 
@@ -289,7 +281,7 @@ describe('TriageService.run SSE ordering (real agent, fake models)', () => {
         yield* decisions.upsert(
           new Decision({
             emailId: 'e-fresh-a',
-            category: 'daily_report',
+            category: 'activity_update',
             severity: 'low',
             confidence: 0.95,
             whyPreview: 'stale decision',

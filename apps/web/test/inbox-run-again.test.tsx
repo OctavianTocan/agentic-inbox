@@ -68,9 +68,7 @@ describe('InboxShell re-run entry point', () => {
 
     // A triaged snapshot lands straight in the populated inbox; the run screen
     // is not shown until the user asks for it.
-    await screen.findAllByText(
-      /RFI-187: Lobby east wall finish at Riverside Tower/
-    );
+    await screen.findAllByText(/Question about the moon journal restock/);
     expect(screen.queryByText('The inbox is all caught up')).toBeNull();
 
     fireEvent.click(screen.getByText('Re-run triage'));
@@ -80,7 +78,7 @@ describe('InboxShell re-run entry point', () => {
     });
     // The inbox list is gone while the run screen owns the view.
     expect(
-      screen.queryByText(/RFI-187: Lobby east wall finish at Riverside Tower/)
+      screen.queryByText(/Question about the moon journal restock/)
     ).toBeNull();
 
     fireEvent.click(screen.getByText('Open current inbox'));
@@ -89,9 +87,7 @@ describe('InboxShell re-run entry point', () => {
     // the list is back and no re-triage was needed.
     await waitFor(() => {
       expect(
-        screen.getAllByText(
-          /RFI-187: Lobby east wall finish at Riverside Tower/
-        ).length
+        screen.getAllByText(/Question about the moon journal restock/).length
       ).toBeGreaterThan(0);
     });
     expect(screen.queryByText('The inbox is all caught up')).toBeNull();

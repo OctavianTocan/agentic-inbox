@@ -135,7 +135,7 @@ export function RunView({ items, onRun, onComplete }: RunViewProps) {
         <p className="max-w-2xl text-muted-foreground text-sm leading-6 sm:text-base">
           {isInboxEmpty
             ? 'Every email has been triaged. Open the inbox to review what the agent handled, or run the agent again to re-triage from scratch.'
-            : `This will process the fixed set of ${total} construction emails, auto-handle routine messages, and hold sensitive work for your review. The run uses the real local API, not a simulated progress screen.`}
+            : `This will process the fixed set of ${total} messages, auto-handle routine work, and hold sensitive work for your review. The run uses the real local API, not a simulated progress screen.`}
         </p>
       </div>
 

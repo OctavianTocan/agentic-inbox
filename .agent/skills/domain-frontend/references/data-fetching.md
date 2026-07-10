@@ -1,6 +1,6 @@
 # Data Fetching
 
-How frontend code reads and writes data in this take-home repo.
+How frontend code reads and writes data in this repository.
 
 ## Decision Rule
 

@@ -120,13 +120,13 @@ export const AgentServiceBody: Layer.Layer<
     const generateDecision = Effect.fn('AgentService.generateDecision')(
       function* (email: Email) {
         const response = yield* LanguageModel.generateObject({
-          objectName: 'CogramInboxDecision',
+          objectName: 'AgenticInboxDecision',
           schema: Decision,
           prompt: [
             {
               role: 'system',
               content:
-                'You classify construction project inbox emails. Return only the requested structured object.'
+                'You classify shared-inbox emails. Return only the requested structured object.'
             },
             { role: 'user', content: triageDecisionPrompt(email) }
           ]

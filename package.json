@@ -1,8 +1,8 @@
 {
-  "name": "cogram-agentic-inbox",
+  "name": "agentic-inbox",
   "version": "0.1.0",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
   "type": "module",
   "workspaces": [
     "apps/*",

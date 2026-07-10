@@ -11,9 +11,9 @@ export class Api extends HttpApi.make('api')
   .add(ActionsApi)
   .add(ChatApi)
   .prefix('/api/v1')
-  .annotate(OpenApi.Title, 'Cogram Agentic Inbox API')
+  .annotate(OpenApi.Title, 'Agentic Inbox API')
   .annotate(OpenApi.Version, '0.1.0')
   .annotate(
     OpenApi.Description,
-    'Effect v4 backend contract for the Cogram Agentic Inbox app.'
+    'Effect v4 backend contract for the Agentic Inbox app.'
   ) {}

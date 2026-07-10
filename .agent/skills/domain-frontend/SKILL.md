@@ -61,7 +61,7 @@ Imports use the app-local `@/...` alias, with design-system imports from `@/desi
 | Question | Answer |
 |----------|--------|
 | How to fetch this data? | Static dataset/derived inbox state → app-local adapters under `apps/web/src/lib/{feature}`. Backend data → shared contracts in `packages/api-core` and web-local calls from `apps/web/src/lib`. See [data-fetching.md](references/data-fetching.md) only when adding new server interactions. |
-| How to write this data? | For the take-home inbox, write through the existing triage/action APIs or local reducers; keep simulated actions legible and reversible. New backend writes need a `packages/api-core` contract first. |
+| How to write this data? | For the inbox, write through the existing triage/action APIs or local reducers; keep simulated actions legible and reversible. New backend writes need a `packages/api-core` contract first. |
 | How to manage this state? | Route/page state → Next route/search params when it must survive links; global product panel state → owning shell component; scoped subtree state → React context; component-local → `useState`. |
 | What dialog component? | Multi-field content/form → `HybridDialog`. Simple destructive yes/no → `HybridAlertDialog`. See [dialogs.md](references/dialogs.md). |
 | Where does this component go? | Check the Component Hierarchy table above. When in doubt → page-specific → `apps/web/src/components/{feature}/`. |

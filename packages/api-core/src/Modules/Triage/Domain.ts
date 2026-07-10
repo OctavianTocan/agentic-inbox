@@ -4,34 +4,34 @@ import { EmailId } from '../Emails/Domain';
 /** Triage bucket the agent assigned to an email. */
 export const Category: Schema.Literals<
   readonly [
-    'rfi',
-    'daily_report',
-    'submittal',
-    'vendor_quote',
+    'request',
+    'activity_update',
+    'document_review',
+    'supplier_update',
     'schedule',
     'status_update',
-    'change_order',
-    'claim_dispute',
+    'financial',
+    'dispute',
     'safety',
-    'owner_escalation',
+    'escalation',
     'other'
   ]
 > = Schema.Literals([
-  'rfi',
-  'daily_report',
-  'submittal',
-  'vendor_quote',
+  'request',
+  'activity_update',
+  'document_review',
+  'supplier_update',
   'schedule',
   'status_update',
-  'change_order',
-  'claim_dispute',
+  'financial',
+  'dispute',
   'safety',
-  'owner_escalation',
+  'escalation',
   'other'
 ]).annotate({
   identifier: 'Category',
   description:
-    'Email category. The last four (change_order, claim_dispute, safety, owner_escalation) are always sensitive.'
+    'Email category. The last four (financial, dispute, safety, escalation) are always sensitive.'
 });
 
 /** How urgent or consequential the email is. */

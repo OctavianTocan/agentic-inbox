@@ -17,7 +17,7 @@ const pausedPrompt = (toolCallId: string): Prompt.Prompt =>
           params: {
             emailId: 'e-001',
             body: 'Agent original draft',
-            summary: 'Acknowledge RFI'
+            summary: 'Acknowledge customer request'
           },
           providerExecuted: false
         }),
@@ -66,7 +66,7 @@ describe('withSendReplyBody', () => {
     expect(params.body).toBe('Reviewer edited reply');
     // Other params (target email, summary label) survive the swap untouched.
     expect(params.emailId).toBe('e-001');
-    expect(params.summary).toBe('Acknowledge RFI');
+    expect(params.summary).toBe('Acknowledge customer request');
   });
 
   it('re-decodes cleanly after the swap', () => {

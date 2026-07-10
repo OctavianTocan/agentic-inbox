@@ -34,13 +34,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## Purpose
 
-Cogram take-home task: an agentic inbox for an AEC (architecture/engineering/
-construction) project. An AI agent processes a **fixed set of 80 emails**
-(`data/emails.json`, no new mail arrives) and for each one either acts
-autonomously (routine: RFIs, daily reports, submittals, vendor quotes,
-schedule pings, status updates) or defers to the human (sensitive: change
-orders, claims/disputes, safety incidents, owner escalations). Full brief:
-`docs/TASK.md`.
+Agentic Inbox is a shared-inbox workspace with a fixed local sample dataset.
+The agent handles routine messages, documents each decision in plain language,
+and defers sensitive or uncertain work to a human reviewer.
 
 Constraints that matter for implementation:
 
@@ -61,7 +57,7 @@ Constraints that matter for implementation:
 
 ## Project Shape
 
-- This is a Bun workspace (originally scaffolded from `cogram-ai-app-template`) with a Next.js frontend and an optional Effect v4 backend.
+- This is a Bun workspace with a Next.js frontend and an optional Effect v4 backend.
 - `apps/web` is the Next.js 16 App Router frontend.
 - `apps/api` is the Effect v4 backend API.
 - `packages/api-core` owns the HTTP API contract and schemas.
@@ -70,7 +66,7 @@ Constraints that matter for implementation:
 - Use `apps/web/src/ai-ui` for headless AI composer/thread behavior.
 - Keep frontend imports local: `@/design-system/...`, `@/ai-ui/...`, and `@/...`.
 - Design intent lives in `DESIGN.md`.
-- The email dataset lives in `data/emails.json`; the task brief lives in `docs/TASK.md`.
+- The email dataset lives in `data/emails.json`.
 - CodeGraph local indexes live in `.codegraph/` and are ignored by Git.
 - Keep `vendor/`, `.agent/`, `.codegraph/`, and generated `.next/` output out of
   TypeScript LSP project discovery.

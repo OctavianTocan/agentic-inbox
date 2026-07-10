@@ -21,20 +21,17 @@ const ActionsLayer = ActionServiceBody.pipe(
 
 const routineDecisionJson = JSON.stringify({
   emailId: 'e-001',
-  category: 'rfi',
+  category: 'request',
   severity: 'medium',
   confidence: 0.9,
-  whyPreview: 'RFI needs a slab edge confirmation',
-  rationale: 'Sender asks for a design clarification before layout.',
-  keyFacts: ['RFI-001'],
+  whyPreview: 'Customer request needs a confirmation',
+  rationale: 'Sender asks for a routine clarification before ordering.',
+  keyFacts: ['Order PB-001'],
   isSensitive: false
 });
 
 describe('triage decision via generateObject (fake model)', () => {
   it('decodes the structured decision the model returns for an email', async () => {
-    // The decision call is generateObject; the fake serves it through the same
-    // provider hook with responseFormat json, proving the decision half of the
-    // spine runs without a live provider (TASK req 1: the agent decides).
     const fake = makeLanguageModelFake({
       generateText: () => [],
       decisionJson: routineDecisionJson
@@ -51,20 +48,18 @@ describe('triage decision via generateObject (fake model)', () => {
       }).pipe(Effect.provide(fake))
     );
 
-    expect(decision.category).toBe('rfi');
+    expect(decision.category).toBe('request');
     expect(decision.isSensitive).toBe(false);
   });
 });
 
 describe('routine triage tool loop (fake model)', () => {
   it('executes send_reply autonomously and writes exactly one ledger entry', async () => {
-    // TASK req 1: routine work is done for the PM. A non-sensitive toolkit must
-    // let the model's send_reply run through to the ledger with no approval.
     const toolkit = makeTriageToolkit(false);
     const fake = makeLanguageModelFake({
       generateText: (prompt) =>
         hasToolResult(prompt)
-          ? [textPart('Replied to the RFI.')]
+          ? [textPart('Replied to the customer request.')]
           : [
               toolCallPart({
                 id: 'call-1',
@@ -101,9 +96,6 @@ describe('routine triage tool loop (fake model)', () => {
 
 describe('sensitive triage tool loop (fake model)', () => {
   it('pauses send_reply for approval and never writes a ledger send', async () => {
-    // TASK req 2 (the money invariant): a sensitive email must never be
-    // auto-actioned. Even when the model calls send_reply, the gate must turn it
-    // into a pending approval and leave the ledger empty.
     const toolkit = makeTriageToolkit(true);
     const fake = makeLanguageModelFake({
       generateText: () => [
@@ -143,9 +135,6 @@ describe('sensitive triage tool loop (fake model)', () => {
 
 describe('approval resume with edited body (fake model)', () => {
   it('sends the reviewer edit, not the agent draft, when the approval is resumed', async () => {
-    // TASK req 2/3 (human-in-the-loop spine): a sensitive send pauses; the
-    // reviewer approves with edits; the resumed loop must execute the send with
-    // the EDITED body. This mirrors resolveApproval appending a
     // tool-approval-response and re-running the loop.
     const toolkit = makeTriageToolkit(true);
     const agentDraft = 'We accept responsibility for the injury.';
@@ -224,8 +213,6 @@ describe('approval resume with edited body (fake model)', () => {
   });
 
   it('does not send when the approval is denied', async () => {
-    // TASK req 2: a denied approval must not execute the gated send; the ledger
-    // stays empty and the pause simply ends with no action taken.
     const toolkit = makeTriageToolkit(true);
     const fake = makeLanguageModelFake({
       generateText: (prompt) =>

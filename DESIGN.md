@@ -1,6 +1,6 @@
 ---
 version: alpha
-name: Cogram Agentic Inbox
+name: Agentic Inbox
 description: Product-focused AI application system extracted from effect-api-layout.
 colors:
   primary: "#a55a43"
@@ -182,7 +182,7 @@ components:
 
 ## Overview
 
-This system is a quiet, dense product UI for an AEC agentic inbox. It should
+This system is a quiet, dense product UI for a shared agentic inbox. It should
 feel like an operational tool: crisp, calm, fast to scan, and ready for
 repeated daily use. The current app is the product, not a showcase: first-run
 triage, inbox review, detail inspection, approval/deny/undo, agent chat, and

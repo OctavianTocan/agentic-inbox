@@ -16,11 +16,11 @@ const EMAIL_ID: EmailIdType = 'e-014';
 
 const routineDecision = new Decision({
   emailId: EMAIL_ID,
-  category: 'rfi',
+  category: 'request',
   severity: 'medium',
   confidence: 0.9,
-  whyPreview: 'RFI needs confirmation',
-  rationale: 'Sender asks for a design clarification.',
+  whyPreview: 'Customer request needs confirmation',
+  rationale: 'Sender asks for a routine clarification.',
   keyFacts: ['detail'],
   isSensitive: false
 });
@@ -30,7 +30,7 @@ const EMAIL = new EmailSchema({
   from: 'Sam Builder <sam@example.com>',
   to: ['pm@example.com'],
   cc: [],
-  subject: 'RFI-014',
+  subject: 'Question about order PB-014',
   body: 'Please confirm the detail.',
   timestamp: '2026-05-01T12:00:00Z',
   inReplyTo: null
@@ -42,9 +42,6 @@ const RealActionsLayer = ActionServiceBody.pipe(
 
 describe('undo write path', () => {
   it('stamps undoneBy on the original entry and links the undo back to it', async () => {
-    // Undo is the recovery primitive (TASK req 5). The write must both mark the
-    // original as undone (undoneBy set) and record a linked undo row (undoes
-    // set), or status computation and audit trail break.
     const result = await runDb(
       Effect.gen(function* () {
         const actions = yield* ActionService;
@@ -69,9 +66,6 @@ describe('undo write path', () => {
 
 describe('inbox status after undo', () => {
   it('flips a done_for_you email back to needs_attention once its send is undone', async () => {
-    // TASK req 5: a wrong auto-action must be cheaply reversible AND visible as
-    // reversed. After undo, statusForItem must no longer count the send (it is
-    // undoneBy != null), so the email returns to Needs attention for the PM.
     const EmailsLayer = Layer.succeed(EmailsService, {
       list: () => Effect.succeed([EMAIL]),
       get: (id: EmailIdType) => Effect.succeed(id === EMAIL_ID ? EMAIL : null),

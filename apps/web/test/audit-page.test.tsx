@@ -18,20 +18,21 @@ const fakeItem: InboxItem = {
     from: 'Priya Rao <priya@acme-mech.com>',
     to: ['pm@site.dev'],
     cc: [],
-    subject: 'RFI-204 duct routing clash at Level 3',
-    body: 'Please confirm the revised routing.',
+    subject: 'Question about moon journal delivery',
+    body: 'Please confirm the revised delivery address.',
     timestamp: '2026-07-01T09:00:00.000Z',
     inReplyTo: null
   },
   status: 'done_for_you',
   decision: {
     emailId: 'e-001',
-    category: 'rfi',
+    category: 'request',
     severity: 'low',
     confidence: 0.9,
-    whyPreview: 'Routine RFI',
-    rationale: 'Routine RFI with a documented answer, safe to auto-reply.',
-    keyFacts: ['Clash at Level 3'],
+    whyPreview: 'Routine customer request',
+    rationale:
+      'Routine customer request with a documented answer, safe to auto-reply.',
+    keyFacts: ['Delivery address'],
     isSensitive: false
   },
   pendingApproval: null,
@@ -137,7 +138,7 @@ describe('AuditPage', () => {
     // plus raw payload, and a closable pane (never the mobile drawer).
     expect(
       await screen.findByText(
-        'Routine RFI with a documented answer, safe to auto-reply.'
+        'Routine customer request with a documented answer, safe to auto-reply.'
       )
     ).not.toBeNull();
     expect(screen.getByText(/"to": "priya@acme-mech.com"/)).not.toBeNull();
@@ -164,7 +165,7 @@ describe('AuditPage', () => {
     // Mobile routes the same detail through the drawer sheet.
     expect(
       await screen.findByText(
-        'Routine RFI with a documented answer, safe to auto-reply.'
+        'Routine customer request with a documented answer, safe to auto-reply.'
       )
     ).not.toBeNull();
     expect(
