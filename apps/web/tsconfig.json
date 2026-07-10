@@ -22,6 +22,9 @@
       }
     ],
     "paths": {
+      "@/Infrastructure/*": ["../api/src/Infrastructure/*"],
+      "@/Lib/*": ["../api/src/Lib/*"],
+      "@/Modules/*": ["../api/src/Modules/*"],
       "@/*": ["./src/*"]
     }
   },

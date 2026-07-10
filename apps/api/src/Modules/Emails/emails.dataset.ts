@@ -4,803 +4,963 @@
  */
 export const emailDataset = [
   {
-    id: 'e-001',
-    from: 'Mira Patel <mira@paperbirch.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Question about the moon journal restock',
-    body: 'Hi team, do you know when the moon journal will be back in stock? I would love to order two for a book club gift.',
-    timestamp: '2026-05-13T14:30:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-002',
-    from: 'Studio Notes <updates@paperbirch.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Tuesday studio update',
-    body: 'The morning print run is complete. Forty-eight card sets were packed, three orders were collected, and no issues were reported.',
-    timestamp: '2026-05-13T15:00:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-003',
-    from: 'Northwind Paper <orders@northwind.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Cotton paper availability',
-    body: 'Your requested 300 gsm cotton paper is available. The current lead time is seven business days; reply if you would like us to reserve the next pallet.',
-    timestamp: '2026-05-13T15:12:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-004',
-    from: 'Proof Desk <proofs@paperbirch.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'New proof ready: summer postcard set',
-    body: 'A proof is ready for the summer postcard set. Please review the attached PDF and leave any notes by Friday.',
-    timestamp: '2026-05-13T16:00:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-005',
-    from: 'Jon Bell <jon@littlegrove.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'June lettering workshop availability',
-    body: 'Hello, are there still places in the June lettering workshop? I am hoping to bring one friend.',
-    timestamp: '2026-05-13T16:42:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-006',
-    from: 'Postal Cloud <notices@postalcloud.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Shipment delivered: PB-4821',
-    body: 'Shipment PB-4821 was delivered at 10:14 AM and left at the front desk. No signature was required.',
-    timestamp: '2026-05-13T17:05:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-007',
-    from: 'Avery Lin <avery@paperbirch.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Friday market checklist',
-    body: "I added the tent weights, receipt rolls, and display clips to Friday's market checklist. Let me know if anything else should be packed.",
-    timestamp: '2026-05-13T17:20:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-008',
-    from: 'Tess Romero <tess@daylily.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Custom note card wording',
-    body: 'Could the note cards say “Thank you for being here” in the serif style from your spring collection? Please confirm the character limit.',
-    timestamp: '2026-05-13T17:45:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-009',
-    from: 'Calendar <calendar@paperbirch.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Reminder: inventory count tomorrow',
-    body: 'Reminder: the monthly inventory count begins tomorrow at 9:00 AM. The stockroom will be unavailable for walk-in pickup until noon.',
-    timestamp: '2026-05-13T18:00:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-010',
-    from: 'Nina Cho <nina@paperbirch.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Newsletter draft ready',
-    body: 'The June newsletter draft is ready in the shared folder. It includes the workshop calendar and the new postcard collection.',
-    timestamp: '2026-05-13T18:15:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-011',
-    from: 'Rhea Moss <rhea@copperlane.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Wholesale catalog request',
-    body: 'Hi, could you send your current wholesale catalog and minimum order details? We are choosing a few local makers for our autumn shelf.',
-    timestamp: '2026-05-13T18:30:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-012',
-    from: 'Parcel Lane <tracking@parcellane.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Pickup delayed by one day',
-    body: 'Your regular pickup has moved from Thursday to Friday because of a regional routing delay. No action is required.',
-    timestamp: '2026-05-13T18:45:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-013',
-    from: 'Maya Reed <maya@oakandink.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Press kit photo request',
-    body: 'Would it be possible to use two product photos in our local maker guide? We will credit Paper Birch and link to the shop.',
-    timestamp: '2026-05-13T19:00:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-014',
-    from: 'Elena Ford <elena@customer.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Duplicate card charge on order PB-4793',
-    body: 'My card appears to have been charged twice for order PB-4793. Please do not make any changes until someone checks the payment record and confirms the refund process.',
-    timestamp: '2026-05-13T19:15:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-015',
-    from: 'Workshop Desk <workshops@paperbirch.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Saturday class roster',
-    body: 'The Saturday class roster now has twelve confirmed seats and four waitlist requests. Supplies are already allocated for twelve.',
-    timestamp: '2026-05-13T19:30:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-016',
-    from: 'Avery Lin <avery@paperbirch.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Safety incident at the print studio',
-    body: 'A guest cut their hand on a paper trimmer during cleanup. First aid was provided and the trimmer has been removed from use pending inspection. Please route this to the studio lead.',
-    timestamp: '2026-05-13T19:45:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-017',
-    from: 'Wren Studio <hello@wrenstudio.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Collaboration note',
-    body: 'Thanks for the introduction call. We would be happy to trade a small display card for a mention in the summer guide.',
-    timestamp: '2026-05-13T20:00:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-018',
-    from: 'Northwind Paper <orders@northwind.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Sample swatch book shipped',
-    body: 'The sample swatch book shipped today. Tracking is attached, and delivery is expected Monday.',
-    timestamp: '2026-05-13T20:15:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-019',
-    from: 'Mira Patel <mira@paperbirch.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Re: Question about the moon journal restock',
-    body: 'Thank you. Please add me to the restock notice list if that is available.',
-    timestamp: '2026-05-13T20:30:00Z',
-    in_reply_to: 'e-001'
-  },
-  {
-    id: 'e-020',
-    from: 'Studio Notes <updates@paperbirch.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Wednesday studio update',
-    body: 'The foil test passed, and the new packaging labels arrived. One shelf label needs a replacement because the color is faded.',
-    timestamp: '2026-05-14T14:00:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-021',
-    from: 'Harper Vale <harper@customer.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Address correction for PB-4830',
-    body: 'I entered the wrong apartment number for PB-4830. The correct address is in my order note; can you confirm it before the parcel leaves?',
-    timestamp: '2026-05-14T14:20:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-022',
-    from: 'Print House <service@printhouse.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Maintenance window Thursday evening',
-    body: 'The press service visit is scheduled for Thursday from 6:00 to 7:00 PM. The machine will be unavailable during the visit.',
-    timestamp: '2026-05-14T14:40:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-023',
-    from: 'Noor Ellis <noor@paperbirch.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'New product copy for review',
-    body: 'I drafted product copy for the constellation calendar. The copy is in the review folder and follows the same tone as the spring collection.',
-    timestamp: '2026-05-14T15:00:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-024',
-    from: 'Cedar Post <dispatch@cedarpost.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Weekend pickup cutoff',
-    body: 'For delivery before Monday, please submit outgoing parcels by 3:30 PM Friday. Later parcels will leave Tuesday.',
-    timestamp: '2026-05-14T15:20:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-025',
-    from: 'Moss & Clay <orders@mossclay.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Invoice for display stands',
-    body: 'Attached is the invoice for six walnut display stands. Please confirm the delivery window is still next week.',
-    timestamp: '2026-05-14T15:40:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-026',
-    from: 'Community Calendar <events@townhall.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Listing approved: Paper Birch open studio',
-    body: 'Your open studio listing has been approved for the June community calendar. You can update the description until May 28.',
-    timestamp: '2026-05-14T16:00:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-027',
-    from: 'Lena Park <lena@customer.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Gift message typo',
-    body: 'The gift message on my confirmation has “congratulation” instead of “congratulations.” Could that be fixed before it is printed?',
-    timestamp: '2026-05-14T16:20:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-028',
-    from: 'Supply Ledger <reports@supplyledger.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Weekly stock summary',
-    body: 'Weekly stock summary: envelopes are at 62%, sticker sheets are at 41%, and navy ribbon is at 18%. No purchase order is required this week.',
-    timestamp: '2026-05-14T16:40:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-029',
-    from: 'Jon Bell <jon@littlegrove.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Re: June lettering workshop availability',
-    body: 'Great, please reserve two seats if there is room. I can complete payment once you send the registration link.',
-    timestamp: '2026-05-14T17:00:00Z',
-    in_reply_to: 'e-005'
-  },
-  {
-    id: 'e-030',
-    from: 'Nina Cho <nina@paperbirch.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Social post scheduled',
-    body: 'The behind-the-scenes reel is scheduled for Friday morning. The caption points viewers to the workshop page.',
-    timestamp: '2026-05-14T17:20:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-031',
-    from: 'Dylan Price <dylan@customer.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Escalation: order PB-4758 has not arrived',
-    body: 'My order is now two weeks late and the prior reply did not resolve it. I want a manager to review the case before any response promises a refund or replacement.',
-    timestamp: '2026-05-14T17:40:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-032',
-    from: 'Parcel Lane <tracking@parcellane.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'PB-4758 delayed in transit',
-    body: 'Parcel PB-4758 is delayed at the regional depot because of severe weather. The next scan is expected within 24 hours.',
-    timestamp: '2026-05-14T18:00:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-033',
-    from: 'Maya Reed <maya@oakandink.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Maker guide proof attached',
-    body: 'The maker guide proof is attached. Please check the photo credit and the link before we send it to print.',
-    timestamp: '2026-05-14T18:20:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-034',
-    from: 'Avery Lin <avery@paperbirch.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Thursday packing update',
-    body: 'Thirty-one parcels were packed today. The only open item is a missing address confirmation for PB-4830.',
-    timestamp: '2026-05-14T18:40:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-035',
-    from: 'Wren Studio <hello@wrenstudio.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Display card draft',
-    body: 'Here is the draft display card for your review. We kept the layout clean and left room for a QR code.',
-    timestamp: '2026-05-14T19:00:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-036',
-    from: 'Northwind Paper <orders@northwind.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Ribbon color substitution',
-    body: 'The navy ribbon is temporarily unavailable. We can send charcoal, moss, or wait for the next navy delivery on June 3.',
-    timestamp: '2026-05-14T19:20:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-037',
-    from: 'Workshop Desk <workshops@paperbirch.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Waitlist update',
-    body: 'Two seats opened in the June lettering workshop. The first two people on the waitlist have been notified.',
-    timestamp: '2026-05-14T19:40:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-038',
-    from: 'Cedar Post <dispatch@cedarpost.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'New customs form requirement',
-    body: 'International parcels now require a phone number for the recipient on the customs form. This applies to all labels created after Monday.',
-    timestamp: '2026-05-14T20:00:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-039',
-    from: 'Morgan Lee <morgan@customer.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Request to remove my account information',
-    body: 'Please delete my account information and order history where permitted. I would like a human to confirm what data can be removed and what records must be retained.',
-    timestamp: '2026-05-14T20:20:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-040',
-    from: 'Studio Notes <updates@paperbirch.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Friday studio update',
-    body: 'The new stamp set was tested and approved for production. The storage cabinet has been reorganized and labeled.',
-    timestamp: '2026-05-15T14:00:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-041',
-    from: 'Rhea Moss <rhea@copperlane.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Autumn shelf selection',
-    body: 'We would like to begin with twelve journals, eight card sets, and six calendars. Please share the current wholesale order form.',
-    timestamp: '2026-05-15T14:20:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-042',
-    from: 'Noor Ellis <noor@paperbirch.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Calendar copy approved',
-    body: 'The constellation calendar copy has been approved with one small punctuation edit. It is ready for the next proof.',
-    timestamp: '2026-05-15T14:40:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-043',
-    from: 'Print House <service@printhouse.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Press maintenance complete',
-    body: 'The scheduled press maintenance is complete. The feeder alignment was adjusted and the machine passed the test run.',
-    timestamp: '2026-05-15T15:00:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-044',
-    from: 'Lena Park <lena@customer.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Re: Gift message typo',
-    body: 'Thank you for checking. The corrected wording should be “Congratulations on your new home.”',
-    timestamp: '2026-05-15T15:20:00Z',
-    in_reply_to: 'e-027'
-  },
-  {
-    id: 'e-045',
-    from: 'Samir Cole <samir@customer.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Dispute about damaged order PB-4688',
-    body: 'The parcel arrived with water damage, and I disagree with the credit offered in the last message. Please have someone review the photos and the full order record before replying.',
-    timestamp: '2026-05-15T15:40:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-046',
-    from: 'Supply Ledger <reports@supplyledger.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Low stock alert: navy ribbon',
-    body: 'Navy ribbon is below the preferred reorder point. Estimated remaining supply is nine business days at current use.',
-    timestamp: '2026-05-15T16:00:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-047',
-    from: 'Moss & Clay <orders@mossclay.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Display stand delivery confirmed',
-    body: 'The display stands will arrive Tuesday between 10:00 AM and noon. Please keep the loading area clear for the driver.',
-    timestamp: '2026-05-15T16:20:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-048',
-    from: 'Community Calendar <events@townhall.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Open studio event reminder',
-    body: 'Your open studio event is listed for June 8. Please send any final accessibility notes by the end of the month.',
-    timestamp: '2026-05-15T16:40:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-049',
-    from: 'Harper Vale <harper@customer.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Re: Address correction for PB-4830',
-    body: 'Thanks for the quick check. The corrected apartment number is 4B.',
-    timestamp: '2026-05-15T17:00:00Z',
-    in_reply_to: 'e-021'
-  },
-  {
-    id: 'e-050',
-    from: 'Avery Lin <avery@paperbirch.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Follow-up on trimmer incident',
-    body: 'The paper trimmer was inspected after the injury report. The guard is loose, so the station should remain closed until a replacement part is installed.',
-    timestamp: '2026-05-15T17:20:00Z',
-    in_reply_to: 'e-016'
-  },
-  {
-    id: 'e-051',
-    from: 'Nina Cho <nina@paperbirch.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Saturday market post published',
-    body: 'The Saturday market post is live on the usual channels. It includes the booth number and workshop sign-up link.',
-    timestamp: '2026-05-15T17:40:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-052',
-    from: 'Parcel Lane <tracking@parcellane.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'PB-4758 departed regional depot',
-    body: 'Parcel PB-4758 departed the regional depot and is expected to arrive tomorrow. Tracking will update after the next scan.',
-    timestamp: '2026-05-15T18:00:00Z',
-    in_reply_to: 'e-032'
-  },
-  {
-    id: 'e-053',
-    from: 'Mira Patel <mira@paperbirch.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Restock notice confirmation',
-    body: 'Could you confirm whether my email was added to the moon journal restock notice list?',
-    timestamp: '2026-05-15T18:20:00Z',
-    in_reply_to: 'e-019'
-  },
-  {
-    id: 'e-054',
-    from: 'Wren Studio <hello@wrenstudio.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'QR code destination',
-    body: 'What URL should the display card QR code use? We can update the final proof as soon as we have it.',
-    timestamp: '2026-05-15T18:40:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-055',
-    from: 'Northwind Paper <orders@northwind.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'June delivery schedule',
-    body: 'The next paper delivery is scheduled for June 3. Orders confirmed before May 24 will be included in that shipment.',
-    timestamp: '2026-05-15T19:00:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-056',
-    from: 'Studio Notes <updates@paperbirch.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Weekend preparation update',
-    body: 'Market supplies are packed, the price cards are printed, and the cash float has been counted. The only pending item is the weather check.',
-    timestamp: '2026-05-15T19:20:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-057',
-    from: 'Tess Romero <tess@daylily.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Custom note card proof',
-    body: 'The wording looks good. Could you send a proof with a slightly warmer ink color before printing the full set?',
-    timestamp: '2026-05-15T19:40:00Z',
-    in_reply_to: 'e-008'
-  },
-  {
-    id: 'e-058',
-    from: 'Workshop Desk <workshops@paperbirch.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Supply list for June lettering workshop',
-    body: 'The supply list is complete: brush pens, practice sheets, envelopes, and name tags. The room booking is confirmed from 1:00 to 4:00 PM.',
-    timestamp: '2026-05-15T20:00:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-059',
-    from: 'Cedar Post <dispatch@cedarpost.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'International parcel guidance',
-    body: 'Please use the updated customs form for all international parcels. The new form has a separate field for handmade goods.',
-    timestamp: '2026-05-15T20:20:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-060',
-    from: 'Dylan Price <dylan@customer.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Re: Escalation: order PB-4758 has not arrived',
-    body: 'I need a written answer today. Do not issue a refund, replacement, or store credit until a manager reviews the shipment history.',
-    timestamp: '2026-05-15T20:40:00Z',
-    in_reply_to: 'e-031'
-  },
-  {
-    id: 'e-061',
-    from: 'Noor Ellis <noor@paperbirch.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Summer postcard proof approved',
-    body: 'The summer postcard proof is approved. The final files are in the production folder with the bleed marks included.',
-    timestamp: '2026-05-16T14:00:00Z',
-    in_reply_to: 'e-004'
-  },
-  {
-    id: 'e-062',
-    from: 'Moss & Clay <orders@mossclay.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Walnut stand care sheet',
-    body: 'Attached is the care sheet for the walnut display stands. A soft dry cloth is recommended for routine cleaning.',
-    timestamp: '2026-05-16T14:20:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-063',
-    from: 'Rhea Moss <rhea@copperlane.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Wholesale order form received',
-    body: 'We received the wholesale order form. We will return the completed version after our team meeting next week.',
-    timestamp: '2026-05-16T14:40:00Z',
-    in_reply_to: 'e-041'
-  },
-  {
-    id: 'e-064',
-    from: 'Print House <service@printhouse.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Replacement trimmer guard estimate',
-    body: 'We can supply a replacement guard for the paper trimmer. Please have the studio lead review the estimate before authorizing the repair.',
-    timestamp: '2026-05-16T15:00:00Z',
-    in_reply_to: 'e-050'
-  },
-  {
-    id: 'e-065',
-    from: 'Maya Reed <maya@oakandink.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Maker guide sent to print',
-    body: 'The maker guide was sent to print this morning. Thank you for confirming the credit line and product link.',
-    timestamp: '2026-05-16T15:20:00Z',
-    in_reply_to: 'e-033'
-  },
-  {
-    id: 'e-066',
-    from: 'Supply Ledger <reports@supplyledger.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Monthly supply snapshot',
-    body: 'Monthly supply snapshot: paper stock is stable, envelopes are above target, and navy ribbon remains the only item below the reorder point.',
-    timestamp: '2026-05-16T15:40:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-067',
-    from: 'Lena Park <lena@customer.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Thank you for the gift note update',
-    body: 'The corrected gift note is perfect. Thank you for taking care of it before the order went out.',
-    timestamp: '2026-05-16T16:00:00Z',
-    in_reply_to: 'e-044'
-  },
-  {
-    id: 'e-068',
-    from: 'Community Calendar <events@townhall.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Accessibility note requested',
-    body: 'Could you confirm whether the June open studio has step-free access and a quiet hour? We will add the details to the public listing.',
-    timestamp: '2026-05-16T16:20:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-069',
-    from: 'Harper Vale <harper@customer.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Address confirmed for PB-4830',
-    body: 'The corrected address is right. Thank you for confirming it before dispatch.',
-    timestamp: '2026-05-16T16:40:00Z',
-    in_reply_to: 'e-049'
-  },
-  {
-    id: 'e-070',
-    from: 'Studio Notes <updates@paperbirch.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Monday studio plan',
-    body: "Monday's plan includes the calendar print run, order packing, and a short inventory check after lunch.",
-    timestamp: '2026-05-16T17:00:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-071',
-    from: 'Tess Romero <tess@daylily.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Warm ink proof approved',
-    body: 'The warmer ink color is lovely. Please use that version for the full note card set.',
-    timestamp: '2026-05-16T17:20:00Z',
-    in_reply_to: 'e-057'
-  },
-  {
-    id: 'e-072',
-    from: 'Parcel Lane <tracking@parcellane.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'PB-4758 delivered',
-    body: 'Parcel PB-4758 was delivered at 1:08 PM. The delivery photo is available from the tracking page.',
-    timestamp: '2026-05-16T17:40:00Z',
-    in_reply_to: 'e-052'
-  },
-  {
-    id: 'e-073',
-    from: 'Jon Bell <jon@littlegrove.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Workshop registration complete',
-    body: 'We completed registration for the June lettering workshop. Looking forward to attending.',
-    timestamp: '2026-05-16T18:00:00Z',
-    in_reply_to: 'e-029'
-  },
-  {
-    id: 'e-074',
-    from: 'Wren Studio <hello@wrenstudio.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Display card final proof',
-    body: 'The final display card proof is ready with the workshop page QR code. Please reply with approval or any last edits.',
-    timestamp: '2026-05-16T18:20:00Z',
-    in_reply_to: 'e-054'
-  },
-  {
-    id: 'e-075',
-    from: 'Morgan Lee <morgan@customer.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Re: Request to remove my account information',
-    body: 'Please do not close this request automatically. I need confirmation from someone who can explain the retention requirements.',
-    timestamp: '2026-05-16T18:40:00Z',
-    in_reply_to: 'e-039'
-  },
-  {
-    id: 'e-076',
-    from: 'Nina Cho <nina@paperbirch.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Market recap',
-    body: 'The market was steady and the postcard collection was the most requested item. Three customers asked about the next lettering workshop.',
-    timestamp: '2026-05-16T19:00:00Z',
-    in_reply_to: null
-  },
-  {
-    id: 'e-077',
-    from: 'Northwind Paper <orders@northwind.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Charcoal ribbon sample available',
-    body: 'A charcoal ribbon sample is ready for collection if you would like to compare it with the current navy stock.',
-    timestamp: '2026-05-16T19:20:00Z',
-    in_reply_to: 'e-036'
-  },
-  {
-    id: 'e-078',
-    from: 'Mira Patel <mira@paperbirch.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Moon journal restock purchase',
-    body: 'I received the restock notice and placed my order. Thank you for keeping me in the loop.',
-    timestamp: '2026-05-16T19:40:00Z',
-    in_reply_to: 'e-053'
-  },
-  {
-    id: 'e-079',
-    from: 'Samir Cole <samir@customer.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'Photos for PB-4688 attached',
-    body: 'I attached the photos of the damaged parcel. Please make sure the reviewer sees the outer packaging and the damaged card set.',
-    timestamp: '2026-05-16T20:00:00Z',
-    in_reply_to: 'e-045'
-  },
-  {
-    id: 'e-080',
-    from: 'Studio Notes <updates@paperbirch.example>',
-    to: ['inbox@paperbirch.example'],
-    cc: [],
-    subject: 'End-of-week studio summary',
-    body: 'The week closed with all routine orders packed, the new postcard files approved, and the workshop roster confirmed. The trimmer station remains closed for repair.',
-    timestamp: '2026-05-16T20:20:00Z',
-    in_reply_to: null
+    "id": "e-001",
+    "from": "Mira Patel <mira@paperbirch.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Question about the moon journal restock",
+    "body": "Hi team, do you know when the moon journal will be back in stock? I would love to order two for a book club gift.",
+    "timestamp": "2026-05-13T14:30:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-002",
+    "from": "Studio Notes <updates@paperbirch.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Tuesday studio update",
+    "body": "The morning print run is complete. Forty-eight card sets were packed, three orders were collected, and no issues were reported.",
+    "timestamp": "2026-05-13T15:00:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-003",
+    "from": "Northwind Paper <orders@northwind.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Cotton paper availability",
+    "body": "Your requested 300 gsm cotton paper is available. The current lead time is seven business days; reply if you would like us to reserve the next pallet.",
+    "timestamp": "2026-05-13T15:12:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-004",
+    "from": "Proof Desk <proofs@paperbirch.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "New proof ready: summer postcard set",
+    "body": "A proof is ready for the summer postcard set. Please review the attached PDF and leave any notes by Friday.",
+    "timestamp": "2026-05-13T16:00:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-005",
+    "from": "Jon Bell <jon@littlegrove.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "June lettering workshop availability",
+    "body": "Hello, are there still places in the June lettering workshop? I am hoping to bring one friend.",
+    "timestamp": "2026-05-13T16:42:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-006",
+    "from": "Postal Cloud <notices@postalcloud.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Shipment delivered: PB-4821",
+    "body": "Shipment PB-4821 was delivered at 10:14 AM and left at the front desk. No signature was required.",
+    "timestamp": "2026-05-13T17:05:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-007",
+    "from": "Avery Lin <avery@paperbirch.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Friday market checklist",
+    "body": "I added the tent weights, receipt rolls, and display clips to Friday's market checklist. Let me know if anything else should be packed.",
+    "timestamp": "2026-05-13T17:20:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-008",
+    "from": "Tess Romero <tess@daylily.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Custom note card wording",
+    "body": "Could the note cards say “Thank you for being here” in the serif style from your spring collection? Please confirm the character limit.",
+    "timestamp": "2026-05-13T17:45:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-009",
+    "from": "Calendar <calendar@paperbirch.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Reminder: inventory count tomorrow",
+    "body": "Reminder: the monthly inventory count begins tomorrow at 9:00 AM. The stockroom will be unavailable for walk-in pickup until noon.",
+    "timestamp": "2026-05-13T18:00:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-010",
+    "from": "Nina Cho <nina@paperbirch.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Newsletter draft ready",
+    "body": "The June newsletter draft is ready in the shared folder. It includes the workshop calendar and the new postcard collection.",
+    "timestamp": "2026-05-13T18:15:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-011",
+    "from": "Rhea Moss <rhea@copperlane.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Wholesale catalog request",
+    "body": "Hi, could you send your current wholesale catalog and minimum order details? We are choosing a few local makers for our autumn shelf.",
+    "timestamp": "2026-05-13T18:30:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-012",
+    "from": "Parcel Lane <tracking@parcellane.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Pickup delayed by one day",
+    "body": "Your regular pickup has moved from Thursday to Friday because of a regional routing delay. No action is required.",
+    "timestamp": "2026-05-13T18:45:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-013",
+    "from": "Maya Reed <maya@oakandink.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Press kit photo request",
+    "body": "Would it be possible to use two product photos in our local maker guide? We will credit Paper Birch and link to the shop.",
+    "timestamp": "2026-05-13T19:00:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-014",
+    "from": "Elena Ford <elena@customer.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Duplicate card charge on order PB-4793",
+    "body": "My card appears to have been charged twice for order PB-4793. Please do not make any changes until someone checks the payment record and confirms the refund process.",
+    "timestamp": "2026-05-13T19:15:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-015",
+    "from": "Workshop Desk <workshops@paperbirch.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Saturday class roster",
+    "body": "The Saturday class roster now has twelve confirmed seats and four waitlist requests. Supplies are already allocated for twelve.",
+    "timestamp": "2026-05-13T19:30:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-016",
+    "from": "Avery Lin <avery@paperbirch.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Safety incident at the print studio",
+    "body": "A guest cut their hand on a paper trimmer during cleanup. First aid was provided and the trimmer has been removed from use pending inspection. Please route this to the studio lead.",
+    "timestamp": "2026-05-13T19:45:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-017",
+    "from": "Wren Studio <hello@wrenstudio.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Collaboration note",
+    "body": "Thanks for the introduction call. We would be happy to trade a small display card for a mention in the summer guide.",
+    "timestamp": "2026-05-13T20:00:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-018",
+    "from": "Northwind Paper <orders@northwind.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Sample swatch book shipped",
+    "body": "The sample swatch book shipped today. Tracking is attached, and delivery is expected Monday.",
+    "timestamp": "2026-05-13T20:15:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-019",
+    "from": "Mira Patel <mira@paperbirch.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Re: Question about the moon journal restock",
+    "body": "Thank you. Please add me to the restock notice list if that is available.",
+    "timestamp": "2026-05-13T20:30:00Z",
+    "in_reply_to": "e-001"
+  },
+  {
+    "id": "e-020",
+    "from": "Studio Notes <updates@paperbirch.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Wednesday studio update",
+    "body": "The foil test passed, and the new packaging labels arrived. One shelf label needs a replacement because the color is faded.",
+    "timestamp": "2026-05-14T14:00:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-021",
+    "from": "Harper Vale <harper@customer.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Address correction for PB-4830",
+    "body": "I entered the wrong apartment number for PB-4830. The correct address is in my order note; can you confirm it before the parcel leaves?",
+    "timestamp": "2026-05-14T14:20:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-022",
+    "from": "Print House <service@printhouse.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Maintenance window Thursday evening",
+    "body": "The press service visit is scheduled for Thursday from 6:00 to 7:00 PM. The machine will be unavailable during the visit.",
+    "timestamp": "2026-05-14T14:40:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-023",
+    "from": "Noor Ellis <noor@paperbirch.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "New product copy for review",
+    "body": "I drafted product copy for the constellation calendar. The copy is in the review folder and follows the same tone as the spring collection.",
+    "timestamp": "2026-05-14T15:00:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-024",
+    "from": "Cedar Post <dispatch@cedarpost.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Weekend pickup cutoff",
+    "body": "For delivery before Monday, please submit outgoing parcels by 3:30 PM Friday. Later parcels will leave Tuesday.",
+    "timestamp": "2026-05-14T15:20:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-025",
+    "from": "Moss & Clay <orders@mossclay.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Invoice for display stands",
+    "body": "Attached is the invoice for six walnut display stands. Please confirm the delivery window is still next week.",
+    "timestamp": "2026-05-14T15:40:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-026",
+    "from": "Community Calendar <events@townhall.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Listing approved: Paper Birch open studio",
+    "body": "Your open studio listing has been approved for the June community calendar. You can update the description until May 28.",
+    "timestamp": "2026-05-14T16:00:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-027",
+    "from": "Lena Park <lena@customer.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Gift message typo",
+    "body": "The gift message on my confirmation has “congratulation” instead of “congratulations.” Could that be fixed before it is printed?",
+    "timestamp": "2026-05-14T16:20:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-028",
+    "from": "Supply Ledger <reports@supplyledger.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Weekly stock summary",
+    "body": "Weekly stock summary: envelopes are at 62%, sticker sheets are at 41%, and navy ribbon is at 18%. No purchase order is required this week.",
+    "timestamp": "2026-05-14T16:40:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-029",
+    "from": "Jon Bell <jon@littlegrove.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Re: June lettering workshop availability",
+    "body": "Great, please reserve two seats if there is room. I can complete payment once you send the registration link.",
+    "timestamp": "2026-05-14T17:00:00Z",
+    "in_reply_to": "e-005"
+  },
+  {
+    "id": "e-030",
+    "from": "Nina Cho <nina@paperbirch.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Social post scheduled",
+    "body": "The behind-the-scenes reel is scheduled for Friday morning. The caption points viewers to the workshop page.",
+    "timestamp": "2026-05-14T17:20:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-031",
+    "from": "Dylan Price <dylan@customer.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Escalation: order PB-4758 has not arrived",
+    "body": "My order is now two weeks late and the prior reply did not resolve it. I want a manager to review the case before any response promises a refund or replacement.",
+    "timestamp": "2026-05-14T17:40:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-032",
+    "from": "Parcel Lane <tracking@parcellane.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "PB-4758 delayed in transit",
+    "body": "Parcel PB-4758 is delayed at the regional depot because of severe weather. The next scan is expected within 24 hours.",
+    "timestamp": "2026-05-14T18:00:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-033",
+    "from": "Maya Reed <maya@oakandink.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Maker guide proof attached",
+    "body": "The maker guide proof is attached. Please check the photo credit and the link before we send it to print.",
+    "timestamp": "2026-05-14T18:20:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-034",
+    "from": "Avery Lin <avery@paperbirch.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Thursday packing update",
+    "body": "Thirty-one parcels were packed today. The only open item is a missing address confirmation for PB-4830.",
+    "timestamp": "2026-05-14T18:40:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-035",
+    "from": "Wren Studio <hello@wrenstudio.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Display card draft",
+    "body": "Here is the draft display card for your review. We kept the layout clean and left room for a QR code.",
+    "timestamp": "2026-05-14T19:00:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-036",
+    "from": "Northwind Paper <orders@northwind.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Ribbon color substitution",
+    "body": "The navy ribbon is temporarily unavailable. We can send charcoal, moss, or wait for the next navy delivery on June 3.",
+    "timestamp": "2026-05-14T19:20:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-037",
+    "from": "Workshop Desk <workshops@paperbirch.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Waitlist update",
+    "body": "Two seats opened in the June lettering workshop. The first two people on the waitlist have been notified.",
+    "timestamp": "2026-05-14T19:40:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-038",
+    "from": "Cedar Post <dispatch@cedarpost.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "New customs form requirement",
+    "body": "International parcels now require a phone number for the recipient on the customs form. This applies to all labels created after Monday.",
+    "timestamp": "2026-05-14T20:00:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-039",
+    "from": "Morgan Lee <morgan@customer.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Request to remove my account information",
+    "body": "Please delete my account information and order history where permitted. I would like a human to confirm what data can be removed and what records must be retained.",
+    "timestamp": "2026-05-14T20:20:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-040",
+    "from": "Studio Notes <updates@paperbirch.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Friday studio update",
+    "body": "The new stamp set was tested and approved for production. The storage cabinet has been reorganized and labeled.",
+    "timestamp": "2026-05-15T14:00:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-041",
+    "from": "Rhea Moss <rhea@copperlane.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Autumn shelf selection",
+    "body": "We would like to begin with twelve journals, eight card sets, and six calendars. Please share the current wholesale order form.",
+    "timestamp": "2026-05-15T14:20:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-042",
+    "from": "Noor Ellis <noor@paperbirch.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Calendar copy approved",
+    "body": "The constellation calendar copy has been approved with one small punctuation edit. It is ready for the next proof.",
+    "timestamp": "2026-05-15T14:40:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-043",
+    "from": "Print House <service@printhouse.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Press maintenance complete",
+    "body": "The scheduled press maintenance is complete. The feeder alignment was adjusted and the machine passed the test run.",
+    "timestamp": "2026-05-15T15:00:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-044",
+    "from": "Lena Park <lena@customer.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Re: Gift message typo",
+    "body": "Thank you for checking. The corrected wording should be “Congratulations on your new home.”",
+    "timestamp": "2026-05-15T15:20:00Z",
+    "in_reply_to": "e-027"
+  },
+  {
+    "id": "e-045",
+    "from": "Samir Cole <samir@customer.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Dispute about damaged order PB-4688",
+    "body": "The parcel arrived with water damage, and I disagree with the credit offered in the last message. Please have someone review the photos and the full order record before replying.",
+    "timestamp": "2026-05-15T15:40:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-046",
+    "from": "Supply Ledger <reports@supplyledger.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Low stock alert: navy ribbon",
+    "body": "Navy ribbon is below the preferred reorder point. Estimated remaining supply is nine business days at current use.",
+    "timestamp": "2026-05-15T16:00:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-047",
+    "from": "Moss & Clay <orders@mossclay.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Display stand delivery confirmed",
+    "body": "The display stands will arrive Tuesday between 10:00 AM and noon. Please keep the loading area clear for the driver.",
+    "timestamp": "2026-05-15T16:20:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-048",
+    "from": "Community Calendar <events@townhall.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Open studio event reminder",
+    "body": "Your open studio event is listed for June 8. Please send any final accessibility notes by the end of the month.",
+    "timestamp": "2026-05-15T16:40:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-049",
+    "from": "Harper Vale <harper@customer.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Re: Address correction for PB-4830",
+    "body": "Thanks for the quick check. The corrected apartment number is 4B.",
+    "timestamp": "2026-05-15T17:00:00Z",
+    "in_reply_to": "e-021"
+  },
+  {
+    "id": "e-050",
+    "from": "Avery Lin <avery@paperbirch.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Follow-up on trimmer incident",
+    "body": "The paper trimmer was inspected after the injury report. The guard is loose, so the station should remain closed until a replacement part is installed.",
+    "timestamp": "2026-05-15T17:20:00Z",
+    "in_reply_to": "e-016"
+  },
+  {
+    "id": "e-051",
+    "from": "Nina Cho <nina@paperbirch.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Saturday market post published",
+    "body": "The Saturday market post is live on the usual channels. It includes the booth number and workshop sign-up link.",
+    "timestamp": "2026-05-15T17:40:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-052",
+    "from": "Parcel Lane <tracking@parcellane.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "PB-4758 departed regional depot",
+    "body": "Parcel PB-4758 departed the regional depot and is expected to arrive tomorrow. Tracking will update after the next scan.",
+    "timestamp": "2026-05-15T18:00:00Z",
+    "in_reply_to": "e-032"
+  },
+  {
+    "id": "e-053",
+    "from": "Mira Patel <mira@paperbirch.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Restock notice confirmation",
+    "body": "Could you confirm whether my email was added to the moon journal restock notice list?",
+    "timestamp": "2026-05-15T18:20:00Z",
+    "in_reply_to": "e-019"
+  },
+  {
+    "id": "e-054",
+    "from": "Wren Studio <hello@wrenstudio.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "QR code destination",
+    "body": "What URL should the display card QR code use? We can update the final proof as soon as we have it.",
+    "timestamp": "2026-05-15T18:40:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-055",
+    "from": "Northwind Paper <orders@northwind.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "June delivery schedule",
+    "body": "The next paper delivery is scheduled for June 3. Orders confirmed before May 24 will be included in that shipment.",
+    "timestamp": "2026-05-15T19:00:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-056",
+    "from": "Studio Notes <updates@paperbirch.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Weekend preparation update",
+    "body": "Market supplies are packed, the price cards are printed, and the cash float has been counted. The only pending item is the weather check.",
+    "timestamp": "2026-05-15T19:20:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-057",
+    "from": "Tess Romero <tess@daylily.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Custom note card proof",
+    "body": "The wording looks good. Could you send a proof with a slightly warmer ink color before printing the full set?",
+    "timestamp": "2026-05-15T19:40:00Z",
+    "in_reply_to": "e-008"
+  },
+  {
+    "id": "e-058",
+    "from": "Workshop Desk <workshops@paperbirch.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Supply list for June lettering workshop",
+    "body": "The supply list is complete: brush pens, practice sheets, envelopes, and name tags. The room booking is confirmed from 1:00 to 4:00 PM.",
+    "timestamp": "2026-05-15T20:00:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-059",
+    "from": "Cedar Post <dispatch@cedarpost.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "International parcel guidance",
+    "body": "Please use the updated customs form for all international parcels. The new form has a separate field for handmade goods.",
+    "timestamp": "2026-05-15T20:20:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-060",
+    "from": "Dylan Price <dylan@customer.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Re: Escalation: order PB-4758 has not arrived",
+    "body": "I need a written answer today. Do not issue a refund, replacement, or store credit until a manager reviews the shipment history.",
+    "timestamp": "2026-05-15T20:40:00Z",
+    "in_reply_to": "e-031"
+  },
+  {
+    "id": "e-061",
+    "from": "Noor Ellis <noor@paperbirch.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Summer postcard proof approved",
+    "body": "The summer postcard proof is approved. The final files are in the production folder with the bleed marks included.",
+    "timestamp": "2026-05-16T14:00:00Z",
+    "in_reply_to": "e-004"
+  },
+  {
+    "id": "e-062",
+    "from": "Moss & Clay <orders@mossclay.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Walnut stand care sheet",
+    "body": "Attached is the care sheet for the walnut display stands. A soft dry cloth is recommended for routine cleaning.",
+    "timestamp": "2026-05-16T14:20:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-063",
+    "from": "Rhea Moss <rhea@copperlane.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Wholesale order form received",
+    "body": "We received the wholesale order form. We will return the completed version after our team meeting next week.",
+    "timestamp": "2026-05-16T14:40:00Z",
+    "in_reply_to": "e-041"
+  },
+  {
+    "id": "e-064",
+    "from": "Print House <service@printhouse.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Replacement trimmer guard estimate",
+    "body": "We can supply a replacement guard for the paper trimmer. Please have the studio lead review the estimate before authorizing the repair.",
+    "timestamp": "2026-05-16T15:00:00Z",
+    "in_reply_to": "e-050"
+  },
+  {
+    "id": "e-065",
+    "from": "Maya Reed <maya@oakandink.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Maker guide sent to print",
+    "body": "The maker guide was sent to print this morning. Thank you for confirming the credit line and product link.",
+    "timestamp": "2026-05-16T15:20:00Z",
+    "in_reply_to": "e-033"
+  },
+  {
+    "id": "e-066",
+    "from": "Supply Ledger <reports@supplyledger.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Monthly supply snapshot",
+    "body": "Monthly supply snapshot: paper stock is stable, envelopes are above target, and navy ribbon remains the only item below the reorder point.",
+    "timestamp": "2026-05-16T15:40:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-067",
+    "from": "Lena Park <lena@customer.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Thank you for the gift note update",
+    "body": "The corrected gift note is perfect. Thank you for taking care of it before the order went out.",
+    "timestamp": "2026-05-16T16:00:00Z",
+    "in_reply_to": "e-044"
+  },
+  {
+    "id": "e-068",
+    "from": "Community Calendar <events@townhall.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Accessibility note requested",
+    "body": "Could you confirm whether the June open studio has step-free access and a quiet hour? We will add the details to the public listing.",
+    "timestamp": "2026-05-16T16:20:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-069",
+    "from": "Harper Vale <harper@customer.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Address confirmed for PB-4830",
+    "body": "The corrected address is right. Thank you for confirming it before dispatch.",
+    "timestamp": "2026-05-16T16:40:00Z",
+    "in_reply_to": "e-049"
+  },
+  {
+    "id": "e-070",
+    "from": "Studio Notes <updates@paperbirch.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Monday studio plan",
+    "body": "Monday's plan includes the calendar print run, order packing, and a short inventory check after lunch.",
+    "timestamp": "2026-05-16T17:00:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-071",
+    "from": "Tess Romero <tess@daylily.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Warm ink proof approved",
+    "body": "The warmer ink color is lovely. Please use that version for the full note card set.",
+    "timestamp": "2026-05-16T17:20:00Z",
+    "in_reply_to": "e-057"
+  },
+  {
+    "id": "e-072",
+    "from": "Parcel Lane <tracking@parcellane.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "PB-4758 delivered",
+    "body": "Parcel PB-4758 was delivered at 1:08 PM. The delivery photo is available from the tracking page.",
+    "timestamp": "2026-05-16T17:40:00Z",
+    "in_reply_to": "e-052"
+  },
+  {
+    "id": "e-073",
+    "from": "Jon Bell <jon@littlegrove.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Workshop registration complete",
+    "body": "We completed registration for the June lettering workshop. Looking forward to attending.",
+    "timestamp": "2026-05-16T18:00:00Z",
+    "in_reply_to": "e-029"
+  },
+  {
+    "id": "e-074",
+    "from": "Wren Studio <hello@wrenstudio.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Display card final proof",
+    "body": "The final display card proof is ready with the workshop page QR code. Please reply with approval or any last edits.",
+    "timestamp": "2026-05-16T18:20:00Z",
+    "in_reply_to": "e-054"
+  },
+  {
+    "id": "e-075",
+    "from": "Morgan Lee <morgan@customer.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Re: Request to remove my account information",
+    "body": "Please do not close this request automatically. I need confirmation from someone who can explain the retention requirements.",
+    "timestamp": "2026-05-16T18:40:00Z",
+    "in_reply_to": "e-039"
+  },
+  {
+    "id": "e-076",
+    "from": "Nina Cho <nina@paperbirch.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Market recap",
+    "body": "The market was steady and the postcard collection was the most requested item. Three customers asked about the next lettering workshop.",
+    "timestamp": "2026-05-16T19:00:00Z",
+    "in_reply_to": null
+  },
+  {
+    "id": "e-077",
+    "from": "Northwind Paper <orders@northwind.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Charcoal ribbon sample available",
+    "body": "A charcoal ribbon sample is ready for collection if you would like to compare it with the current navy stock.",
+    "timestamp": "2026-05-16T19:20:00Z",
+    "in_reply_to": "e-036"
+  },
+  {
+    "id": "e-078",
+    "from": "Mira Patel <mira@paperbirch.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Moon journal restock purchase",
+    "body": "I received the restock notice and placed my order. Thank you for keeping me in the loop.",
+    "timestamp": "2026-05-16T19:40:00Z",
+    "in_reply_to": "e-053"
+  },
+  {
+    "id": "e-079",
+    "from": "Samir Cole <samir@customer.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "Photos for PB-4688 attached",
+    "body": "I attached the photos of the damaged parcel. Please make sure the reviewer sees the outer packaging and the damaged card set.",
+    "timestamp": "2026-05-16T20:00:00Z",
+    "in_reply_to": "e-045"
+  },
+  {
+    "id": "e-080",
+    "from": "Studio Notes <updates@paperbirch.example>",
+    "to": [
+      "inbox@paperbirch.example"
+    ],
+    "cc": [],
+    "subject": "End-of-week studio summary",
+    "body": "The week closed with all routine orders packed, the new postcard files approved, and the workshop roster confirmed. The trimmer station remains closed for repair.",
+    "timestamp": "2026-05-16T20:20:00Z",
+    "in_reply_to": null
   }
 ] as const;

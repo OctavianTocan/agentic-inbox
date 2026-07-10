@@ -21,6 +21,7 @@
       "!apps/web/src/design-system",
       "!apps/web/src/ai-ui",
       "!packages/api-core/openapi.json",
+      "!apps/api/src/Modules/Emails/emails.dataset.ts",
       "!required-workflows.json"
     ]
   },
@@ -110,6 +111,9 @@
         "**/*.generated.ts",
         "apps/api/src/Modules/Emails/emails.dataset.ts"
       ],
+      "formatter": {
+        "enabled": false
+      },
       "linter": {
         "rules": {
           "style": {
