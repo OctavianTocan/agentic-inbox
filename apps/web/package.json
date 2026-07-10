@@ -12,6 +12,7 @@
     "lint": "biome check ."
   },
   "dependencies": {
+    "@apps/api": "workspace:*",
     "@base-ui/react": "catalog:",
     "@fontsource-variable/dm-sans": "^5.2.8",
     "@fontsource-variable/fira-code": "^5.2.7",
