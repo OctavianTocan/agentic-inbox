@@ -6,7 +6,8 @@ export const triageDecisionPrompt = (
   email: Email
 ): string => `Classify this shared-inbox email.
 
-Return the structured decision only. Categories: request, activity_update, document_review, supplier_update, schedule, status_update, financial, dispute, safety, escalation, other.
+Return the structured decision only. Do not include an emailId field.
+Categories: request, activity_update, document_review, supplier_update, schedule, status_update, financial, dispute, safety, escalation, other.
 Sensitive categories are financial, dispute, safety, escalation.
 Keep whyPreview at 65 characters or less.
 

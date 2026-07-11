@@ -7,12 +7,18 @@ export type ResolveApprovalInput = {
   readonly editedBody?: string;
 };
 
+/** Run options: `fresh` clears prior triage; `signal` cancels the SSE stream (pause). */
+export type RunTriageOptions = {
+  readonly fresh?: boolean;
+  readonly signal?: AbortSignal;
+};
+
 /** Thin data seam between the inbox UI and the backend API. */
 export type InboxClient = {
   /** Fetch the current inbox snapshot: summary plus joined items. */
   getInbox: () => Promise<Inbox>;
   /** Run the batch triage agent and stream progress events. Pass fresh to clear prior triage state first. */
-  runTriage: (fresh?: boolean) => AsyncIterable<TriageRunEvent>;
+  runTriage: (options?: RunTriageOptions) => AsyncIterable<TriageRunEvent>;
   /** Approve or deny a pending sensitive action and return the updated inbox. */
   resolveApproval: (
     approvalId: string,
@@ -196,7 +202,8 @@ function triageEventFromSseBlock(block: string): TriageRunEvent | null {
 
 /** Streams the triage SSE response as typed UI events. */
 async function* triageEventsFromResponse(
-  response: Response
+  response: Response,
+  signal?: AbortSignal
 ): AsyncIterable<TriageRunEvent> {
   if (response.body === null) {
     throw new Error('Triage run response had no body');
@@ -208,6 +215,9 @@ async function* triageEventsFromResponse(
 
   try {
     while (true) {
+      if (signal?.aborted) {
+        return;
+      }
       const { done, value } = await reader.read();
       if (done) {
         break;
@@ -228,7 +238,11 @@ async function* triageEventsFromResponse(
       }
     }
     buffer += decoder.decode();
-    if (buffer.trim().length > 0) {
+    if (buffer.trim().length === 0) {
+      if (signal?.aborted) {
+        return;
+      }
+    } else {
       const event = triageEventFromSseBlock(buffer);
       if (event !== null) {
         if (event.type === 'done') {
@@ -239,26 +253,56 @@ async function* triageEventsFromResponse(
         yield event;
       }
     }
+    if (signal?.aborted) {
+      return;
+    }
     if (!sawDone) {
       throw new Error('Triage run ended before completion');
     }
-  } finally {
-    if (sawDone) {
-      await reader.cancel();
+  } catch (error) {
+    if (signal?.aborted || isAbortError(error)) {
+      return;
     }
-    reader.releaseLock();
+    throw error;
+  } finally {
+    try {
+      if (sawDone) {
+        await reader.cancel();
+      } else if (signal?.aborted) {
+        await reader.cancel('paused');
+      }
+    } catch {
+      // Reader may already be closed after an abort.
+    }
+    try {
+      reader.releaseLock();
+    } catch {
+      // Already released.
+    }
   }
 }
 
+/** True when a fetch/stream rejection was caused by AbortController. */
+function isAbortError(error: unknown): boolean {
+  return (
+    (error instanceof DOMException && error.name === 'AbortError') ||
+    (error instanceof Error && error.name === 'AbortError')
+  );
+}
+
 /** Opens the backend triage stream. */
-async function* runTriage(fresh = false): AsyncIterable<TriageRunEvent> {
+async function* runTriage(
+  options: RunTriageOptions = {}
+): AsyncIterable<TriageRunEvent> {
+  const { fresh = false, signal } = options;
   const response = await fetch(`${API_PREFIX}/triage/run`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ fresh })
+    body: JSON.stringify({ fresh }),
+    ...(signal === undefined ? {} : { signal })
   });
   await assertOk(response);
-  yield* triageEventsFromResponse(response);
+  yield* triageEventsFromResponse(response, signal);
 }
 
 /** HTTP client backed by the Effect API. */

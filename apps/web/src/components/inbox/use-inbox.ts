@@ -5,7 +5,8 @@ import { toast } from 'sonner';
 import {
   type InboxClient,
   inboxClient,
-  type ResolveApprovalInput
+  type ResolveApprovalInput,
+  type RunTriageOptions
 } from '@/lib/inbox/client';
 import type { Inbox, TriageRunEvent } from '@/lib/inbox/types';
 
@@ -14,7 +15,9 @@ export type UseInbox = {
   readonly inbox: Inbox | null;
   readonly isLoading: boolean;
   readonly refresh: () => Promise<void>;
-  readonly runTriage: (fresh?: boolean) => AsyncIterable<TriageRunEvent>;
+  readonly runTriage: (
+    options?: RunTriageOptions
+  ) => AsyncIterable<TriageRunEvent>;
   readonly approve: (approvalId: string, editedBody?: string) => Promise<void>;
   readonly deny: (approvalId: string) => Promise<void>;
   readonly undo: (ledgerEntryId: string, emailId: string) => Promise<void>;
@@ -142,7 +145,7 @@ export function useInbox(client: InboxClient = inboxClient): UseInbox {
   );
 
   const runTriage = useCallback(
-    (fresh?: boolean) => client.runTriage(fresh),
+    (options?: RunTriageOptions) => client.runTriage(options),
     [client]
   );
 

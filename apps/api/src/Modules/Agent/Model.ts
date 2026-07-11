@@ -46,16 +46,29 @@ const modelRoleLayer = <Self, Id extends string>(
   Layer.effect(tag, LanguageModel.LanguageModel).pipe(Layer.provide(source));
 
 /**
- * Structured-output model for `generateObject` triage. `strictJsonSchema` is on
- * because gpt-5.5 drops required fields without it (SPIKE-NOTES finding 1); this
- * config must NOT drive the tool path (SPIKE-NOTES finding 3).
+ * Structured-output model for `generateObject` triage.
+ *
+ * OpenRouter structured outputs use `response_format.type = json_schema` with
+ * `strict: true` (https://openrouter.ai/docs/guides/features/structured-outputs).
+ * `@effect/ai-openrouter` emits that when `strictJsonSchema` is true.
+ *
+ * Do **not** set `provider.require_parameters` here: many free models advertise
+ * `structured_outputs` but not `response_format`, and requiring the latter
+ * returns 404 "No endpoints found that can handle the requested parameters".
+ *
+ * `response-healing` repairs truncated / markdown-wrapped JSON before decode.
+ * This config must NOT drive the tool path (SPIKE-NOTES finding 3).
  */
 export const TriageModelLive: Layer.Layer<TriageModel, Config.ConfigError> =
   modelRoleLayer(
     TriageModel,
     OpenRouterLanguageModel.layer({
       model: MODEL,
-      config: { reasoning: { effort: 'low' }, strictJsonSchema: true }
+      config: {
+        reasoning: { effort: 'low' },
+        strictJsonSchema: true,
+        plugins: [{ id: 'response-healing' }]
+      }
     }).pipe(Layer.provide(IdGeneratorLive), Layer.provide(ClientLive))
   );
 

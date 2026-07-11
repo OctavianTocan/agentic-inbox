@@ -34,6 +34,35 @@ import { DecisionsRepo, DecisionsRepoLive } from './Repo';
 type EmailStatusType = Schema.Schema.Type<typeof EmailStatus>;
 type TriageEvent = Schema.Schema.Type<typeof TriageStreamEvent>;
 
+/**
+ * How many emails to triage in parallel.
+ *
+ * Defaults to 1 so free OpenRouter keys (≈20 RPM) are not blasted by the old
+ * 24-wide fan-out. Override with `TRIAGE_CONCURRENCY` when you have headroom.
+ */
+const TRIAGE_CONCURRENCY = Math.max(1, positiveIntEnv('TRIAGE_CONCURRENCY', 1));
+
+/**
+ * Pause between emails during a batch run (ms).
+ *
+ * Skipped under Vitest so unit tests stay fast. Override with `TRIAGE_GAP_MS`
+ * (use `0` to disable). Default 2s keeps bursts under free-tier RPM.
+ */
+const TRIAGE_GAP_MS =
+  process.env.VITEST !== undefined && process.env.VITEST.length > 0
+    ? positiveIntEnv('TRIAGE_GAP_MS', 0)
+    : positiveIntEnv('TRIAGE_GAP_MS', 2_000);
+
+/** Parses a non-negative integer env var, falling back when unset or invalid. */
+function positiveIntEnv(name: string, fallback: number): number {
+  const raw = process.env[name]?.trim();
+  if (raw === undefined || raw.length === 0) {
+    return fallback;
+  }
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : fallback;
+}
+
 /** Orchestrates batch triage and joined inbox reads. */
 export class TriageService extends Context.Service<
   TriageService,
@@ -79,43 +108,50 @@ export const TriageServiceBody: Layer.Layer<
 
       return Stream.fromIterable(emailsToProcess).pipe(
         Stream.mapEffect(
-          (email) =>
-            agent.triageEmail(email).pipe(
-              Effect.flatMap(({ decision, actions: acted, approval }) =>
-                decisions.upsert(decision).pipe(
-                  Effect.map((storedDecision): TriageEvent[] => [
-                    new TriageStarted({
-                      type: 'started',
-                      emailId: email.id
-                    }),
-                    new TriageDecided({
-                      type: 'decision',
-                      decision: storedDecision
-                    }),
-                    ...acted,
-                    ...(approval === null
-                      ? []
-                      : [
-                          new TriageApprovalPending({
-                            type: 'approval_pending',
-                            approval
-                          })
-                        ])
-                  ])
+          (email, index) =>
+            (index === 0 || TRIAGE_GAP_MS === 0
+              ? Effect.void
+              : Effect.sleep(`${TRIAGE_GAP_MS} millis`)
+            ).pipe(
+              Effect.flatMap(() =>
+                agent.triageEmail(email).pipe(
+                  Effect.flatMap(({ decision, actions: acted, approval }) =>
+                    decisions.upsert(decision).pipe(
+                      Effect.map((storedDecision): TriageEvent[] => [
+                        new TriageStarted({
+                          type: 'started',
+                          emailId: email.id
+                        }),
+                        new TriageDecided({
+                          type: 'decision',
+                          decision: storedDecision
+                        }),
+                        ...acted,
+                        ...(approval === null
+                          ? []
+                          : [
+                              new TriageApprovalPending({
+                                type: 'approval_pending',
+                                approval
+                              })
+                            ])
+                      ])
+                    )
+                  ),
+                  Effect.catch((error) =>
+                    Effect.succeed<TriageEvent[]>([
+                      new TriageStarted({ type: 'started', emailId: email.id }),
+                      new TriageFailed({
+                        type: 'failed',
+                        emailId: email.id,
+                        reason: errorMessage(error)
+                      })
+                    ])
+                  )
                 )
-              ),
-              Effect.catch((error) =>
-                Effect.succeed<TriageEvent[]>([
-                  new TriageStarted({ type: 'started', emailId: email.id }),
-                  new TriageFailed({
-                    type: 'failed',
-                    emailId: email.id,
-                    reason: errorMessage(error)
-                  })
-                ])
               )
             ),
-          { concurrency: 24, unordered: true }
+          { concurrency: TRIAGE_CONCURRENCY }
         ),
         Stream.flatMap((events) => Stream.fromIterable(events)),
         Stream.concat(

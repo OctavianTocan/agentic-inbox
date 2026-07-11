@@ -18,7 +18,13 @@ import {
   ChatToolResult
 } from '@app/api-core/Modules/Chat/Domain';
 import type { Email } from '@app/api-core/Modules/Emails/Domain';
-import { Decision } from '@app/api-core/Modules/Triage/Domain';
+import {
+  Category,
+  Confidence,
+  Decision,
+  Severity,
+  WhyPreview
+} from '@app/api-core/Modules/Triage/Domain';
 import { TriageActed } from '@app/api-core/Modules/Triage/Events';
 import { type Config, Context, Effect, Layer, Schedule, Schema } from 'effect';
 import { type AiError, LanguageModel, Prompt } from 'effect/unstable/ai';
@@ -48,9 +54,46 @@ import {
 } from './Toolkit';
 
 const MAX_AGENT_TURNS = 6;
-const retrySchedule = Schedule.exponential('250 millis').pipe(Schedule.take(3));
+/** Longer backoff than the old 250ms ramp — free OpenRouter keys reject bursts, and failed retries still count against the daily quota. */
+const retrySchedule = Schedule.exponential('2 seconds').pipe(Schedule.take(2));
 const encodePrompt = Schema.encodeSync(Prompt.Prompt);
 const decodePrompt = Schema.decodeUnknownSync(Prompt.Prompt);
+
+/**
+ * Structured fields for triage `generateObject`.
+ *
+ * `emailId` is omitted — the caller already knows the email. Other fields are
+ * optional at decode time because free OpenRouter endpoints often advertise
+ * `structured_outputs` yet still omit keys; {@link normalizeDecision} fills
+ * defaults and stamps `email.id`. Required-looking descriptions still guide
+ * the JSON schema / prompt when the provider honors `response_format`.
+ */
+const DecisionFromModel = Schema.Struct({
+  category: Schema.optionalKey(Category),
+  severity: Schema.optionalKey(Severity),
+  confidence: Schema.optionalKey(Confidence),
+  whyPreview: Schema.optionalKey(WhyPreview),
+  rationale: Schema.optionalKey(
+    Schema.String.annotate({
+      description:
+        'Full plain-language explanation of the decision, rendered as markdown.'
+    })
+  ),
+  keyFacts: Schema.optionalKey(
+    Schema.Array(Schema.String).annotate({
+      description:
+        'Extracted salient facts the reviewer should see (amounts, dates, parties).'
+    })
+  ),
+  isSensitive: Schema.optionalKey(
+    Schema.Boolean.annotate({
+      description:
+        'Whether the policy classifies this email as sensitive (never auto-actioned).'
+    })
+  )
+});
+
+type DecisionFromModel = Schema.Schema.Type<typeof DecisionFromModel>;
 
 type PendingApproval = {
   readonly approvalId: string;
@@ -121,12 +164,12 @@ export const AgentServiceBody: Layer.Layer<
       function* (email: Email) {
         const response = yield* LanguageModel.generateObject({
           objectName: 'AgenticInboxDecision',
-          schema: Decision,
+          schema: DecisionFromModel,
           prompt: [
             {
               role: 'system',
               content:
-                'You classify shared-inbox emails. Return only the requested structured object.'
+                'You classify shared-inbox emails. Return only the requested structured object. Do not include emailId; the system already knows which email this is.'
             },
             { role: 'user', content: triageDecisionPrompt(email) }
           ]
@@ -224,6 +267,8 @@ export const AgentServiceBody: Layer.Layer<
       const decision = yield* generateDecision(email).pipe(
         Effect.provideService(LanguageModel.LanguageModel, triageModel)
       );
+
+      // This is for the Tool loop.
       const prompt = Prompt.make([
         { role: 'system', content: TRIAGE_SYSTEM_PROMPT },
         { role: 'user', content: triageActionPrompt(email, decision) }
@@ -238,6 +283,7 @@ export const AgentServiceBody: Layer.Layer<
           ? null
           : approvalRequestFromPrompt(email.id, result.prompt, result.pending);
 
+      // TODO: Weird code. Redundant checks.
       if (approval !== null) {
         yield* conversations.save({
           status: 'awaiting_approval',
@@ -381,22 +427,31 @@ export const AgentServiceLive = Layer.provide(AgentServiceBody, [
 ]);
 
 /** Clamps model-only constraints and applies deterministic sensitivity policy. */
-const normalizeDecision = (email: Email, decision: Decision): Decision => {
-  const confidence = Math.max(0, Math.min(1, decision.confidence));
-  const whyPreview =
-    decision.whyPreview.length > 65
-      ? decision.whyPreview.slice(0, 65)
-      : decision.whyPreview;
+const normalizeDecision = (
+  email: Email,
+  decision: DecisionFromModel
+): Decision => {
+  const category = decision.category ?? 'other';
+  const severity = decision.severity ?? 'medium';
+  const confidence = Math.max(0, Math.min(1, decision.confidence ?? 0.5));
+  const rawWhy =
+    decision.whyPreview?.trim() ||
+    'Incomplete model output; needs a quick human look.';
+  const whyPreview = rawWhy.length > 65 ? rawWhy.slice(0, 65) : rawWhy;
+  const rationale =
+    decision.rationale?.trim() ||
+    'The model returned incomplete structured output; defaults were applied so triage can continue.';
+  const keyFacts = decision.keyFacts ?? [];
   return new Decision({
     emailId: email.id,
-    category: decision.category,
-    severity: decision.severity,
+    category,
+    severity,
     confidence,
     whyPreview,
-    rationale: decision.rationale,
-    keyFacts: decision.keyFacts,
+    rationale,
+    keyFacts,
     isSensitive: isSensitive({
-      category: decision.category,
+      category,
       confidence,
       emailBody: `${email.subject}\n${email.body}`
     })
