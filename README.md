@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./.github/media/agentic-inbox-banner-dark.svg">
+    <img src="./.github/media/agentic-inbox-banner-light.svg" alt="Agentic Inbox — human-guided AI email triage" width="100%">
+  </picture>
+</p>
+
 # Agentic Inbox
 
 Agentic Inbox is a local shared-inbox workspace. An AI agent sorts a fixed set
