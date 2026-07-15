@@ -31,3 +31,19 @@ _Avoid_: approval id (as a second public identity), conversation id (as the resu
 **Retriage** (and batch `fresh`):
 A demo wipe of triage state so the inbox can be walked again — not a linked historical fork.
 _Avoid_: parent-linked retriage runs, treating wipe as production reprocess
+
+**Policy reason**:
+A stable code explaining why policy forced human review (`sensitive_category`, `low_confidence`, `dollar_signal`, `legal_keyword`, `safety_keyword`, `escalation_keyword`). Stored on `policy_applied` trace events; never as raw body snippets.
+_Avoid_: collapsing reasons into a bare `isSensitive` boolean for traces/evals
+
+**Trace event**:
+One redacted stage row in a run’s product timeline (`run_started`, `classified`, `policy_applied`, `proposed`, `approval_resolved`, `executed`, `run_completed` / `run_failed`). Not a LangSmith/OTel span and not a checkpoint blob.
+_Avoid_: storing prompts, drafts, or raw email bodies in trace payloads
+
+**Experiment**:
+A frozen eval run: commit + graph/prompt/policy/model versions + dataset id, with recorded metrics and per-case results (CLI-first).
+_Avoid_: treating live inbox triage as an experiment; treating LangSmith traces as the eval record
+
+**Source**:
+Where an email came from for Must-have: `seed` (fixture inbox) or `synthetic` (scenario-generated). Paste/Gmail deferred.
+_Avoid_: Rivet mailbox actor as the Must-have source
