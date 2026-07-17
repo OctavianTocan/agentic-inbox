@@ -50,14 +50,17 @@ export type Decision = {
   readonly rationale: string;
   readonly keyFacts: readonly string[];
   readonly isSensitive: boolean;
+  readonly policyReasons: readonly string[];
 };
 
 /** An append-only record of one executed action, shown in the agent trace. */
 export type LedgerEntry = {
   readonly id: string;
+  readonly runId: string | null;
   readonly actor: Actor;
   readonly emailId: string;
   readonly action: ActionKind;
+  readonly actionRevision: number;
   readonly summary: string;
   readonly payload: Readonly<Record<string, unknown>>;
   readonly undoneBy: string | null;
@@ -70,6 +73,7 @@ export type ApprovalRequest = {
   readonly id: string;
   readonly emailId: string;
   readonly action: ActionKind;
+  readonly actionRevision: number;
   readonly summary: string;
   readonly payload: Readonly<Record<string, unknown>>;
   readonly createdAt: string;

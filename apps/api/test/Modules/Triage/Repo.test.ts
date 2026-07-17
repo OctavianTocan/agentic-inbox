@@ -2,7 +2,10 @@ import { Decision } from '@app/api-core/Modules/Triage/Domain';
 import { type Context, Effect } from 'effect';
 import { describe, expect, it } from 'vitest';
 import type { EmailIdType } from '@/Lib/Ids';
-import { DecisionsRepo, DecisionsRepoBody } from '@/Modules/Triage/Repo';
+import {
+  DecisionsRepo,
+  DecisionsRepoBody
+} from '@/Modules/Triage/Decisions/Repo';
 import { runDb } from '../../support/Database';
 
 type Decisions = Context.Service.Shape<typeof DecisionsRepo>;
@@ -29,6 +32,7 @@ const makeDecision = (overrides?: Partial<Decision>): Decision =>
     rationale: 'A worker reported a near-miss with the tower crane.',
     keyFacts: ['near-miss', 'tower crane', 'no injuries'],
     isSensitive: true,
+    policyReasons: [],
     ...overrides
   });
 

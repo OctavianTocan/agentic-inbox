@@ -14,7 +14,10 @@ import { ToolModel, TriageModel } from '@/Modules/Agent/Model';
 import { AgentServiceBody } from '@/Modules/Agent/Service';
 import { ConversationsRepoBody } from '@/Modules/Chat/Repo';
 import { EmailsService } from '@/Modules/Emails/Service';
-import { DecisionsRepo, DecisionsRepoBody } from '@/Modules/Triage/Repo';
+import {
+  DecisionsRepo,
+  DecisionsRepoBody
+} from '@/Modules/Triage/Decisions/Repo';
 import { TriageService, TriageServiceBody } from '@/Modules/Triage/Service';
 import { runDb } from '../../support/Database';
 import {
@@ -35,7 +38,8 @@ const routineDecisionJson = JSON.stringify({
   whyPreview: 'Activity update needs no reply',
   rationale: 'An activity update is informational; archive it.',
   keyFacts: ['activity update'],
-  isSensitive: false
+  isSensitive: false,
+  policyReasons: []
 });
 
 const sensitiveDecisionJson = JSON.stringify({
@@ -46,7 +50,8 @@ const sensitiveDecisionJson = JSON.stringify({
   whyPreview: 'Safety incident needs a human',
   rationale: 'A safety incident carries legal exposure; defer to the human.',
   keyFacts: ['safety'],
-  isSensitive: true
+  isSensitive: true,
+  policyReasons: []
 });
 
 /** A routine email whose body carries no dollar, legal, safety, or escalation signal. */
@@ -201,7 +206,8 @@ describe('TriageService.run SSE ordering (real agent, fake models)', () => {
             whyPreview: 'already decided',
             rationale: 'Seeded so the run skips it.',
             keyFacts: [],
-            isSensitive: false
+            isSensitive: false,
+            policyReasons: []
           })
         );
         const stream = yield* triage.run();
@@ -287,7 +293,8 @@ describe('TriageService.run SSE ordering (real agent, fake models)', () => {
             whyPreview: 'stale decision',
             rationale: 'A non-fresh run would skip this email.',
             keyFacts: [],
-            isSensitive: false
+            isSensitive: false,
+            policyReasons: []
           })
         );
         const stream = yield* triage.run(true);

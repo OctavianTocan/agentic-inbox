@@ -454,7 +454,8 @@ const normalizeDecision = (
       category,
       confidence,
       emailBody: `${email.subject}\n${email.body}`
-    })
+    }),
+    policyReasons: []
   });
 };
 
@@ -537,6 +538,7 @@ const approvalRequestFromPrompt = (
     action: actionFromToolName(toolCall?.name),
     summary: summaryFromToolCall(toolCall?.name, payload),
     payload,
+    actionRevision: 1,
     createdAt: new Date().toISOString()
   });
 };

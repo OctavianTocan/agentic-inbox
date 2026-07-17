@@ -10,22 +10,25 @@ import type {
   ActionKindType,
   ActorType,
   EmailIdType,
-  LedgerEntryIdType
+  LedgerEntryIdType,
+  RunIdType
 } from '@/Lib/Ids';
 
 const decodeActor = Schema.decodeUnknownSync(Actor);
 const decodeAction = Schema.decodeUnknownSync(ActionKind);
 
 const ledgerColumns =
-  'id, actor, email_id, action, summary, payload, undone_by, undoes, created_at';
+  'id, run_id, actor, email_id, action, action_revision, summary, payload, undone_by, undoes, created_at';
 
 /** Maps a SQL row to a `LedgerEntry`. */
 const decodeEntry = (row: Record<string, unknown>): LedgerEntry =>
   new LedgerEntry({
     id: row.id as LedgerEntryIdType,
+    runId: row.run_id as RunIdType | null,
     actor: decodeActor(row.actor),
     emailId: row.email_id as EmailIdType,
     action: decodeAction(row.action),
+    actionRevision: row.action_revision as number,
     summary: row.summary as string,
     payload: row.payload as Record<string, unknown>,
     undoneBy: (row.undone_by as LedgerEntryIdType | null) ?? null,
@@ -36,14 +39,28 @@ const decodeEntry = (row: Record<string, unknown>): LedgerEntry =>
 /** Fields an actor supplies when appending an action; id, timestamp, and undo pointers are set by the repo. */
 export type AppendLedgerEntry = {
   readonly actor: ActorType;
+  readonly runId?: RunIdType | undefined;
   readonly emailId: EmailIdType;
   readonly action: ActionKindType;
+  readonly actionRevision?: number | undefined;
   readonly summary: string;
   readonly payload: Record<string, unknown>;
   readonly undoes?: LedgerEntryIdType | undefined;
 };
 
 /** Append-only store of executed actions with undo linkage; powers the trace and undo. */
+//<skill-gen>
+// ---
+// name: domain-backend
+// description: "Use when designing Effect HTTP API surfaces, module boundaries (Domain.ts / Errors.ts / Api.ts / Service.ts / Repo.ts), sub-modules, error shapes, Postgres persistence, or reviewing backend package layout in apps/api or packages/api-core. NOT for visual UI — use domain-design / domain-frontend."
+// ---
+//
+// ## Append-only ledger exception
+//
+// `$$file` is not an upsert aggregate. Effects are immutable rows: use `append`
+// (+ get/list/delete for wipe). Idempotency is `(run_id, action, action_revision)`
+// at the DB layer, not an in-place update of a prior row.
+//</skill-gen>
 export class ActionLedgerRepo extends Context.Service<
   ActionLedgerRepo,
   {
@@ -80,13 +97,15 @@ export const ActionLedgerRepoBody: Layer.Layer<
       const ts = DateTime.formatIso(now);
       const id = crypto.randomUUID() as LedgerEntryIdType;
       const undoesId = entry.undoes ?? null;
+      const runId = entry.runId ?? (null as RunIdType | null);
+      const actionRevision = entry.actionRevision ?? 1;
 
       // An undo entry inserts itself and stamps the original's undone_by
       // pointer in one transaction, so the two rows always agree.
       yield* Effect.gen(function* () {
         yield* sql`
-          INSERT INTO action_ledger (id, actor, email_id, action, summary, payload, undoes, created_at)
-          VALUES (${id}, ${entry.actor}, ${entry.emailId}, ${entry.action}, ${entry.summary}, ${JSON.stringify(entry.payload)}::jsonb, ${undoesId}, ${ts})
+          INSERT INTO action_ledger (id, run_id, actor, email_id, action, action_revision, summary, payload, undoes, created_at)
+          VALUES (${id}, ${runId}, ${entry.actor}, ${entry.emailId}, ${entry.action}, ${actionRevision}, ${entry.summary}, ${JSON.stringify(entry.payload)}::jsonb, ${undoesId}, ${ts})
         `;
         if (undoesId !== null) {
           yield* sql`UPDATE action_ledger SET undone_by = ${id} WHERE id = ${undoesId}`;

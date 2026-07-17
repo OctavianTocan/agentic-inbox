@@ -6,7 +6,10 @@ import {
 import type { Decision } from '@app/api-core/Modules/Triage/Domain';
 import { Context, Effect, Layer } from 'effect';
 import type { ActorType, EmailIdType, LedgerEntryIdType } from '@/Lib/Ids';
-import { DecisionsRepo, DecisionsRepoLive } from '@/Modules/Triage/Repo';
+import {
+  DecisionsRepo,
+  DecisionsRepoLive
+} from '@/Modules/Triage/Decisions/Repo';
 import { ActionLedgerRepo, ActionLedgerRepoLive } from './Repo';
 
 /** Arguments for simulating a reply to an email. */

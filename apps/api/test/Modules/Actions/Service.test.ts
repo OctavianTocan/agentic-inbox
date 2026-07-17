@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { EmailIdType, LedgerEntryIdType } from '@/Lib/Ids';
 import { ActionLedgerRepo, ActionLedgerRepoBody } from '@/Modules/Actions/Repo';
 import { ActionService, ActionServiceBody } from '@/Modules/Actions/Service';
-import { DecisionsRepoBody } from '@/Modules/Triage/Repo';
+import { DecisionsRepoBody } from '@/Modules/Triage/Decisions/Repo';
 import { runDb } from '../../support/Database';
 
 type Actions = Context.Service.Shape<typeof ActionService>;

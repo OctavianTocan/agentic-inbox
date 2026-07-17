@@ -29,7 +29,7 @@ import {
   ConversationsRepoLive
 } from '@/Modules/Chat/Repo';
 import { EmailsService, EmailsServiceLive } from '@/Modules/Emails/Service';
-import { DecisionsRepo, DecisionsRepoLive } from './Repo';
+import { DecisionsRepo, DecisionsRepoLive } from './Decisions/Repo';
 
 type EmailStatusType = Schema.Schema.Type<typeof EmailStatus>;
 type TriageEvent = Schema.Schema.Type<typeof TriageStreamEvent>;
@@ -279,6 +279,7 @@ const findApprovalForEmail = (
       action: actionFromToolName(toolCall?.name),
       summary: summaryFromToolCall(toolCall?.name, payload),
       payload,
+      actionRevision: 1,
       createdAt: conversation.createdAt
     });
   }

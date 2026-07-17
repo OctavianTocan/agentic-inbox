@@ -1,3 +1,30 @@
+//<skill-gen>
+// ---
+// name: domain-backend
+// description: "Use when designing Effect HTTP API surfaces, module boundaries (Domain.ts / Errors.ts / Api.ts / Service.ts / Repo.ts), sub-modules, error shapes, Postgres persistence, or reviewing backend package layout in apps/api or packages/api-core. NOT for visual UI — use domain-design / domain-frontend."
+// ---
+//
+// ## Repo surface (mutable aggregates)
+//
+// Persist whole entities. Services mutate in memory, then call `upsert` / `create`.
+// Do **not** add per-field writers (`updateStatus`, `setPending`, `complete`, …).
+//
+// Canonical shape (see `$$file`):
+//
+// - `upsert` / `create`
+// - `get` / `list*`
+// - `deleteByEmail` / `deleteAll` (demo wipe)
+//
+// Append-only stores (action ledger) use `append` instead of upsert.
+// Atomic claim/CAS methods are OK when concurrency requires them — not as a substitute for upsert.
+//
+// ## Sub-modules
+//
+// When a module needs a second Domain/Repo aggregate, nest it:
+// `Modules/Triage/Decisions/`, `Modules/Triage/Runs/` — mirror in `packages/api-core`
+// (`Triage/Runs/Domain.ts`). Prefer that over a second flat `Repo.ts` at the parent.
+//</skill-gen>
+
 import {
   Category,
   Confidence,
@@ -25,7 +52,8 @@ const decodeDecision = (row: Record<string, unknown>): Decision =>
     whyPreview: decodeWhyPreview(row.why_preview),
     rationale: row.rationale as string,
     keyFacts: row.key_facts as ReadonlyArray<string>,
-    isSensitive: row.is_sensitive as boolean
+    isSensitive: row.is_sensitive as boolean,
+    policyReasons: row.policy_reasons as ReadonlyArray<string>
   });
 
 /** Persistence for per-email triage decisions, keyed by email id. */
@@ -58,11 +86,11 @@ export const DecisionsRepoBody: Layer.Layer<
 
       yield* sql`
         INSERT INTO decisions
-          (email_id, category, severity, confidence, why_preview, rationale, key_facts, is_sensitive, created_at)
+          (email_id, category, severity, confidence, why_preview, rationale, key_facts, is_sensitive, created_at, policy_reasons)
         VALUES (
           ${decision.emailId}, ${decision.category}, ${decision.severity}, ${decision.confidence},
           ${decision.whyPreview}, ${decision.rationale}, ${JSON.stringify(decision.keyFacts)}::jsonb,
-          ${decision.isSensitive}, ${ts}
+          ${decision.isSensitive}, ${ts}, ${JSON.stringify(decision.policyReasons)}::jsonb
         )
         ON CONFLICT (email_id) DO UPDATE SET
           category = EXCLUDED.category,
@@ -71,11 +99,12 @@ export const DecisionsRepoBody: Layer.Layer<
           why_preview = EXCLUDED.why_preview,
           rationale = EXCLUDED.rationale,
           key_facts = EXCLUDED.key_facts,
-          is_sensitive = EXCLUDED.is_sensitive
+          is_sensitive = EXCLUDED.is_sensitive,
+          policy_reasons = EXCLUDED.policy_reasons
       `.pipe(sql.withTransaction, Effect.orDie);
 
       const rows = yield* sql`
-        SELECT email_id, category, severity, confidence, why_preview, rationale, key_facts, is_sensitive
+        SELECT email_id, category, severity, confidence, why_preview, rationale, key_facts, is_sensitive, policy_reasons
         FROM decisions WHERE email_id = ${decision.emailId}
       `.pipe(Effect.orDie);
       return decodeDecision(rows[0] as Record<string, unknown>);
@@ -85,7 +114,7 @@ export const DecisionsRepoBody: Layer.Layer<
       emailId: EmailIdType
     ) {
       const rows = yield* sql`
-        SELECT email_id, category, severity, confidence, why_preview, rationale, key_facts, is_sensitive
+        SELECT email_id, category, severity, confidence, why_preview, rationale, key_facts, is_sensitive, policy_reasons
         FROM decisions WHERE email_id = ${emailId}
       `.pipe(Effect.orDie);
       return rows[0]
@@ -95,7 +124,7 @@ export const DecisionsRepoBody: Layer.Layer<
 
     const list = Effect.fn('DecisionsRepo.list')(function* () {
       const rows = yield* sql`
-        SELECT email_id, category, severity, confidence, why_preview, rationale, key_facts, is_sensitive
+        SELECT email_id, category, severity, confidence, why_preview, rationale, key_facts, is_sensitive, policy_reasons
         FROM decisions ORDER BY created_at ASC
       `.pipe(Effect.orDie);
       return rows.map((row) => decodeDecision(row as Record<string, unknown>));

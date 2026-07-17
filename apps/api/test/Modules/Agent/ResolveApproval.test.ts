@@ -14,7 +14,7 @@ import { ToolModel, TriageModel } from '@/Modules/Agent/Model';
 import { AgentService, AgentServiceBody } from '@/Modules/Agent/Service';
 import { ConversationsRepoBody } from '@/Modules/Chat/Repo';
 import { EmailsService } from '@/Modules/Emails/Service';
-import { DecisionsRepoBody } from '@/Modules/Triage/Repo';
+import { DecisionsRepoBody } from '@/Modules/Triage/Decisions/Repo';
 import { runDb } from '../../support/Database';
 import {
   type GenerateTextScript,
@@ -46,7 +46,8 @@ const sensitiveDecisionJson = JSON.stringify({
   whyPreview: 'Safety incident with legal exposure',
   rationale: 'A safety incident can create legal exposure; defer to the human.',
   keyFacts: ['injury', 'east wall'],
-  isSensitive: true
+  isSensitive: true,
+  policyReasons: []
 });
 
 const EmailsLayer = Layer.succeed(EmailsService, {

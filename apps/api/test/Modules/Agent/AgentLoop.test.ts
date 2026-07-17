@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { ActionLedgerRepoBody } from '@/Modules/Actions/Repo';
 import { ActionService, ActionServiceBody } from '@/Modules/Actions/Service';
 import { makeTriageHandlers, makeTriageToolkit } from '@/Modules/Agent/Toolkit';
-import { DecisionsRepoBody } from '@/Modules/Triage/Repo';
+import { DecisionsRepoBody } from '@/Modules/Triage/Decisions/Repo';
 import { runDb } from '../../support/Database';
 import {
   hasApprovalResponse,
@@ -27,7 +27,8 @@ const routineDecisionJson = JSON.stringify({
   whyPreview: 'Customer request needs a confirmation',
   rationale: 'Sender asks for a routine clarification before ordering.',
   keyFacts: ['Order PB-001'],
-  isSensitive: false
+  isSensitive: false,
+  policyReasons: []
 });
 
 describe('triage decision via generateObject (fake model)', () => {

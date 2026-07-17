@@ -220,7 +220,8 @@ export const makeTriageHandlers = (
           whyPreview: params.whyPreview,
           rationale: params.rationale,
           keyFacts: params.keyFacts,
-          isSensitive: params.isSensitive
+          isSensitive: params.isSensitive,
+          policyReasons: []
         })
         .pipe(Effect.as({ recorded: true })),
     send_reply: (params) =>

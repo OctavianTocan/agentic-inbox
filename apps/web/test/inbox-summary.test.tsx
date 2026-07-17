@@ -24,7 +24,8 @@ const triagedItem: InboxItem = {
     whyPreview: 'Routine customer request',
     rationale: 'Standard customer request.',
     keyFacts: [],
-    isSensitive: false
+    isSensitive: false,
+    policyReasons: []
   },
   pendingApproval: null,
   actions: []

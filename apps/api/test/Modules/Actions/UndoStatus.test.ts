@@ -8,7 +8,10 @@ import { ActionService, ActionServiceBody } from '@/Modules/Actions/Service';
 import { AgentService } from '@/Modules/Agent/Service';
 import { ConversationsRepoBody } from '@/Modules/Chat/Repo';
 import { EmailsService } from '@/Modules/Emails/Service';
-import { DecisionsRepo, DecisionsRepoBody } from '@/Modules/Triage/Repo';
+import {
+  DecisionsRepo,
+  DecisionsRepoBody
+} from '@/Modules/Triage/Decisions/Repo';
 import { TriageService, TriageServiceBody } from '@/Modules/Triage/Service';
 import { runDb } from '../../support/Database';
 
@@ -22,7 +25,8 @@ const routineDecision = new Decision({
   whyPreview: 'Customer request needs confirmation',
   rationale: 'Sender asks for a routine clarification.',
   keyFacts: ['detail'],
-  isSensitive: false
+  isSensitive: false,
+  policyReasons: []
 });
 
 const EMAIL = new EmailSchema({

@@ -16,7 +16,10 @@ import { ActionService, ActionServiceBody } from '@/Modules/Actions/Service';
 import { AgentService } from '@/Modules/Agent/Service';
 import { ConversationsRepo, ConversationsRepoBody } from '@/Modules/Chat/Repo';
 import { EmailsService } from '@/Modules/Emails/Service';
-import { DecisionsRepo, DecisionsRepoBody } from '@/Modules/Triage/Repo';
+import {
+  DecisionsRepo,
+  DecisionsRepoBody
+} from '@/Modules/Triage/Decisions/Repo';
 import { TriageService, TriageServiceBody } from '@/Modules/Triage/Service';
 import { runDb } from '../../support/Database';
 
@@ -39,7 +42,8 @@ const DECISION = new Decision({
   whyPreview: 'Customer request needs confirmation',
   rationale: 'The sender asks for a routine clarification before packing.',
   keyFacts: ['Order PB-001', 'delivery note', 'before packing'],
-  isSensitive: false
+  isSensitive: false,
+  policyReasons: []
 });
 
 const emptyLedger: ReadonlyArray<LedgerEntry> = [];
@@ -112,7 +116,8 @@ const decisionFor = (emailId: EmailIdType): Decision =>
     whyPreview: 'needs confirmation',
     rationale: 'The sender asks for a design clarification.',
     keyFacts: ['detail'],
-    isSensitive: false
+    isSensitive: false,
+    policyReasons: []
   });
 
 const emailFor = (id: EmailIdType): Email =>
@@ -230,9 +235,11 @@ const ledgerEntryFor = (
 ): LedgerEntry =>
   new LedgerEntry({
     id: `l-${emailId}-${action}`,
+    runId: null,
     actor: 'batch_agent',
     emailId,
     action,
+    actionRevision: 1,
     summary: `${action} for ${emailId}`,
     payload: {},
     undoneBy: null,
@@ -249,7 +256,8 @@ const sensitiveDecisionFor = (emailId: EmailIdType): Decision =>
     whyPreview: 'Billing request carries financial exposure',
     rationale: 'A billing request can cost real money; defer to the human.',
     keyFacts: ['billing request'],
-    isSensitive: true
+    isSensitive: true,
+    policyReasons: []
   });
 
 const inboxWithLedger = (
@@ -454,7 +462,8 @@ describe('TriageService per-email re-triage', () => {
       whyPreview: 're-triaged fresh',
       rationale: 'A second pass reclassified this email.',
       keyFacts: ['re-triaged'],
-      isSensitive: false
+      isSensitive: false,
+      policyReasons: []
     });
     const RetriageEmailsLayer = Layer.succeed(EmailsService, {
       list: () => Effect.succeed([target, other]),

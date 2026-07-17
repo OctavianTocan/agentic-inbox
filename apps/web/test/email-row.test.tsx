@@ -46,12 +46,14 @@ const pendingItem: InboxItem = {
     whyPreview: 'Customer request needing a reply.',
     rationale: 'Routine customer request.',
     keyFacts: [],
-    isSensitive: false
+    isSensitive: false,
+    policyReasons: []
   },
   pendingApproval: {
     id: 'a-042',
     emailId: 'e-042',
     action: 'send_reply',
+    actionRevision: 1,
     summary: 'Reply with the pour date.',
     payload: {},
     createdAt: '2026-05-14T10:05:00Z'
@@ -71,6 +73,7 @@ const pendingWithDraft: InboxItem = {
     id: 'a-042',
     emailId: 'e-042',
     action: 'send_reply',
+    actionRevision: 1,
     summary: 'Reply with the pour date.',
     payload: { body: 'Agent drafted reply about the pour date.' },
     createdAt: '2026-05-14T10:05:00Z'
@@ -79,9 +82,11 @@ const pendingWithDraft: InboxItem = {
 
 const deferral: LedgerEntry = {
   id: 'l-defer-042',
+  runId: null,
   actor: 'batch_agent',
   emailId: 'e-042',
   action: 'flag_for_review',
+  actionRevision: 1,
   summary: 'Billing request needs a human review.',
   payload: {},
   undoneBy: null,
@@ -91,9 +96,11 @@ const deferral: LedgerEntry = {
 
 const activeAction: LedgerEntry = {
   id: 'l-042',
+  runId: null,
   actor: 'batch_agent',
   emailId: 'e-042',
   action: 'send_reply',
+  actionRevision: 1,
   summary: 'Sent the reply.',
   payload: {},
   undoneBy: null,
