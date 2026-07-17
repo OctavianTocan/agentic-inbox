@@ -5,8 +5,8 @@ Rules are split by path in `.opencodereview/rule.json`. OCR resolves the most sp
 | Rule file | Applies to |
 |-----------|------------|
 | [rules/base.md](rules/base.md) | Universal Agentic Inbox conventions |
-| [rules/api-core.md](rules/api-core.md) | `packages/api-core/**` |
-| [rules/api.md](rules/api.md) | `apps/api/**` |
+| [rules/api-core.md](rules/api-core.md) | `packages/api-core/**` (Domain sub-modules OK) |
+| [rules/api.md](rules/api.md) | `apps/api/**` (whole-entity repos; sub-modules) |
 | [rules/web.md](rules/web.md) | `apps/web/**` |
 | [rules/design-system.md](rules/design-system.md) | `apps/web/src/design-system/**` |
 | [rules/data.md](rules/data.md) | `data/**` |

@@ -7,6 +7,10 @@ Handlers, repos, agent loop, and Postgres live here. Contracts come from `@app/a
 ## Do NOT flag
 
 - Module folders under `src/Modules/{Emails,Triage,Actions,Chat,Agent,System}`
+- **Sub-modules** under a module when a second aggregate needs its own `Repo` / domain types (e.g. `Triage/Decisions/`, `Triage/Runs/`) — preferred over packing multiple repos into one flat `Repo.ts`
+- Mutable-aggregate repos shaped as `create`/`upsert` + `get`/`list*` + `delete*` (whole-entity save; services mutate in memory then upsert)
+- Append-only ledgers using `append` + reads (`Actions/Repo.ts`) instead of upsert
+- Narrow atomic intents on a repo when concurrency requires it (e.g. `claimApproval`) — not general field setters
 - `isSensitive` / `SENSITIVE_CATEGORIES` / keyword gates in `Modules/Actions/Policy.ts`
 - Approval pause for `send_reply` on sensitive mail; `flag_for_review` as the no-reply fallback
 - `undoAction` ledger semantics; `TEST_DATABASE_URL` as a distinct `*_test` DB
@@ -25,3 +29,6 @@ Handlers, repos, agent loop, and Postgres live here. Contracts come from `@app/a
 - `decodeUnknownSync` / sync decode in Effect hot paths; missing timeouts on outbound LLM calls
 - New AI provider wiring scattered in feature modules instead of a single agent/client boundary
 - Missing regression tests for triage stream, policy gate, approval resume, or undo behavior changes
+- **Repo methods that patch single fields** on a mutable aggregate (`updateStatus`, `setPending`, `complete`, `updateProposal`, …) — use whole-entity `upsert` instead; keep transitions in the service
+- **Second Domain/Repo aggregate dumped flat** into the parent module when it should be a sub-module folder (`Module/Sub/{Repo.ts,…}` mirroring `api-core` `Module/Sub/Domain.ts`)
+- Exposing CRUD HTTP endpoints for internal persistence rows (e.g. triage runs) instead of domain intents (`run triage`, `resume by runId`)

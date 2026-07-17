@@ -31,6 +31,7 @@ Bun workspace: Next.js frontend (`apps/web`), Effect v4 API (`apps/api`), shared
 - Secrets in source, docs, fixtures, or logs (`OPENROUTER_API_KEY`, DB URLs with credentials in committed files)
 - Missing regression tests for behavioral triage / policy / undo fixes
 - Files mixing Domain schemas, Errors, Service/Layer, and I/O adapters past ~300 lines without a split
+- Per-field mutable-repo writers (`updateStatus`, `setPending`, …) — upsert the whole entity; nest a second aggregate as `Module/Sub/`
 
 ## TypeScript
 

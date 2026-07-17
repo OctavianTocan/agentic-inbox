@@ -8,9 +8,10 @@ Apply **base.md** conventions plus:
 
 - Thin `Api.ts` composing module HttpApi groups under `/api/v1`
 - Module layout `Domain.ts` / `Errors.ts` / `Api.ts` (and `Events.ts` / `Inbox.ts` where present)
+- **Sub-modules** for a second aggregate’s schemas under the parent module (e.g. `Modules/Triage/Runs/Domain.ts`) — keep wire types next to the runtime sub-module in `apps/api`
 - Package name `@app/api-core`; direct file imports (`@app/api-core/Modules/Triage/Domain`)
 
-## DO flag
+## Do flag
 
 - Handler / repo / DB logic landing here instead of `apps/api`
 - Tagged errors defined in `Domain.ts` or `Api.ts` instead of `Errors.ts`
@@ -19,3 +20,4 @@ Apply **base.md** conventions plus:
 - Wire types as plain interfaces when they should be Effect Schema (OpenAPI / decode boundary)
 - Breaking field renames on Decision / Ledger / Approval payloads without updating web clients and tests in the same change
 - Schemas that encode auto-execution of sensitive categories without an approval / `flag_for_review` path
+- Cramming a second aggregate’s Domain into the parent `Domain.ts` when it warrants `Module/Sub/Domain.ts` (mirror the `apps/api` sub-module)
