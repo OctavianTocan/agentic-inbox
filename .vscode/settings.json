@@ -9,7 +9,7 @@
     "editor.defaultFormatter": "biomejs.biome"
   },
   "[typescript]": {
-    "editor.defaultFormatter": "biomejs.biome"
+    "editor.defaultFormatter": "vscode.typescript-language-features"
   },
   "[typescriptreact]": {
     "editor.defaultFormatter": "biomejs.biome"
@@ -55,5 +55,6 @@
     "**/node_modules/**": true,
     "**/vendor/**": true
   },
-  "tailwindCSS.experimental.configFile": "apps/web/src/design-system/styles/globals.css"
+  "tailwindCSS.experimental.configFile": "apps/web/src/design-system/styles/globals.css",
+  "js/ts.tsdk.path": "node_modules/typescript/lib"
 }
