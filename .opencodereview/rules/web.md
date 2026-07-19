@@ -20,6 +20,8 @@ Next.js 16 App Router product UI. Design tokens/primitives: see **design-system.
 - Auto-action UI without an obvious undo / re-triage control
 - Treating mock/static email ids as a live mailbox (pagination, “load more”, sync from provider)
 - Redefining api-core wire types locally instead of importing `@app/api-core/...`
+- Hand-rolled `fetch` + locally mirrored wire types for endpoints already on `@app/api-core` `Api` when an `HttpApiClient` (or shared api-client) exists — prefer `HttpApiClient.make(Api, …)` + `FetchHttpClient`
+- Duplicating SSE/JSON response shapes instead of importing api-core schemas / derived client types (SSE UI narrowing adapters are OK)
 - Icons from `@hugeicons/*` or `lucide-react` outside `@/design-system/components/icons`
 - Client components fetching with secrets; shipping `OPENROUTER_API_KEY` to the browser
 - Components > ~300 lines mixing data fetching, layout, and interaction without extraction

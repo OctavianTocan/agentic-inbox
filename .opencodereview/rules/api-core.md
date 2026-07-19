@@ -19,6 +19,10 @@ Apply **base.md** conventions plus:
 - Duplicate request/response shapes redefined in `apps/web` or `apps/api` instead of importing from api-core
 - New HTTP endpoints added only in `apps/api` without a matching api-core contract
 - Wire types as plain interfaces when they should be Effect Schema (OpenAPI / decode boundary)
+- Path/query `params` using bare `Schema.String` when a branded domain id exists (`EmailId`, `ApprovalId`, `LedgerEntryId`, …)
+- Endpoint `error:` arrays missing tagged errors that handlers actually `Effect.fail`
+- Shared OpenAPI models added/changed without an `identifier` (and useful `description`) annotation — `Schema.Class('Name')` counts
+- Status codes set only in handlers instead of `httpApiStatus` / `HttpApiSchema.status` on error/success schemas
 - Domain fields persisted as SQL NULL using bare `Schema.optional(X)` only — Postgres returns `null`, which fails optional decode; use `Schema.NullOr` or `Schema.optional(Schema.NullOr(...))`
 - Breaking field renames on Decision / Ledger / Approval payloads without updating web clients and tests in the same change
 - Schemas that encode auto-execution of sensitive categories without an approval / `flag_for_review` path

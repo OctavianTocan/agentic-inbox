@@ -17,6 +17,9 @@ Handlers, repos, agent loop, and Postgres live here. Contracts come from `@app/a
 - Approval pause for `send_reply` on sensitive mail; `flag_for_review` as the no-reply fallback
 - `undoAction` ledger semantics; `TEST_DATABASE_URL` as a distinct `*_test` DB
 - OpenRouter via catalog-pinned `@effect/ai-openrouter` until `packages/clients/ai-sdk` exists
+- Demo-mode gate via dynamic `process.env[name]` in `runtime-mode.ts` (Next bundling exception — do not replace with Effect Config)
+- Effect `Config` / `ConfigProvider` / `AppConfig` for `DATABASE_URL`, `OPENROUTER_*`, server port/host, triage knobs
+- Preferring idiomatic patterns from `repos/effect-smol` (read-only) when reviewing Effect HttpApi/Config usage
 
 ## DO flag
 
@@ -26,6 +29,10 @@ Handlers, repos, agent loop, and Postgres live here. Contracts come from `@app/a
 - Mutating ledger / decisions without plain-language rationale the UI can show
 - Undo that cannot reverse an auto-action, or allowing undo-of-undo as a silent no-op without a tagged error
 - HttpApi schemas/errors authored only in `apps/api` instead of `@app/api-core`
+- `Effect.die` / `Effect.orDie` / `catchTag(…, Effect.die)` for errors that are (or should be) declared on the endpoint — use `Effect.fail` so OpenAPI + clients see typed statuses
+- `Schema.decodeUnknownSync` in HTTP handlers for path/body ids (params schemas should already decode)
+- New knobs via raw `process.env` / `Bun.env` when they belong in Effect `AppConfig` (`Config.*` + `withDefault`)
+- `Config.string` + manual `Redacted.make` for secrets when `Config.redacted` fits
 - Using `DATABASE_URL` (or truncating) the primary DB in tests — must use `TEST_DATABASE_URL`
 - Credential leakage in logs, stream events, or chat tool results
 - `decodeUnknownSync` / sync decode in Effect **request/service hot paths** (handlers, agent loops) — exception: repo SQL row decode via `decodeSqlRow` / `Schema.encodeKeys` as above; missing timeouts on outbound LLM calls

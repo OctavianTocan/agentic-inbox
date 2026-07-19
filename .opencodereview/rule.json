@@ -86,6 +86,7 @@
     ".serena/**",
     ".superpowers/**",
     "vendor/**",
+    "repos/**",
     "**/node_modules/**",
     ".codegraph/**",
     "bun.lock",
