@@ -1,4 +1,4 @@
-import { Api } from '@app/api-core';
+import { Api, SchemaErrorHandlerLive } from '@app/api-core';
 import type { LedgerEntry } from '@app/api-core/Modules/Actions/Domain';
 import {
   ActionNotFound,
@@ -76,7 +76,8 @@ const DemoCoreModulesLive = Layer.mergeAll(
 /** Root demo layer: same routes as live, seeded inbox, no external deps. */
 export const DemoAppLive = Layer.mergeAll(
   HttpApiBuilder.layer(Api, { openapiPath: '/openapi.json' }).pipe(
-    Layer.provide(DemoCoreModulesLive)
+    Layer.provide(DemoCoreModulesLive),
+    Layer.provide(SchemaErrorHandlerLive)
   ),
   HttpApiScalar.layer(Api, { path: '/docs' })
 );

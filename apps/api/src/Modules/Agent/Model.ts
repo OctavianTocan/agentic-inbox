@@ -2,12 +2,10 @@ import {
   OpenRouterClient,
   OpenRouterLanguageModel
 } from '@effect/ai-openrouter';
-import { Config, Context, Layer, Redacted } from 'effect';
+import { Config, Context, Effect, Layer } from 'effect';
 import { IdGenerator, LanguageModel } from 'effect/unstable/ai';
 import { FetchHttpClient } from 'effect/unstable/http';
-
-/** Model id, overridable via `OPENROUTER_MODEL`; defaults to the Phase 0 proven `openai/gpt-5.5`. */
-export const MODEL = process.env.OPENROUTER_MODEL ?? 'openai/gpt-5.5';
+import { AppConfig } from '@/Infrastructure/AppConfig';
 
 /**
  * The structured-output model role used by the triage decision call. A distinct
@@ -21,8 +19,8 @@ export class TriageModel extends Context.Service<
 
 /**
  * The tool-calling model role used by the agent tool loop. A distinct tag from
- * {@link TriageModel} keeps the two model configs injectable and separately
- * overridable (tests supply a fake for both).
+ * {@link TriageModel} keeps the two model configs injectable and
+ * separately overridable (tests supply a fake for both).
  */
 export class ToolModel extends Context.Service<
   ToolModel,
@@ -30,7 +28,7 @@ export class ToolModel extends Context.Service<
 >()('@apps/api/Agent/ToolModel') {}
 
 const ClientLive = OpenRouterClient.layerConfig({
-  apiKey: Config.map(Config.string('OPENROUTER_API_KEY'), Redacted.make)
+  apiKey: Config.redacted('OPENROUTER_API_KEY')
 }).pipe(Layer.provide(FetchHttpClient.layer));
 
 const IdGeneratorLive = Layer.succeed(
@@ -60,16 +58,21 @@ const modelRoleLayer = <Self, Id extends string>(
  * This config must NOT drive the tool path (SPIKE-NOTES finding 3).
  */
 export const TriageModelLive: Layer.Layer<TriageModel, Config.ConfigError> =
-  modelRoleLayer(
-    TriageModel,
-    OpenRouterLanguageModel.layer({
-      model: MODEL,
-      config: {
-        reasoning: { effort: 'low' },
-        strictJsonSchema: true,
-        plugins: [{ id: 'response-healing' }]
-      }
-    }).pipe(Layer.provide(IdGeneratorLive), Layer.provide(ClientLive))
+  Layer.unwrap(
+    Effect.gen(function* () {
+      const { openRouterModel } = yield* AppConfig;
+      return modelRoleLayer(
+        TriageModel,
+        OpenRouterLanguageModel.layer({
+          model: openRouterModel,
+          config: {
+            reasoning: { effort: 'low' },
+            strictJsonSchema: true,
+            plugins: [{ id: 'response-healing' }]
+          }
+        }).pipe(Layer.provide(IdGeneratorLive), Layer.provide(ClientLive))
+      );
+    })
   );
 
 /**
@@ -78,10 +81,15 @@ export const TriageModelLive: Layer.Layer<TriageModel, Config.ConfigError> =
  * finding 3), because gpt-5.5 rejects strict-mode tool schemas.
  */
 export const ToolModelLive: Layer.Layer<ToolModel, Config.ConfigError> =
-  modelRoleLayer(
-    ToolModel,
-    OpenRouterLanguageModel.layer({
-      model: MODEL,
-      config: { reasoning: { effort: 'low' } }
-    }).pipe(Layer.provide(IdGeneratorLive), Layer.provide(ClientLive))
+  Layer.unwrap(
+    Effect.gen(function* () {
+      const { openRouterModel } = yield* AppConfig;
+      return modelRoleLayer(
+        ToolModel,
+        OpenRouterLanguageModel.layer({
+          model: openRouterModel,
+          config: { reasoning: { effort: 'low' } }
+        }).pipe(Layer.provide(IdGeneratorLive), Layer.provide(ClientLive))
+      );
+    })
   );

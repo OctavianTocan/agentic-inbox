@@ -20,6 +20,7 @@ import {
 } from '@app/api-core/Modules/Triage/Inbox';
 import { Context, Effect, Layer, Schema, Stream } from 'effect';
 import { Prompt } from 'effect/unstable/ai';
+import { AppConfig } from '@/Infrastructure/AppConfig';
 import type { EmailIdType } from '@/Lib/Ids';
 import { ActionService, ActionServiceLive } from '@/Modules/Actions/Service';
 import { AgentService, AgentServiceLive } from '@/Modules/Agent/Service';
@@ -34,34 +35,9 @@ import { DecisionsRepo, DecisionsRepoLive } from './Decisions/Repo';
 type EmailStatusType = Schema.Schema.Type<typeof EmailStatus>;
 type TriageEvent = Schema.Schema.Type<typeof TriageStreamEvent>;
 
-/**
- * How many emails to triage in parallel.
- *
- * Defaults to 1 so free OpenRouter keys (≈20 RPM) are not blasted by the old
- * 24-wide fan-out. Override with `TRIAGE_CONCURRENCY` when you have headroom.
- */
-const TRIAGE_CONCURRENCY = Math.max(1, positiveIntEnv('TRIAGE_CONCURRENCY', 1));
-
-/**
- * Pause between emails during a batch run (ms).
- *
- * Skipped under Vitest so unit tests stay fast. Override with `TRIAGE_GAP_MS`
- * (use `0` to disable). Default 2s keeps bursts under free-tier RPM.
- */
-const TRIAGE_GAP_MS =
-  process.env.VITEST !== undefined && process.env.VITEST.length > 0
-    ? positiveIntEnv('TRIAGE_GAP_MS', 0)
-    : positiveIntEnv('TRIAGE_GAP_MS', 2_000);
-
-/** Parses a non-negative integer env var, falling back when unset or invalid. */
-function positiveIntEnv(name: string, fallback: number): number {
-  const raw = process.env[name]?.trim();
-  if (raw === undefined || raw.length === 0) {
-    return fallback;
-  }
-  const parsed = Number(raw);
-  return Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : fallback;
-}
+/** True when Vitest is driving the process (skip batch pacing defaults). */
+const underVitest =
+  process.env.VITEST !== undefined && process.env.VITEST.length > 0;
 
 /** Orchestrates batch triage and joined inbox reads. */
 export class TriageService extends Context.Service<
@@ -94,6 +70,16 @@ export const TriageServiceBody: Layer.Layer<
     const decisions = yield* DecisionsRepo;
     const actions = yield* ActionService;
     const conversations = yield* ConversationsRepo;
+    const { triageConcurrency: rawConcurrency, triageGapMs: configuredGap } =
+      yield* AppConfig.pipe(Effect.orDie);
+    const triageConcurrency = Math.max(1, rawConcurrency);
+    // Under Vitest skip pacing unless TRIAGE_GAP_MS is explicitly set.
+    const triageGapMs = underVitest
+      ? process.env.TRIAGE_GAP_MS !== undefined &&
+        process.env.TRIAGE_GAP_MS.length > 0
+        ? Math.max(0, configuredGap)
+        : 0
+      : Math.max(0, configuredGap);
 
     const run = Effect.fn('TriageService.run')(function* (fresh = false) {
       if (fresh) {
@@ -109,9 +95,9 @@ export const TriageServiceBody: Layer.Layer<
       return Stream.fromIterable(emailsToProcess).pipe(
         Stream.mapEffect(
           (email, index) =>
-            (index === 0 || TRIAGE_GAP_MS === 0
+            (index === 0 || triageGapMs === 0
               ? Effect.void
-              : Effect.sleep(`${TRIAGE_GAP_MS} millis`)
+              : Effect.sleep(`${triageGapMs} millis`)
             ).pipe(
               Effect.flatMap(() =>
                 agent.triageEmail(email).pipe(
@@ -151,7 +137,7 @@ export const TriageServiceBody: Layer.Layer<
                 )
               )
             ),
-          { concurrency: TRIAGE_CONCURRENCY }
+          { concurrency: triageConcurrency }
         ),
         Stream.flatMap((events) => Stream.fromIterable(events)),
         Stream.concat(
