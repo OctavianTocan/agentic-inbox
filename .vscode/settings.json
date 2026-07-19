@@ -28,12 +28,25 @@
   "typescript.tsserver.maxTsServerMemory": 4096,
   "typescript.preferences.autoImportFileExcludePatterns": [
     "vendor/**",
+    "repos/**",
     ".agent/**",
     ".codegraph/**",
     "**/.next/**",
     "**/dist/**",
     "**/build/**"
   ],
+  "javascript.preferences.autoImportFileExcludePatterns": [
+    "vendor/**",
+    "repos/**",
+    ".agent/**",
+    ".codegraph/**",
+    "**/.next/**",
+    "**/dist/**",
+    "**/build/**"
+  ],
+  "files.exclude": {
+    "repos/**": true
+  },
   "files.watcherExclude": {
     "**/.agent/**": true,
     "**/.codegraph/**": true,
@@ -43,7 +56,8 @@
     "**/coverage/**": true,
     "**/dist/**": true,
     "**/node_modules/**": true,
-    "**/vendor/**": true
+    "**/vendor/**": true,
+    "**/repos/**": true
   },
   "search.exclude": {
     "**/.agent/**": true,
@@ -53,7 +67,8 @@
     "**/coverage/**": true,
     "**/dist/**": true,
     "**/node_modules/**": true,
-    "**/vendor/**": true
+    "**/vendor/**": true,
+    "**/repos/**": true
   },
   "tailwindCSS.experimental.configFile": "apps/web/src/design-system/styles/globals.css",
   "js/ts.tsdk.path": "node_modules/typescript/lib"
