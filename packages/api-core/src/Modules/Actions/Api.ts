@@ -4,7 +4,12 @@ import {
   HttpApiGroup,
   OpenApi
 } from 'effect/unstable/httpapi';
-import { ApprovalDecisionRequest, LedgerEntry } from './Domain';
+import {
+  ApprovalDecisionRequest,
+  ApprovalId,
+  LedgerEntry,
+  LedgerEntryId
+} from './Domain';
 import {
   ActionNotFound,
   ActionNotUndoable,
@@ -16,10 +21,15 @@ import {
 export class ActionsApi extends HttpApiGroup.make('actions')
   .add(
     HttpApiEndpoint.post('resolveApproval', '/approvals/:id', {
-      params: { id: Schema.String },
+      params: { id: ApprovalId },
       payload: ApprovalDecisionRequest,
       success: LedgerEntry,
-      error: [ApprovalNotFound, ApprovalAlreadyResolved]
+      error: [
+        ApprovalNotFound,
+        ApprovalAlreadyResolved,
+        ActionNotFound,
+        ActionNotUndoable
+      ]
     })
       .annotate(OpenApi.Summary, 'Resolve an approval')
       .annotate(
@@ -29,7 +39,7 @@ export class ActionsApi extends HttpApiGroup.make('actions')
   )
   .add(
     HttpApiEndpoint.post('undo', '/actions/:id/undo', {
-      params: { id: Schema.String },
+      params: { id: LedgerEntryId },
       success: LedgerEntry,
       error: [ActionNotFound, ActionNotUndoable]
     })

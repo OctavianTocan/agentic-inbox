@@ -74,6 +74,7 @@
         "apps/api/src/Modules/**/*.ts",
         "apps/api/test/**/*.ts",
         "packages/api-core/src/Api.ts",
+        "packages/api-core/src/Middleware.ts",
         "packages/api-core/src/Modules/**/*.ts"
       ],
       "linter": {

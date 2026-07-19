@@ -1,10 +1,10 @@
-import { Schema } from 'effect';
 import {
   HttpApiEndpoint,
   HttpApiGroup,
   HttpApiSchema,
   OpenApi
 } from 'effect/unstable/httpapi';
+import { EmailId } from '../Emails/Domain';
 import { EmailNotFound } from '../Emails/Errors';
 import { TriageRunRequest } from './Domain';
 import { TriageRunFailed } from './Errors';
@@ -40,7 +40,7 @@ export class TriageApi extends HttpApiGroup.make('triage')
   )
   .add(
     HttpApiEndpoint.post('retriage', '/triage/:id/retriage', {
-      params: { id: Schema.String },
+      params: { id: EmailId },
       success: Inbox,
       error: EmailNotFound
     })
