@@ -11,6 +11,8 @@ Handlers, repos, agent loop, and Postgres live here. Contracts come from `@app/a
 - Mutable-aggregate repos shaped as `create`/`upsert` + `get`/`list*` + `delete*` (whole-entity save; services mutate in memory then upsert)
 - Append-only ledgers using `append` + reads (`Actions/Repo.ts`) instead of upsert
 - Narrow atomic intents on a repo when concurrency requires it (e.g. `claimApproval`) — not general field setters
+- **SQL row → domain via Effect Schema**: `Domain.pipe(Schema.encodeKeys({…}))` + `decodeSqlRow(...)` from `Infrastructure/Database/DecodeSqlRow.ts` (sync decode at the repo boundary is intentional)
+- `Schema.NullOr` / `Schema.optional(Schema.NullOr(...))` on fields that map to SQL NULL columns
 - `isSensitive` / `SENSITIVE_CATEGORIES` / keyword gates in `Modules/Actions/Policy.ts`
 - Approval pause for `send_reply` on sensitive mail; `flag_for_review` as the no-reply fallback
 - `undoAction` ledger semantics; `TEST_DATABASE_URL` as a distinct `*_test` DB
@@ -26,7 +28,8 @@ Handlers, repos, agent loop, and Postgres live here. Contracts come from `@app/a
 - HttpApi schemas/errors authored only in `apps/api` instead of `@app/api-core`
 - Using `DATABASE_URL` (or truncating) the primary DB in tests — must use `TEST_DATABASE_URL`
 - Credential leakage in logs, stream events, or chat tool results
-- `decodeUnknownSync` / sync decode in Effect hot paths; missing timeouts on outbound LLM calls
+- `decodeUnknownSync` / sync decode in Effect **request/service hot paths** (handlers, agent loops) — exception: repo SQL row decode via `decodeSqlRow` / `Schema.encodeKeys` as above; missing timeouts on outbound LLM calls
+- **Hand-mapped SQL row decoders** — `as` casts, per-field `decodeUnknownSync` on literals only, or `new Domain({ emailId: row.email_id as … })` instead of `Schema.encodeKeys` + `decodeSqlRow`
 - New AI provider wiring scattered in feature modules instead of a single agent/client boundary
 - Missing regression tests for triage stream, policy gate, approval resume, or undo behavior changes
 - **Repo methods that patch single fields** on a mutable aggregate (`updateStatus`, `setPending`, `complete`, `updateProposal`, …) — use whole-entity `upsert` instead; keep transitions in the service
