@@ -1,4 +1,22 @@
+import { Api } from '@app/api-core';
+import { Effect } from 'effect';
+import { FetchHttpClient } from 'effect/unstable/http';
+import { HttpApiClient } from 'effect/unstable/httpapi';
 import type { ApprovalVerdict, Inbox, TriageRunEvent } from './types';
+
+//<skill-gen>
+// ---
+// name: domain-backend
+// description: "Use when designing Effect HTTP API surfaces (HttpApi, HttpApiClient, branded params, typed errors), Effect Config / AppConfig, module boundaries (Domain/Errors/Api/Service/Repo), sub-modules, Postgres persistence, or reviewing backend layout in apps/api or packages/api-core. Prefer repos/effect-smol and agent-patterns/ for Effect idioms. NOT for visual UI."
+// ---
+//
+// ## Web HttpApiClient
+//
+// - Prefer `HttpApiClient.make(Api, { baseUrl })` + `FetchHttpClient.layer` for JSON routes.
+// - Import wire types from `@app/api-core` (see `lib/inbox/types.ts`); do not redefine mirrors.
+// - SSE (triage/chat) may keep a thin raw-fetch adapter for AbortSignal + UI event narrowing.
+// - See `agent-patterns/effect-httpapi.md`.
+//</skill-gen>
 
 /** Inputs for resolving a pending approval on a sensitive email. */
 export type ResolveApprovalInput = {
@@ -30,7 +48,30 @@ export type InboxClient = {
   retriage: (emailId: string) => Promise<Inbox>;
 };
 
-const API_PREFIX = '/api/v1';
+/** Same-origin base URL for browser; empty for SSR callers that only build the client. */
+const apiBaseUrl = (): string =>
+  typeof window === 'undefined' ? '' : window.location.origin;
+
+/** Builds the typed client Effect for the shared HttpApi contract. */
+const makeApiClientEffect = () =>
+  HttpApiClient.make(Api, { baseUrl: apiBaseUrl() });
+
+type ApiClient = Effect.Success<ReturnType<typeof makeApiClientEffect>>;
+
+/**
+ * Runs a typed HttpApiClient program with FetchHttpClient.
+ *
+ * @param body - Client callback returning the Effect to execute.
+ */
+const withClient = <A, E>(
+  body: (client: ApiClient) => Effect.Effect<A, E>
+): Promise<A> =>
+  Effect.runPromise(
+    Effect.gen(function* () {
+      const client = yield* makeApiClientEffect();
+      return yield* body(client);
+    }).pipe(Effect.provide(FetchHttpClient.layer))
+  );
 
 /** Object-like value that can be safely indexed by string keys. */
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
@@ -69,25 +110,9 @@ async function assertOk(response: Response): Promise<void> {
   throw new Error(await responseMessage(response));
 }
 
-/** Reads the joined inbox snapshot from the API. */
+/** Typed inbox snapshot from the HttpApiClient. */
 async function fetchInbox(): Promise<Inbox> {
-  const response = await fetch(`${API_PREFIX}/inbox`);
-  await assertOk(response);
-  return response.json();
-}
-
-/** Posts JSON to an API endpoint that returns no client-needed body. */
-async function postJson(path: string, body?: unknown): Promise<void> {
-  const init =
-    body === undefined
-      ? { method: 'POST' }
-      : {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
-        };
-  const response = await fetch(`${API_PREFIX}${path}`, init);
-  await assertOk(response);
+  return withClient((client) => client.triage.inbox());
 }
 
 /** Extracts the email id from a nested backend event object. */
@@ -290,12 +315,17 @@ function isAbortError(error: unknown): boolean {
   );
 }
 
-/** Opens the backend triage stream. */
+/**
+ * Opens the backend triage stream.
+ *
+ * SSE stays on raw `fetch` so AbortSignal pause/cancel and UI event narrowing
+ * stay simple; JSON routes use {@link HttpApiClient}.
+ */
 async function* runTriage(
   options: RunTriageOptions = {}
 ): AsyncIterable<TriageRunEvent> {
   const { fresh = false, signal } = options;
-  const response = await fetch(`${API_PREFIX}/triage/run`, {
+  const response = await fetch('/api/v1/triage/run', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ fresh }),
@@ -305,22 +335,30 @@ async function* runTriage(
   yield* triageEventsFromResponse(response, signal);
 }
 
-/** HTTP client backed by the Effect API. */
+/** HTTP client backed by Effect `HttpApiClient` for JSON + raw fetch for SSE. */
 function createHttpInboxClient(): InboxClient {
   return {
     getInbox: fetchInbox,
     runTriage,
     resolveApproval: async (approvalId, input) => {
-      await postJson(`/approvals/${encodeURIComponent(approvalId)}`, input);
+      await withClient((client) =>
+        client.actions.resolveApproval({
+          params: { id: approvalId },
+          payload: input
+        })
+      );
       return fetchInbox();
     },
     undoAction: async (ledgerEntryId) => {
-      await postJson(`/actions/${encodeURIComponent(ledgerEntryId)}/undo`);
+      await withClient((client) =>
+        client.actions.undo({ params: { id: ledgerEntryId } })
+      );
       return fetchInbox();
     },
     retriage: async (emailId) => {
-      await postJson(`/triage/${encodeURIComponent(emailId)}/retriage`);
-      return fetchInbox();
+      return withClient((client) =>
+        client.triage.retriage({ params: { id: emailId } })
+      );
     }
   };
 }

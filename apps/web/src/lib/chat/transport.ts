@@ -1,3 +1,4 @@
+/** Discrete events streamed by a {@link ChatTransport} during one assistant turn. */
 export type ChatTransportEvent =
   | { readonly type: 'text-delta'; readonly delta: string }
   | {

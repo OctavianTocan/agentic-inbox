@@ -1,6 +1,7 @@
 import { bySeverityDesc, senderName } from './labels';
 import type { InboxItem } from './types';
 
+/** How inbox rows are ordered in the list and keyboard navigation. */
 export type SortKey = 'severity' | 'newest' | 'oldest' | 'sender';
 
 /** Menu label for each sort order, in display order. */

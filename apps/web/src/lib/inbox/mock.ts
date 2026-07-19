@@ -223,6 +223,7 @@ function summarize(list: readonly InboxItem[]): InboxSummary {
   };
 }
 
+/** Fixture inbox for Storybook / tests when the API is unavailable. */
 export function buildMockInbox(): Inbox {
   return {
     summary: summarize(items),
@@ -230,4 +231,5 @@ export function buildMockInbox(): Inbox {
   };
 }
 
+/** Re-export of the mock summary helper used by inbox UI tests. */
 export { summarize as summarizeInbox };

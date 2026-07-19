@@ -1,3 +1,4 @@
+import { isDemoMode } from '@apps/api/runtime-mode';
 import type { Metadata } from 'next';
 import { DemoModeSticker } from '@/components/demo-mode-sticker';
 import { ReactGrabSetup } from '@/components/dev/react-grab';
@@ -17,19 +18,6 @@ export const metadata: Metadata = {
     apple: [{ url: '/apple-touch-icon.png', sizes: '180x180' }]
   }
 };
-
-/** Read env at runtime (dynamic key — avoids Next build-time inlining). */
-function envValue(name: string): string {
-  return process.env[name]?.trim() ?? '';
-}
-
-/** True when either live dependency is missing (same rule as the API demo path). */
-function isDemoMode(): boolean {
-  return (
-    envValue('DATABASE_URL').length === 0 ||
-    envValue('OPENROUTER_API_KEY').length === 0
-  );
-}
 
 export default function RootLayout({
   children
