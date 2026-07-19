@@ -85,6 +85,10 @@ AGENTS.md
 CLAUDE.md
 !tools/AGENTS.md
 !tools/CLAUDE.md
+!apps/**/AGENTS.md
+!apps/**/CLAUDE.md
+!packages/**/AGENTS.md
+!packages/**/CLAUDE.md
 
 #########################################
 # Monorepo build artifacts

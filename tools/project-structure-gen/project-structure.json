@@ -46,6 +46,14 @@
       "description": "Operator notes and plans when tracked under docs/plans/."
     },
     {
+      "path": "repos",
+      "description": "Git-subtree vendored library source for agents (Effect under effect-smol). Read-only; do not import."
+    },
+    {
+      "path": "agent-patterns",
+      "description": "Short pattern distillations for agents (Effect, modules, repos, agent loop, demo, web, OCR). See agent-patterns/README.md."
+    },
+    {
       "path": ".agent/skills",
       "description": "Repo-local agent brain skills. Do not hand-edit generated SKILL.md files directly."
     },

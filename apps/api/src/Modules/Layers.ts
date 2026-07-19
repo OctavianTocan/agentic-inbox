@@ -10,7 +10,7 @@ import { TriageServiceLive } from './Triage/Service';
 //<skill-gen>
 // ---
 // name: domain-backend
-// description: "Use when designing Effect HTTP API surfaces, module boundaries (Domain.ts / Errors.ts / Api.ts / Service.ts / Repo.ts), sub-modules, error shapes, Postgres persistence, or reviewing backend package layout in apps/api or packages/api-core. NOT for visual UI — use domain-design / domain-frontend."
+// description: "Use when designing Effect HTTP API surfaces (HttpApi, HttpApiClient, branded params, typed errors), Effect Config / AppConfig, module boundaries (Domain/Errors/Api/Service/Repo), sub-modules, Postgres persistence, or reviewing backend layout in apps/api or packages/api-core. Prefer repos/effect-smol and agent-patterns/ for Effect idioms. NOT for visual UI."
 // ---
 //
 // # Backend Surface Design (agentic-inbox)
@@ -34,6 +34,7 @@ import { TriageServiceLive } from './Triage/Service';
 // 1. Match existing modules — Domain / Errors / Api / Service / Repo split.
 // 2. Prefer extending `@app/api-core` schemas before inventing parallel types.
 // 3. Compose HTTP layers in `$$file` (`CoreModulesLive`).
+// 4. Before writing Effect code, read `repos/effect-smol/LLMS.md`, then `agent-patterns/`.
 //
 // ## Codebase anchors
 //
@@ -43,6 +44,8 @@ import { TriageServiceLive } from './Triage/Service';
 // | Runtime modules | `apps/api/src/Modules/` |
 // | Layer merge | `$$file` |
 // | Postgres migrator | `apps/api/src/Infrastructure/Database/` |
+// | Vendored Effect | `repos/effect-smol/` (read-only; see `repos/README.md`) |
+// | Agent pattern files | `agent-patterns/` |
 //
 // ## Quick reference
 //
@@ -51,6 +54,7 @@ import { TriageServiceLive } from './Triage/Service';
 // - Second aggregate → sub-module folder on both packages.
 // - Default answer to new public routes is no — extend existing groups.
 // - Never auto-action sensitive mail.
+// - Do not import from `repos/`; prefer it over web search for Effect idioms.
 //</skill-gen>
 
 /** Merged runtime layers for every HttpApi group. */
