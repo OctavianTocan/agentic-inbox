@@ -1,5 +1,7 @@
+import { EmailId } from '@app/api-core/Modules/Emails/Domain';
 import { PgClient } from '@effect/sql-pg';
 import { Context, DateTime, Effect, Layer, Schema } from 'effect';
+import { decodeSqlRow } from '@/Infrastructure/Database/DecodeSqlRow';
 import { DatabaseLive } from '@/Infrastructure/Database/Postgres';
 import type { EmailIdType } from '@/Lib/Ids';
 
@@ -9,21 +11,31 @@ export const ConversationStatus: Schema.Literals<
 > = Schema.Literals(['active', 'awaiting_approval', 'complete']);
 
 /** The tool approval a paused conversation is blocked on, if any. */
-export type PendingApproval = {
-  readonly approvalId: string;
-  readonly toolCallId: string;
-};
+export const PendingApproval = Schema.Struct({
+  approvalId: Schema.String,
+  toolCallId: Schema.String
+});
+
+export type PendingApproval = Schema.Schema.Type<typeof PendingApproval>;
 
 /** A persisted agent conversation: its encoded prompt state and any pending approval. */
-export type ConversationRecord = {
-  readonly id: string;
-  readonly status: Schema.Schema.Type<typeof ConversationStatus>;
-  readonly prompt: unknown;
-  readonly pending: PendingApproval | null;
-  readonly emailId: EmailIdType | null;
-  readonly createdAt: string;
-  readonly updatedAt: string;
-};
+export const ConversationRecord = Schema.Struct({
+  id: Schema.String,
+  status: ConversationStatus,
+  prompt: Schema.Unknown,
+  pending: Schema.NullOr(PendingApproval),
+  emailId: Schema.NullOr(EmailId),
+  createdAt: Schema.String,
+  updatedAt: Schema.String
+}).pipe(
+  Schema.encodeKeys({
+    emailId: 'email_id',
+    createdAt: 'created_at',
+    updatedAt: 'updated_at'
+  })
+);
+
+export type ConversationRecord = Schema.Schema.Type<typeof ConversationRecord>;
 
 /** Fields supplied when persisting a conversation; id and timestamps are managed by the repo on insert. */
 export type SaveConversation = {
@@ -34,23 +46,10 @@ export type SaveConversation = {
   readonly emailId?: EmailIdType | null | undefined;
 };
 
-const decodeStatus = Schema.decodeUnknownSync(ConversationStatus);
-
 const conversationColumns =
   'id, status, prompt, pending, email_id, created_at, updated_at';
 
-/** Maps a SQL row to a `ConversationRecord`. */
-const decodeConversation = (
-  row: Record<string, unknown>
-): ConversationRecord => ({
-  id: row.id as string,
-  status: decodeStatus(row.status),
-  prompt: row.prompt,
-  pending: (row.pending as PendingApproval | null) ?? null,
-  emailId: (row.email_id as EmailIdType | null) ?? null,
-  createdAt: row.created_at as string,
-  updatedAt: row.updated_at as string
-});
+const decodeConversation = decodeSqlRow(ConversationRecord);
 
 /** Persistence for agent conversations so paused approvals survive restarts. */
 export class ConversationsRepo extends Context.Service<
@@ -107,14 +106,12 @@ export const ConversationsRepoBody: Layer.Layer<
       `.pipe(sql.withTransaction, Effect.orDie);
 
       const rows = yield* getById(id);
-      return decodeConversation(rows[0] as Record<string, unknown>);
+      return decodeConversation(rows[0]);
     });
 
     const get = Effect.fn('ConversationsRepo.get')(function* (id: string) {
       const rows = yield* getById(id);
-      return rows[0]
-        ? decodeConversation(rows[0] as Record<string, unknown>)
-        : null;
+      return rows[0] ? decodeConversation(rows[0]) : null;
     });
 
     const listAwaitingApproval = Effect.fn(
@@ -124,9 +121,7 @@ export const ConversationsRepoBody: Layer.Layer<
         yield* sql`SELECT ${sql.literal(conversationColumns)} FROM conversations WHERE status = 'awaiting_approval' ORDER BY created_at ASC`.pipe(
           Effect.orDie
         );
-      return rows.map((row) =>
-        decodeConversation(row as Record<string, unknown>)
-      );
+      return rows.map((row) => decodeConversation(row));
     });
 
     const claimApproval = Effect.fn('ConversationsRepo.claimApproval')(
@@ -161,9 +156,7 @@ export const ConversationsRepoBody: Layer.Layer<
           JOIN target ON target.id = updated.id
         `.pipe(sql.withTransaction, Effect.orDie);
 
-        return rows[0]
-          ? decodeConversation(rows[0] as Record<string, unknown>)
-          : null;
+        return rows[0] ? decodeConversation(rows[0]) : null;
       }
     );
 

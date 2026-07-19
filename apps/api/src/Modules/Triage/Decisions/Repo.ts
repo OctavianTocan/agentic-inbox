@@ -23,39 +23,32 @@
 // When a module needs a second Domain/Repo aggregate, nest it:
 // `Modules/Triage/Decisions/`, `Modules/Triage/Runs/` — mirror in `packages/api-core`
 // (`Triage/Runs/Domain.ts`). Prefer that over a second flat `Repo.ts` at the parent.
+//
+// ## Example: Schema row decode in `$$file`
+//
+// `DecisionFromRow = Decision.pipe(Schema.encodeKeys({…}))` then
+// `decodeSqlRow(DecisionFromRow)` — see also `Infrastructure/Database/DecodeSqlRow.ts`.
 //</skill-gen>
 
-import {
-  Category,
-  Confidence,
-  Decision,
-  Severity,
-  WhyPreview
-} from '@app/api-core/Modules/Triage/Domain';
+import { Decision } from '@app/api-core/Modules/Triage/Domain';
 import { PgClient } from '@effect/sql-pg';
 import { Context, DateTime, Effect, Layer, Schema } from 'effect';
+import { decodeSqlRow } from '@/Infrastructure/Database/DecodeSqlRow';
 import { DatabaseLive } from '@/Infrastructure/Database/Postgres';
 import type { EmailIdType } from '@/Lib/Ids';
 
-const decodeCategory = Schema.decodeUnknownSync(Category);
-const decodeSeverity = Schema.decodeUnknownSync(Severity);
-const decodeConfidence = Schema.decodeUnknownSync(Confidence);
-const decodeWhyPreview = Schema.decodeUnknownSync(WhyPreview);
+/** SQL row → `Decision` (snake_case encoded keys). */
+const DecisionFromRow = Decision.pipe(
+  Schema.encodeKeys({
+    emailId: 'email_id',
+    whyPreview: 'why_preview',
+    keyFacts: 'key_facts',
+    isSensitive: 'is_sensitive',
+    policyReasons: 'policy_reasons'
+  })
+);
 
-/** Maps a SQL row to a `Decision`. */
-const decodeDecision = (row: Record<string, unknown>): Decision =>
-  new Decision({
-    emailId: row.email_id as EmailIdType,
-    category: decodeCategory(row.category),
-    severity: decodeSeverity(row.severity),
-    confidence: decodeConfidence(row.confidence),
-    whyPreview: decodeWhyPreview(row.why_preview),
-    rationale: row.rationale as string,
-    keyFacts: row.key_facts as ReadonlyArray<string>,
-    isSensitive: row.is_sensitive as boolean,
-    policyReasons: row.policy_reasons as ReadonlyArray<string>
-  });
-
+const decodeDecision = decodeSqlRow(DecisionFromRow);
 /** Persistence for per-email triage decisions, keyed by email id. */
 export class DecisionsRepo extends Context.Service<
   DecisionsRepo,
@@ -107,7 +100,7 @@ export const DecisionsRepoBody: Layer.Layer<
         SELECT email_id, category, severity, confidence, why_preview, rationale, key_facts, is_sensitive, policy_reasons
         FROM decisions WHERE email_id = ${decision.emailId}
       `.pipe(Effect.orDie);
-      return decodeDecision(rows[0] as Record<string, unknown>);
+      return decodeDecision(rows[0]);
     });
 
     const get = Effect.fn('DecisionsRepo.get')(function* (
@@ -117,9 +110,7 @@ export const DecisionsRepoBody: Layer.Layer<
         SELECT email_id, category, severity, confidence, why_preview, rationale, key_facts, is_sensitive, policy_reasons
         FROM decisions WHERE email_id = ${emailId}
       `.pipe(Effect.orDie);
-      return rows[0]
-        ? decodeDecision(rows[0] as Record<string, unknown>)
-        : null;
+      return rows[0] ? decodeDecision(rows[0]) : null;
     });
 
     const list = Effect.fn('DecisionsRepo.list')(function* () {
@@ -127,7 +118,7 @@ export const DecisionsRepoBody: Layer.Layer<
         SELECT email_id, category, severity, confidence, why_preview, rationale, key_facts, is_sensitive, policy_reasons
         FROM decisions ORDER BY created_at ASC
       `.pipe(Effect.orDie);
-      return rows.map((row) => decodeDecision(row as Record<string, unknown>));
+      return rows.map((row) => decodeDecision(row));
     });
 
     const deleteByEmail = Effect.fn('DecisionsRepo.deleteByEmail')(function* (

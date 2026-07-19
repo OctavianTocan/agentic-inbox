@@ -47,22 +47,23 @@ export class TriageRun extends Schema.Class<TriageRun>('TriageRun')({
   proposalSummary: Schema.String.annotate({
     description: 'Summary of the proposal for the triage run.'
   }),
-  pending: Schema.optional(Schema.Boolean).annotate({
+  // `optional(NullOr(...))` so SQL NULL and omitted keys both decode cleanly.
+  pending: Schema.optional(Schema.NullOr(Schema.Boolean)).annotate({
     description: 'Whether the triage run is pending.'
   }),
-  decisionSnapshot: Schema.optional(Schema.Json).annotate({
+  decisionSnapshot: Schema.optional(Schema.NullOr(Schema.Json)).annotate({
     description: 'Snapshot of the decision for the triage run.'
   }),
-  policyVersion: Schema.optional(Schema.String).annotate({
+  policyVersion: Schema.optional(Schema.NullOr(Schema.String)).annotate({
     description: 'Version of the policy used for the triage run.'
   }),
-  promptVersion: Schema.optional(Schema.String).annotate({
+  promptVersion: Schema.optional(Schema.NullOr(Schema.String)).annotate({
     description: 'Version of the prompt used for the triage run.'
   }),
-  graphVersion: Schema.optional(Schema.String).annotate({
+  graphVersion: Schema.optional(Schema.NullOr(Schema.String)).annotate({
     description: 'Version of the graph used for the triage run.'
   }),
-  error: Schema.optional(TriageRunError).annotate({
+  error: Schema.optional(Schema.NullOr(TriageRunError)).annotate({
     description: 'Error message for the triage run.'
   }),
   createdAt: Schema.String.annotate({

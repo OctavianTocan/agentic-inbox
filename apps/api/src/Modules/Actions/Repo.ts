@@ -1,10 +1,7 @@
-import {
-  ActionKind,
-  Actor,
-  LedgerEntry
-} from '@app/api-core/Modules/Actions/Domain';
+import { LedgerEntry } from '@app/api-core/Modules/Actions/Domain';
 import { PgClient } from '@effect/sql-pg';
 import { Context, DateTime, Effect, Layer, Schema } from 'effect';
+import { decodeSqlRow } from '@/Infrastructure/Database/DecodeSqlRow';
 import { DatabaseLive } from '@/Infrastructure/Database/Postgres';
 import type {
   ActionKindType,
@@ -14,28 +11,21 @@ import type {
   RunIdType
 } from '@/Lib/Ids';
 
-const decodeActor = Schema.decodeUnknownSync(Actor);
-const decodeAction = Schema.decodeUnknownSync(ActionKind);
-
 const ledgerColumns =
   'id, run_id, actor, email_id, action, action_revision, summary, payload, undone_by, undoes, created_at';
 
-/** Maps a SQL row to a `LedgerEntry`. */
-const decodeEntry = (row: Record<string, unknown>): LedgerEntry =>
-  new LedgerEntry({
-    id: row.id as LedgerEntryIdType,
-    runId: row.run_id as RunIdType | null,
-    actor: decodeActor(row.actor),
-    emailId: row.email_id as EmailIdType,
-    action: decodeAction(row.action),
-    actionRevision: row.action_revision as number,
-    summary: row.summary as string,
-    payload: row.payload as Record<string, unknown>,
-    undoneBy: (row.undone_by as LedgerEntryIdType | null) ?? null,
-    undoes: (row.undoes as LedgerEntryIdType | null) ?? null,
-    createdAt: row.created_at as string
-  });
+/** SQL row → `LedgerEntry` (snake_case encoded keys). */
+const LedgerEntryFromRow = LedgerEntry.pipe(
+  Schema.encodeKeys({
+    runId: 'run_id',
+    emailId: 'email_id',
+    actionRevision: 'action_revision',
+    undoneBy: 'undone_by',
+    createdAt: 'created_at'
+  })
+);
 
+const decodeEntry = decodeSqlRow(LedgerEntryFromRow);
 /** Fields an actor supplies when appending an action; id, timestamp, and undo pointers are set by the repo. */
 export type AppendLedgerEntry = {
   readonly actor: ActorType;
@@ -113,14 +103,14 @@ export const ActionLedgerRepoBody: Layer.Layer<
       }).pipe(sql.withTransaction, Effect.orDie);
 
       const rows = yield* getById(id);
-      return decodeEntry(rows[0] as Record<string, unknown>);
+      return decodeEntry(rows[0]);
     });
 
     const get = Effect.fn('ActionLedgerRepo.get')(function* (
       id: LedgerEntryIdType
     ) {
       const rows = yield* getById(id);
-      return rows[0] ? decodeEntry(rows[0] as Record<string, unknown>) : null;
+      return rows[0] ? decodeEntry(rows[0]) : null;
     });
 
     const listByEmail = Effect.fn('ActionLedgerRepo.listByEmail')(function* (
@@ -130,7 +120,7 @@ export const ActionLedgerRepoBody: Layer.Layer<
         yield* sql`SELECT ${sql.literal(ledgerColumns)} FROM action_ledger WHERE email_id = ${emailId} ORDER BY created_at DESC`.pipe(
           Effect.orDie
         );
-      return rows.map((row) => decodeEntry(row as Record<string, unknown>));
+      return rows.map((row) => decodeEntry(row));
     });
 
     const list = Effect.fn('ActionLedgerRepo.list')(function* () {
@@ -138,7 +128,7 @@ export const ActionLedgerRepoBody: Layer.Layer<
         yield* sql`SELECT ${sql.literal(ledgerColumns)} FROM action_ledger ORDER BY created_at DESC`.pipe(
           Effect.orDie
         );
-      return rows.map((row) => decodeEntry(row as Record<string, unknown>));
+      return rows.map((row) => decodeEntry(row));
     });
 
     const deleteByEmail = Effect.fn('ActionLedgerRepo.deleteByEmail')(
