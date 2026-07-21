@@ -1,3 +1,11 @@
+---
+type: Agent Pattern
+title: Skill Generation (skill-gen)
+description: Conventions for //<skill-gen> code markers, merging skill fragments, and skill generation CLI tools.
+tags: [skill-gen, tools, skills, generators]
+timestamp: 2026-07-21T22:07:26Z
+---
+
 # skill-gen (agentic-inbox)
 
 Tool: `tools/skill-gen/`. Commands: `bun run skills:generate` / `skills:check`.

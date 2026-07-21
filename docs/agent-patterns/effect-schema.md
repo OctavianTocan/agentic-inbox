@@ -1,6 +1,14 @@
+---
+type: Agent Pattern
+title: Effect Schema Patterns
+description: Domain schemas, tagged errors, SQL-nullable fields, and encoding/decoding conventions.
+tags: [effect, schema, validation, types, OpenAPI]
+timestamp: 2026-07-21T22:07:26Z
+---
+
 # Effect Schema patterns (agentic-inbox)
 
-Source of truth: [`repos/effect-smol/LLMS.md`](../repos/effect-smol/LLMS.md) (start here), then [`repos/effect-smol/packages/effect/SCHEMA.md`](../repos/effect-smol/packages/effect/SCHEMA.md) and Schema sources under `repos/effect-smol/packages/effect/src/`.
+Source of truth: [`repos/effect-smol/LLMS.md`](../../repos/effect-smol/LLMS.md) (start here), then [`repos/effect-smol/packages/effect/SCHEMA.md`](../../repos/effect-smol/packages/effect/SCHEMA.md) and Schema sources under `repos/effect-smol/packages/effect/src/`.
 
 App anchors: `packages/api-core` domain schemas, `apps/api` `decodeSqlRow` / `Schema.encodeKeys`.
 

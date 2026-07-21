@@ -1,3 +1,11 @@
+---
+type: Agent Pattern
+title: Effect Layers & Services
+description: Dependency injection using Context.Service tags, Layer.effect, Layer.provide, and production wiring.
+tags: [effect, layers, services, dependency-injection]
+timestamp: 2026-07-21T22:07:26Z
+---
+
 # Effect Layers & Context.Service (agentic-inbox)
 
 App anchors: `Modules/*/Service.ts`, `Modules/*/Repo.ts`, `Modules/Layers.ts`, `App.ts`, `Modules/Demo/Layers.ts`.

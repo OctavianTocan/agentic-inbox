@@ -1,3 +1,11 @@
+---
+type: Agent Pattern
+title: Testing Conventions
+description: Test execution commands, layer isolation with fakes, ConfigProvider overrides, and mock conventions.
+tags: [testing, vitest, vitest-run, mocks, layers]
+timestamp: 2026-07-21T22:07:26Z
+---
+
 # Testing (agentic-inbox)
 
 ## Commands

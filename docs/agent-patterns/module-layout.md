@@ -1,3 +1,11 @@
+---
+type: Agent Pattern
+title: Module Layout
+description: Architectural separation between packages/api-core, apps/api, and apps/web with file organization conventions.
+tags: [architecture, module-layout, packages, structure]
+timestamp: 2026-07-21T22:07:26Z
+---
+
 # Module layout (agentic-inbox)
 
 ## Package split

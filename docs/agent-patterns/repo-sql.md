@@ -1,3 +1,11 @@
+---
+type: Agent Pattern
+title: Repository & SQL Row Decoding
+description: Persistence layer rules, whole-entity aggregates, append-only action ledgers, and decodeSqlRow.
+tags: [repo, sql, database, decode, persistence]
+timestamp: 2026-07-21T22:07:26Z
+---
+
 # Repo & SQL decode (agentic-inbox)
 
 Not Effect `SqlSchema` helpers — use `decodeSqlRow` + `Schema.encodeKeys`.

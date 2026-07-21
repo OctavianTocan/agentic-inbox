@@ -1,3 +1,11 @@
+---
+type: Agent Pattern
+title: Dataset & Branded IDs
+description: Static inbox sample dataset and branded domain IDs.
+tags: [dataset, ids, domain, schemas, fixtures]
+timestamp: 2026-07-21T22:07:26Z
+---
+
 # Dataset & ids (agentic-inbox)
 
 Anchors: `data/emails.json`, `packages/api-core` branded ids, `apps/api/src/Lib/Ids.ts`.

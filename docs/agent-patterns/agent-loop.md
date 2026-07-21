@@ -1,3 +1,11 @@
+---
+type: Agent Pattern
+title: Agent Loop
+description: Two model roles, triage flow, approval handlers, and execution loop conventions.
+tags: [agent, triage, loop, models, approvals]
+timestamp: 2026-07-21T22:07:26Z
+---
+
 # Agent loop (agentic-inbox)
 
 Anchors: `Modules/Agent/Service.ts`, `Model.ts`, `Toolkit.ts`, `Prompts.ts`.

@@ -1,3 +1,11 @@
+---
+type: Agent Pattern
+title: Open Code Review (OCR)
+description: Rules, commands, path configurations, and audience flags for Open Code Review scans.
+tags: [ocr, review, lint, tools]
+timestamp: 2026-07-21T22:07:26Z
+---
+
 # Open Code Review — OCR (agentic-inbox)
 
 **OCR = Open Code Review**, not optical character recognition.
@@ -21,4 +29,4 @@ Anchors: `.opencodereview/review-rules.md`, `rules/{base,api-core,api,web,design
 
 Excluded: `.agent`, `repos`, `node_modules`, build outputs, etc.
 
-When fixing review findings, prefer these rules + `agent-patterns/` over inventing new house style.
+When fixing review findings, prefer these rules + `docs/agent-patterns/` over inventing new house style.

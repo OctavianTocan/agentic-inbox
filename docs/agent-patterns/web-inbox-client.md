@@ -1,3 +1,11 @@
+---
+type: Agent Pattern
+title: Web Inbox & Chat Clients
+description: HttpApiClient usage in web frontend, SSE transport streams, and Next.js request bridge.
+tags: [web, client, httpapi, sse, nextjs]
+timestamp: 2026-07-21T22:07:26Z
+---
+
 # Web inbox / chat clients (agentic-inbox)
 
 Anchors: `apps/web/src/lib/inbox/client.ts`, `lib/inbox/types.ts`, `lib/chat/http-transport.ts`,

@@ -1,3 +1,11 @@
+---
+type: Agent Pattern
+title: Effect HttpApi Patterns
+description: Conventions for HttpApi endpoint groups, handlers, branded path parameters, and client generation.
+tags: [effect, httpapi, endpoints, clients, OpenAPI]
+timestamp: 2026-07-21T22:07:26Z
+---
+
 # Effect HttpApi patterns (agentic-inbox)
 
 Source of truth for APIs: start with `repos/effect-smol/LLMS.md`, then `repos/effect-smol/packages/effect/HTTPAPI.md` and `repos/effect-smol/packages/effect/src/unstable/httpapi/`.

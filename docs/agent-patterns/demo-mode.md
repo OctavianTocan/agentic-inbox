@@ -1,3 +1,11 @@
+---
+type: Agent Pattern
+title: Demo Mode
+description: Fallback behavior and environment gating when database or AI credentials are absent.
+tags: [demo, runtime, environment, layers]
+timestamp: 2026-07-21T22:07:26Z
+---
+
 # Demo mode (agentic-inbox)
 
 Anchors: `runtime-mode.ts`, `Modules/Demo/Layers.ts`, `WebHandler.ts`.

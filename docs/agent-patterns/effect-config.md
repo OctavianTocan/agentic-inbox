@@ -1,3 +1,11 @@
+---
+type: Agent Pattern
+title: Effect Config Patterns
+description: Configuration parsing, secrets management, and environment providers using Effect Config.
+tags: [effect, config, secrets, environment]
+timestamp: 2026-07-21T22:07:26Z
+---
+
 # Effect Config patterns (agentic-inbox)
 
 Source of truth: start with `repos/effect-smol/LLMS.md`, then `repos/effect-smol/packages/effect/CONFIG.md` and Config module sources under `repos/effect-smol/packages/effect/`.

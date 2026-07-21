@@ -1,3 +1,11 @@
+---
+type: Agent Pattern
+title: Sensitive Email Policy
+description: Security gate enforcing manual approval for sensitive categories, low confidence, or safety keywords.
+tags: [security, policy, sensitive, approvals, agent]
+timestamp: 2026-07-21T22:07:26Z
+---
+
 # Sensitive policy (agentic-inbox)
 
 Anchor: `apps/api/src/Modules/Actions/Policy.ts`. Product rule: **never auto-action sensitive mail**.
