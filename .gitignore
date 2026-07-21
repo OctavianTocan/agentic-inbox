@@ -81,6 +81,8 @@ refs/
 docs/*
 !docs/plans/
 !docs/plans/**
+!docs/agent-patterns/
+!docs/agent-patterns/**
 AGENTS.md
 CLAUDE.md
 !tools/AGENTS.md

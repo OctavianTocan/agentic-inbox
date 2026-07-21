@@ -10,7 +10,7 @@ import { TriageServiceLive } from './Triage/Service';
 //<skill-gen>
 // ---
 // name: domain-backend
-// description: "Use when designing Effect HTTP API surfaces (HttpApi, HttpApiClient, branded params, typed errors), Effect Config / AppConfig, module boundaries (Domain/Errors/Api/Service/Repo), sub-modules, Postgres persistence, or reviewing backend layout in apps/api or packages/api-core. Prefer repos/effect-smol and agent-patterns/ for Effect idioms. NOT for visual UI."
+// description: "Use when designing Effect HTTP API surfaces (HttpApi, HttpApiClient, branded params, typed errors), Effect Config / AppConfig, module boundaries (Domain/Errors/Api/Service/Repo), sub-modules, Postgres persistence, or reviewing backend layout in apps/api or packages/api-core. Prefer repos/effect-smol and docs/agent-patterns/ for Effect idioms. NOT for visual UI."
 // ---
 //
 // # Backend Surface Design (agentic-inbox)
@@ -34,7 +34,7 @@ import { TriageServiceLive } from './Triage/Service';
 // 1. Match existing modules — Domain / Errors / Api / Service / Repo split.
 // 2. Prefer extending `@app/api-core` schemas before inventing parallel types.
 // 3. Compose HTTP layers in `$$file` (`CoreModulesLive`).
-// 4. Before writing Effect code, read `repos/effect-smol/LLMS.md`, then `agent-patterns/`.
+// 4. Before writing Effect code, read `repos/effect-smol/LLMS.md`, then `docs/agent-patterns/`.
 //
 // ## Codebase anchors
 //
@@ -45,7 +45,7 @@ import { TriageServiceLive } from './Triage/Service';
 // | Layer merge | `$$file` |
 // | Postgres migrator | `apps/api/src/Infrastructure/Database/` |
 // | Vendored Effect | `repos/effect-smol/` (read-only; see `repos/README.md`) |
-// | Agent pattern files | `agent-patterns/` |
+// | Agent pattern files | `docs/agent-patterns/` |
 //
 // ## Quick reference
 //

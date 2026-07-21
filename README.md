@@ -33,7 +33,7 @@ External library source is vendored under [`repos/`](./repos/) as git subtrees s
 - Read-only reference — do not edit `repos/` unless asked; do not import from `repos/` in app code.
 - Prefer `repos/effect-smol` over web search / `node_modules` when writing Effect.
 - Always start Effect work with [`repos/effect-smol/LLMS.md`](./repos/effect-smol/LLMS.md).
-- Project distillations: [`agent-patterns/`](./agent-patterns/). Full rules: [`repos/README.md`](./repos/README.md).
+- Project distillations: [`docs/agent-patterns/`](./docs/agent-patterns/). Full rules: [`repos/README.md`](./repos/README.md).
 
 ## Architecture
 
@@ -56,9 +56,10 @@ External library source is vendored under [`repos/`](./repos/) as git subtrees s
 |   |-- skill-gen - Generates repo-local skills from //<skill-gen> fragments.
 |   |-- gen-github-workflow - Generates GitHub Actions workflows from marked YAML fragments.
 |   `-- workflow-fragments - CI workflow fragments and required-workflows sync source.
-|-- docs - Operator notes and plans when tracked under docs/plans/.
+|-- docs
+|   |-- agent-patterns - Short pattern distillations for agents (Effect, modules, repos, agent loop, demo, web, OCR) formatted in Google OKF. See docs/agent-patterns/README.md.
+|   `-- plans - Operator notes and plans when tracked under docs/plans/.
 |-- repos - Git-subtree vendored library source for agents (Effect under effect-smol). Read-only; do not import.
-|-- agent-patterns - Short pattern distillations for agents (Effect, modules, repos, agent loop, demo, web, OCR). See agent-patterns/README.md.
 `-- .agent
     |-- skills - Repo-local agent brain skills. Do not hand-edit generated SKILL.md files directly.
     |-- memory - Project-local working, semantic, episodic, and preference memory.

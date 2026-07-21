@@ -8,7 +8,7 @@ import { ActionService } from './Service';
 //<skill-gen>
 // ---
 // name: domain-backend
-// description: "Use when designing Effect HTTP API surfaces (HttpApi, HttpApiClient, branded params, typed errors), Effect Config / AppConfig, module boundaries (Domain/Errors/Api/Service/Repo), sub-modules, Postgres persistence, or reviewing backend layout in apps/api or packages/api-core. Prefer repos/effect-smol and agent-patterns/ for Effect idioms. NOT for visual UI."
+// description: "Use when designing Effect HTTP API surfaces (HttpApi, HttpApiClient, branded params, typed errors), Effect Config / AppConfig, module boundaries (Domain/Errors/Api/Service/Repo), sub-modules, Postgres persistence, or reviewing backend layout in apps/api or packages/api-core. Prefer repos/effect-smol and docs/agent-patterns/ for Effect idioms. NOT for visual UI."
 // ---
 //
 // ## HttpApi handlers
@@ -17,7 +17,7 @@ import { ActionService } from './Service';
 // - `Effect.fail` declared endpoint errors; do **not** `Effect.die` / `orDie` domain errors that belong in OpenAPI.
 // - Infra failures (`ConfigError`, `AiError`) may stay defects (500) unless declared as typed 5xx schemas.
 // - Never `Schema.decodeUnknownSync` path/body ids in handlers — endpoint params already decoded.
-// - See `agent-patterns/effect-httpapi.md`.
+// - See `docs/agent-patterns/effect-httpapi.md`.
 //</skill-gen>
 
 const USER_ACTOR: ActorType = 'user';

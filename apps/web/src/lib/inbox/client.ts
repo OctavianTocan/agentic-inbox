@@ -7,7 +7,7 @@ import type { ApprovalVerdict, Inbox, TriageRunEvent } from './types';
 //<skill-gen>
 // ---
 // name: domain-backend
-// description: "Use when designing Effect HTTP API surfaces (HttpApi, HttpApiClient, branded params, typed errors), Effect Config / AppConfig, module boundaries (Domain/Errors/Api/Service/Repo), sub-modules, Postgres persistence, or reviewing backend layout in apps/api or packages/api-core. Prefer repos/effect-smol and agent-patterns/ for Effect idioms. NOT for visual UI."
+// description: "Use when designing Effect HTTP API surfaces (HttpApi, HttpApiClient, branded params, typed errors), Effect Config / AppConfig, module boundaries (Domain/Errors/Api/Service/Repo), sub-modules, Postgres persistence, or reviewing backend layout in apps/api or packages/api-core. Prefer repos/effect-smol and docs/agent-patterns/ for Effect idioms. NOT for visual UI."
 // ---
 //
 // ## Web HttpApiClient
@@ -15,7 +15,7 @@ import type { ApprovalVerdict, Inbox, TriageRunEvent } from './types';
 // - Prefer `HttpApiClient.make(Api, { baseUrl })` + `FetchHttpClient.layer` for JSON routes.
 // - Import wire types from `@app/api-core` (see `lib/inbox/types.ts`); do not redefine mirrors.
 // - SSE (triage/chat) may keep a thin raw-fetch adapter for AbortSignal + UI event narrowing.
-// - See `agent-patterns/effect-httpapi.md`.
+// - See `docs/agent-patterns/effect-httpapi.md`.
 //</skill-gen>
 
 /** Inputs for resolving a pending approval on a sensitive email. */

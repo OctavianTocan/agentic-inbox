@@ -21,7 +21,7 @@ When writing Effect code:
 
 1. **Always start with** [`effect-smol/LLMS.md`](./effect-smol/LLMS.md) (Effect’s agent-oriented guide).
 2. Then use package docs and source under `effect-smol/packages/effect/` (for example `HTTPAPI.md`, `CONFIG.md`, and `src/`).
-3. Prefer project distillations in [`agent-patterns/`](../agent-patterns/) once they exist for a topic.
+3. Prefer project distillations in [`docs/agent-patterns/`](../docs/agent-patterns/) once they exist for a topic.
 
 Treat `repos/effect-smol` as the source of truth for Effect patterns — not `node_modules`.
 

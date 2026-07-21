@@ -50,8 +50,8 @@
       "description": "Git-subtree vendored library source for agents (Effect under effect-smol). Read-only; do not import."
     },
     {
-      "path": "agent-patterns",
-      "description": "Short pattern distillations for agents (Effect, modules, repos, agent loop, demo, web, OCR). See agent-patterns/README.md."
+      "path": "docs/agent-patterns",
+      "description": "Short pattern distillations for agents (Effect, modules, repos, agent loop, demo, web, OCR) formatted in Google OKF. See docs/agent-patterns/README.md."
     },
     {
       "path": ".agent/skills",

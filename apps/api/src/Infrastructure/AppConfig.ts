@@ -3,7 +3,7 @@ import { Config } from 'effect';
 //<skill-gen>
 // ---
 // name: domain-backend
-// description: "Use when designing Effect HTTP API surfaces (HttpApi, HttpApiClient, branded params, typed errors), Effect Config / AppConfig, module boundaries (Domain/Errors/Api/Service/Repo), sub-modules, Postgres persistence, or reviewing backend layout in apps/api or packages/api-core. Prefer repos/effect-smol and agent-patterns/ for Effect idioms. NOT for visual UI."
+// description: "Use when designing Effect HTTP API surfaces (HttpApi, HttpApiClient, branded params, typed errors), Effect Config / AppConfig, module boundaries (Domain/Errors/Api/Service/Repo), sub-modules, Postgres persistence, or reviewing backend layout in apps/api or packages/api-core. Prefer repos/effect-smol and docs/agent-patterns/ for Effect idioms. NOT for visual UI."
 // ---
 //
 // ## Effect Config (`AppConfig`)
@@ -12,7 +12,7 @@ import { Config } from 'effect';
 // - Secrets: `Config.redacted` on `layerConfig` surfaces (`DATABASE_URL`, `OPENROUTER_API_KEY`).
 // - Demo-mode gate stays raw dynamic `process.env` in `runtime-mode.ts` (Next bundling).
 // - Tests: prefer `ConfigProvider.layer(ConfigProvider.fromUnknown(…))` when Effect Config is SoT.
-// - See `repos/effect-smol/packages/effect/CONFIG.md` and `agent-patterns/effect-config.md`.
+// - See `repos/effect-smol/packages/effect/CONFIG.md` and `docs/agent-patterns/effect-config.md`.
 //</skill-gen>
 
 /**

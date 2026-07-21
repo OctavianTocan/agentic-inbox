@@ -8,7 +8,7 @@ import { TriageApi } from './Modules/Triage/Api';
 //<skill-gen>
 // ---
 // name: domain-backend
-// description: "Use when designing Effect HTTP API surfaces (HttpApi, HttpApiClient, branded params, typed errors), Effect Config / AppConfig, module boundaries (Domain/Errors/Api/Service/Repo), sub-modules, Postgres persistence, or reviewing backend layout in apps/api or packages/api-core. Prefer repos/effect-smol and agent-patterns/ for Effect idioms. NOT for visual UI."
+// description: "Use when designing Effect HTTP API surfaces (HttpApi, HttpApiClient, branded params, typed errors), Effect Config / AppConfig, module boundaries (Domain/Errors/Api/Service/Repo), sub-modules, Postgres persistence, or reviewing backend layout in apps/api or packages/api-core. Prefer repos/effect-smol and docs/agent-patterns/ for Effect idioms. NOT for visual UI."
 // ---
 //
 // ## HttpApi contracts (`packages/api-core`)
@@ -18,7 +18,7 @@ import { TriageApi } from './Modules/Triage/Api';
 // - Declare every handler `Effect.fail` error on the endpoint with `httpApiStatus`.
 // - Annotate endpoints (`OpenApi.Summary` / `Description`) and shared models (`identifier`).
 // - API-level `SchemaErrorHandler` maps decode failures to structured 422s.
-// - When unsure, read `repos/effect-smol/packages/effect/HTTPAPI.md` and `agent-patterns/effect-httpapi.md`.
+// - When unsure, read `repos/effect-smol/packages/effect/HTTPAPI.md` and `docs/agent-patterns/effect-httpapi.md`.
 // - Do not import application code from `repos/`.
 //</skill-gen>
 
