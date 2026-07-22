@@ -13,6 +13,7 @@ Short, pointed distillations of how this repository works, formatted as a [Googl
 
 ### Effect & Library Idioms
 
+- [effect-writing.md](./effect-writing.md) — Effect.gen / Effect.fn, avoid flatMap towers, Stream.mapEffect.
 - [effect-httpapi.md](./effect-httpapi.md) — HttpApi groups, handlers, clients, branded params.
 - [effect-config.md](./effect-config.md) — AppConfig, secrets, demo-mode env exception.
 - [effect-schema.md](./effect-schema.md) — Schema.Class, TaggedError, NullOr vs optional.

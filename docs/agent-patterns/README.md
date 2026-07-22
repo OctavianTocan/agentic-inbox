@@ -21,6 +21,7 @@ Read the relevant file(s) before changing an area — prefer these plus `repos/e
 
 | File | When |
 |------|------|
+| [effect-writing.md](./effect-writing.md) | Effect.gen / Effect.fn, avoid flatMap towers, Stream.mapEffect |
 | [effect-httpapi.md](./effect-httpapi.md) | HttpApi groups, handlers, clients, branded params |
 | [effect-config.md](./effect-config.md) | AppConfig, secrets, demo-mode env exception |
 | [effect-schema.md](./effect-schema.md) | Schema.Class, TaggedError, NullOr vs optional |
