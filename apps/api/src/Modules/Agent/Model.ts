@@ -43,6 +43,20 @@ const modelRoleLayer = <Self, Id extends string>(
 ): Layer.Layer<Self, Config.ConfigError> =>
   Layer.effect(tag, LanguageModel.LanguageModel).pipe(Layer.provide(source));
 
+/** OpenRouter LanguageModel under a role tag, reading `OPENROUTER_MODEL`. */
+const openRouterModelRole = <Self, Id extends string>(
+  tag: Context.ServiceClass<Self, Id, LanguageModel.Service>,
+  build: (
+    model: string
+  ) => Layer.Layer<LanguageModel.LanguageModel, Config.ConfigError>
+): Layer.Layer<Self, Config.ConfigError> =>
+  Layer.unwrap(
+    Effect.gen(function* () {
+      const { openRouterModel } = yield* AppConfig;
+      return modelRoleLayer(tag, build(openRouterModel));
+    })
+  );
+
 /**
  * Structured-output model for `generateObject` triage.
  *
@@ -58,21 +72,15 @@ const modelRoleLayer = <Self, Id extends string>(
  * This config must NOT drive the tool path (SPIKE-NOTES finding 3).
  */
 export const TriageModelLive: Layer.Layer<TriageModel, Config.ConfigError> =
-  Layer.unwrap(
-    Effect.gen(function* () {
-      const { openRouterModel } = yield* AppConfig;
-      return modelRoleLayer(
-        TriageModel,
-        OpenRouterLanguageModel.layer({
-          model: openRouterModel,
-          config: {
-            reasoning: { effort: 'low' },
-            strictJsonSchema: true,
-            plugins: [{ id: 'response-healing' }]
-          }
-        }).pipe(Layer.provide(IdGeneratorLive), Layer.provide(ClientLive))
-      );
-    })
+  openRouterModelRole(TriageModel, (model) =>
+    OpenRouterLanguageModel.layer({
+      model,
+      config: {
+        reasoning: { effort: 'low' },
+        strictJsonSchema: true,
+        plugins: [{ id: 'response-healing' }]
+      }
+    }).pipe(Layer.provide(IdGeneratorLive), Layer.provide(ClientLive))
   );
 
 /**
@@ -81,15 +89,9 @@ export const TriageModelLive: Layer.Layer<TriageModel, Config.ConfigError> =
  * finding 3), because gpt-5.5 rejects strict-mode tool schemas.
  */
 export const ToolModelLive: Layer.Layer<ToolModel, Config.ConfigError> =
-  Layer.unwrap(
-    Effect.gen(function* () {
-      const { openRouterModel } = yield* AppConfig;
-      return modelRoleLayer(
-        ToolModel,
-        OpenRouterLanguageModel.layer({
-          model: openRouterModel,
-          config: { reasoning: { effort: 'low' } }
-        }).pipe(Layer.provide(IdGeneratorLive), Layer.provide(ClientLive))
-      );
-    })
+  openRouterModelRole(ToolModel, (model) =>
+    OpenRouterLanguageModel.layer({
+      model,
+      config: { reasoning: { effort: 'low' } }
+    }).pipe(Layer.provide(IdGeneratorLive), Layer.provide(ClientLive))
   );

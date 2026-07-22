@@ -180,6 +180,16 @@ export const AgentServiceBody: Layer.Layer<
     );
 
     /**
+     * Runs generateText with retry + tool model. Caller supplies toolkit
+     * handlers via Effect.provide on the turn effect.
+     */
+    const generateToolTurn = <A, E, R>(turn: Effect.Effect<A, E, R>) =>
+      turn.pipe(
+        Effect.retry({ schedule: retrySchedule }),
+        Effect.provideService(LanguageModel.LanguageModel, toolModel)
+      );
+
+    /**
      * Runs the native Effect AI tool loop until completion or approval pause.
      *
      * In triage mode the caller passes a per-email toolkit whose send/archive
@@ -213,31 +223,31 @@ export const AgentServiceBody: Layer.Layer<
 
         const response =
           mode === 'triage'
-            ? yield* LanguageModel.generateText({
-                toolkit: triageToolkit,
-                prompt,
-                concurrency: 4
-              }).pipe(
-                Effect.retry({ schedule: retrySchedule }),
-                Effect.provide(
-                  triageToolkit.toLayer(
-                    makeTriageHandlers(actions, 'batch_agent')
+            ? yield* generateToolTurn(
+                LanguageModel.generateText({
+                  toolkit: triageToolkit,
+                  prompt,
+                  concurrency: 4
+                }).pipe(
+                  Effect.provide(
+                    triageToolkit.toLayer(
+                      makeTriageHandlers(actions, 'batch_agent')
+                    )
                   )
-                ),
-                Effect.provideService(LanguageModel.LanguageModel, toolModel)
+                )
               )
-            : yield* LanguageModel.generateText({
-                toolkit: ChatToolkit,
-                prompt,
-                concurrency: 4
-              }).pipe(
-                Effect.retry({ schedule: retrySchedule }),
-                Effect.provide(
-                  ChatToolkit.toLayer(
-                    makeChatHandlers(actions, emails, 'chat_agent')
+            : yield* generateToolTurn(
+                LanguageModel.generateText({
+                  toolkit: ChatToolkit,
+                  prompt,
+                  concurrency: 4
+                }).pipe(
+                  Effect.provide(
+                    ChatToolkit.toLayer(
+                      makeChatHandlers(actions, emails, 'chat_agent')
+                    )
                   )
-                ),
-                Effect.provideService(LanguageModel.LanguageModel, toolModel)
+                )
               );
         const nextPrompt = Prompt.concat(
           prompt,
@@ -260,6 +270,58 @@ export const AgentServiceBody: Layer.Layer<
       return yield* step(initialPrompt, 0, []);
     });
 
+    /** Persists a loop result as complete or awaiting_approval. */
+    const saveLoopResult = Effect.fn('AgentService.saveLoopResult')(function* (
+      result: LoopResult,
+      options: {
+        readonly id?: string | undefined;
+        readonly emailId?: EmailIdType | null | undefined;
+      } = {}
+    ) {
+      return yield* conversations.save({
+        id: options.id,
+        status: result.pending === null ? 'complete' : 'awaiting_approval',
+        prompt: encodePrompt(result.prompt),
+        pending: result.pending,
+        emailId: options.emailId
+      });
+    });
+
+    /** Ledger rows written since `before`, as triage stream events. */
+    const actedSince = Effect.fn('AgentService.actedSince')(function* (
+      emailId: EmailIdType,
+      before: ReadonlyArray<LedgerEntry>
+    ) {
+      const after = yield* actions.listLedger(emailId);
+      const beforeIds = new Set(before.map((entry) => entry.id));
+      return after
+        .filter((entry) => !beforeIds.has(entry.id))
+        .map((entry) => new TriageActed({ entry }));
+    });
+
+    /** Prefer the newest ledger row; otherwise synthesize a review flag. */
+    const latestEntryOrFlag = Effect.fn('AgentService.latestEntryOrFlag')(
+      function* (
+        emailId: EmailIdType,
+        approvalId: string,
+        verdict: ApprovalDecisionRequest['verdict']
+      ) {
+        const latest = yield* actions.listLedger(emailId);
+        const entry = latest[0];
+        if (entry !== undefined) {
+          return entry;
+        }
+        return yield* actions.flagForReview({
+          emailId,
+          actor: 'user',
+          summary:
+            verdict === 'approve'
+              ? `Approved ${approvalId}`
+              : `Denied ${approvalId}`
+        });
+      }
+    );
+
     const triageEmail = Effect.fn('AgentService.triageEmail')(function* (
       email: Email
     ) {
@@ -268,7 +330,6 @@ export const AgentServiceBody: Layer.Layer<
         Effect.provideService(LanguageModel.LanguageModel, triageModel)
       );
 
-      // This is for the Tool loop.
       const prompt = Prompt.make([
         { role: 'system', content: TRIAGE_SYSTEM_PROMPT },
         { role: 'user', content: triageActionPrompt(email, decision) }
@@ -283,27 +344,9 @@ export const AgentServiceBody: Layer.Layer<
           ? null
           : approvalRequestFromPrompt(email.id, result.prompt, result.pending);
 
-      // TODO: Weird code. Redundant checks.
-      if (approval !== null) {
-        yield* conversations.save({
-          status: 'awaiting_approval',
-          prompt: encodePrompt(result.prompt),
-          pending: result.pending,
-          emailId: email.id
-        });
-      } else {
-        yield* conversations.save({
-          status: 'complete',
-          prompt: encodePrompt(result.prompt),
-          emailId: email.id
-        });
-      }
+      yield* saveLoopResult(result, { emailId: email.id });
 
-      const after = yield* actions.listLedger(email.id);
-      const beforeIds = new Set(before.map((entry) => entry.id));
-      const newActions = after
-        .filter((entry) => !beforeIds.has(entry.id))
-        .map((entry) => new TriageActed({ entry }));
+      const newActions = yield* actedSince(email.id, before);
       return { decision, actions: newActions, approval };
     });
 
@@ -348,11 +391,8 @@ export const AgentServiceBody: Layer.Layer<
           ])
         );
         const result = yield* runLoop(resumed, 'chat', TriageToolkit);
-        yield* conversations.save({
+        yield* saveLoopResult(result, {
           id: record.id,
-          status: result.pending === null ? 'complete' : 'awaiting_approval',
-          prompt: encodePrompt(result.prompt),
-          pending: result.pending,
           emailId: record.emailId
         });
 
@@ -364,19 +404,7 @@ export const AgentServiceBody: Layer.Layer<
             )
           );
         }
-        const latest = yield* actions.listLedger(emailId);
-        const entry = latest[0];
-        if (entry !== undefined) {
-          return entry;
-        }
-        return yield* actions.flagForReview({
-          emailId,
-          actor: 'user',
-          summary:
-            input.verdict === 'approve'
-              ? `Approved ${approvalId}`
-              : `Denied ${approvalId}`
-        });
+        return yield* latestEntryOrFlag(emailId, approvalId, input.verdict);
       }
     );
 
@@ -400,11 +428,8 @@ export const AgentServiceBody: Layer.Layer<
         Prompt.make([{ role: 'user', content: input.message }])
       );
       const result = yield* runLoop(prompt, 'chat', TriageToolkit);
-      const saved = yield* conversations.save({
+      const saved = yield* saveLoopResult(result, {
         id: existing?.id,
-        status: result.pending === null ? 'complete' : 'awaiting_approval',
-        prompt: encodePrompt(result.prompt),
-        pending: result.pending,
         emailId: existing?.emailId
       });
       return [

@@ -20,6 +20,7 @@ import {
   DecisionsRepo,
   DecisionsRepoBody
 } from '@/Modules/Triage/Decisions/Repo';
+import { TriageRunsRepoBody } from '@/Modules/Triage/Runs/Repo';
 import { TriageService, TriageServiceBody } from '@/Modules/Triage/Service';
 import { runDb } from '../../support/Database';
 
@@ -101,6 +102,7 @@ const ServiceLayer = TriageServiceBody.pipe(
       AgentLayer,
       EmailsLayer,
       DecisionsRepoBody,
+      TriageRunsRepoBody,
       ActionsLayer,
       ConversationsLayer
     )
@@ -194,6 +196,7 @@ describe('TriageService', () => {
           MultiAgentLayer,
           MultiEmailsLayer,
           DecisionsRepoBody,
+          TriageRunsRepoBody,
           ActionsLayer,
           ConversationsLayer
         )
@@ -291,6 +294,7 @@ const inboxWithLedger = (
         AgentLayer,
         EmailsLayerOne,
         DecisionsRepoBody,
+        TriageRunsRepoBody,
         LedgerActionsLayer,
         ConversationsLayer
       )
@@ -385,6 +389,7 @@ describe('TriageService fresh re-run', () => {
           FreshAgentLayer,
           FreshEmailsLayer,
           DecisionsRepoBody,
+          TriageRunsRepoBody,
           ActionServiceBody.pipe(
             Layer.provideMerge(
               Layer.mergeAll(ActionLedgerRepoBody, DecisionsRepoBody)
@@ -494,6 +499,7 @@ describe('TriageService per-email re-triage', () => {
           RetriageAgentLayer,
           RetriageEmailsLayer,
           DecisionsRepoBody,
+          TriageRunsRepoBody,
           ActionServiceBody.pipe(
             Layer.provideMerge(
               Layer.mergeAll(ActionLedgerRepoBody, DecisionsRepoBody)
@@ -596,6 +602,7 @@ describe('TriageService per-email re-triage', () => {
           EmptyAgentLayer,
           MissingEmailsLayer,
           DecisionsRepoBody,
+          TriageRunsRepoBody,
           ActionServiceBody.pipe(
             Layer.provideMerge(
               Layer.mergeAll(ActionLedgerRepoBody, DecisionsRepoBody)

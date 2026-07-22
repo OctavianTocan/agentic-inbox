@@ -18,6 +18,7 @@ import {
   DecisionsRepo,
   DecisionsRepoBody
 } from '@/Modules/Triage/Decisions/Repo';
+import { TriageRunsRepoBody } from '@/Modules/Triage/Runs/Repo';
 import { TriageService, TriageServiceBody } from '@/Modules/Triage/Service';
 import { runDb } from '../../support/Database';
 import {
@@ -158,6 +159,7 @@ const triageLayer = (options: {
       )
     ),
     ConversationsRepoBody,
+    TriageRunsRepoBody,
     emailsLayerFor(options.emails),
     modelLayers(options.script, options.decisionJson)
   );

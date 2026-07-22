@@ -2,7 +2,7 @@ import {
   ApprovalRequest,
   type LedgerEntry
 } from '@app/api-core/Modules/Actions/Domain';
-import type { EmailStatus } from '@app/api-core/Modules/Emails/Domain';
+import type { Email, EmailStatus } from '@app/api-core/Modules/Emails/Domain';
 import { EmailNotFound } from '@app/api-core/Modules/Emails/Errors';
 import type { Decision } from '@app/api-core/Modules/Triage/Domain';
 import {
@@ -31,6 +31,7 @@ import {
 } from '@/Modules/Chat/Repo';
 import { EmailsService, EmailsServiceLive } from '@/Modules/Emails/Service';
 import { DecisionsRepo, DecisionsRepoLive } from './Decisions/Repo';
+import { TriageRunsRepo, TriageRunsRepoLive } from './Runs/Repo';
 
 type EmailStatusType = Schema.Schema.Type<typeof EmailStatus>;
 type TriageEvent = Schema.Schema.Type<typeof TriageStreamEvent>;
@@ -62,6 +63,7 @@ export const TriageServiceBody: Layer.Layer<
   | DecisionsRepo
   | ActionService
   | ConversationsRepo
+  | TriageRunsRepo
 > = Layer.effect(
   TriageService,
   Effect.gen(function* () {
@@ -70,6 +72,7 @@ export const TriageServiceBody: Layer.Layer<
     const decisions = yield* DecisionsRepo;
     const actions = yield* ActionService;
     const conversations = yield* ConversationsRepo;
+    const runs = yield* TriageRunsRepo;
     const { triageConcurrency: rawConcurrency, triageGapMs: configuredGap } =
       yield* AppConfig.pipe(Effect.orDie);
     const triageConcurrency = Math.max(1, rawConcurrency);
@@ -81,11 +84,77 @@ export const TriageServiceBody: Layer.Layer<
         : 0
       : Math.max(0, configuredGap);
 
+    /** Triage one email and persist its decision (shared by batch + retriage). */
+    const persistTriage = Effect.fn('TriageService.persistTriage')(function* (
+      email: Email
+    ) {
+      const result = yield* agent.triageEmail(email);
+      const storedDecision = yield* decisions.upsert(result.decision);
+      return {
+        decision: storedDecision,
+        actions: result.actions,
+        approval: result.approval
+      } as const;
+    });
+
+    /** One email for the batch stream: persist triage and map to SSE events. */
+    const triageOneEmail = Effect.fn('TriageService.triageOneEmail')(function* (
+      email: Email
+    ): Effect.fn.Return<TriageEvent[]> {
+      const outcome = yield* persistTriage(email).pipe(
+        Effect.map((ok) => ({ _tag: 'Ok' as const, ...ok })),
+        Effect.catch((error) =>
+          Effect.succeed({
+            _tag: 'Fail' as const,
+            reason: errorMessage(error)
+          })
+        )
+      );
+
+      if (outcome._tag === 'Fail') {
+        return [
+          new TriageStarted({ type: 'started', emailId: email.id }),
+          new TriageFailed({
+            type: 'failed',
+            emailId: email.id,
+            reason: outcome.reason
+          })
+        ];
+      }
+
+      const { decision, actions: acted, approval } = outcome;
+
+      return [
+        new TriageStarted({ type: 'started', emailId: email.id }),
+        new TriageDecided({ type: 'decision', decision }),
+        ...acted,
+        ...(approval === null
+          ? []
+          : [
+              new TriageApprovalPending({
+                type: 'approval_pending',
+                approval
+              })
+            ])
+      ];
+    });
+
+    /** Pace then triage one email (batch concurrency entry point). */
+    const triageEmailWithGap = Effect.fn('TriageService.triageEmailWithGap')(
+      function* (email: Email, index: number): Effect.fn.Return<TriageEvent[]> {
+        if (index > 0 && triageGapMs > 0) {
+          yield* Effect.sleep(`${triageGapMs} millis`);
+        }
+        return yield* triageOneEmail(email);
+      }
+    );
+
     const run = Effect.fn('TriageService.run')(function* (fresh = false) {
       if (fresh) {
         yield* decisions.deleteAll();
         yield* actions.clearLedger();
         yield* conversations.deleteTriage();
+        yield* runs.deleteAll();
       }
       const all = yield* emails.list();
       const existing = yield* decisions.list();
@@ -93,52 +162,9 @@ export const TriageServiceBody: Layer.Layer<
       const emailsToProcess = all.filter((email) => !existingIds.has(email.id));
 
       return Stream.fromIterable(emailsToProcess).pipe(
-        Stream.mapEffect(
-          (email, index) =>
-            (index === 0 || triageGapMs === 0
-              ? Effect.void
-              : Effect.sleep(`${triageGapMs} millis`)
-            ).pipe(
-              Effect.flatMap(() =>
-                agent.triageEmail(email).pipe(
-                  Effect.flatMap(({ decision, actions: acted, approval }) =>
-                    decisions.upsert(decision).pipe(
-                      Effect.map((storedDecision): TriageEvent[] => [
-                        new TriageStarted({
-                          type: 'started',
-                          emailId: email.id
-                        }),
-                        new TriageDecided({
-                          type: 'decision',
-                          decision: storedDecision
-                        }),
-                        ...acted,
-                        ...(approval === null
-                          ? []
-                          : [
-                              new TriageApprovalPending({
-                                type: 'approval_pending',
-                                approval
-                              })
-                            ])
-                      ])
-                    )
-                  ),
-                  Effect.catch((error) =>
-                    Effect.succeed<TriageEvent[]>([
-                      new TriageStarted({ type: 'started', emailId: email.id }),
-                      new TriageFailed({
-                        type: 'failed',
-                        emailId: email.id,
-                        reason: errorMessage(error)
-                      })
-                    ])
-                  )
-                )
-              )
-            ),
-          { concurrency: triageConcurrency }
-        ),
+        Stream.mapEffect(triageEmailWithGap, {
+          concurrency: triageConcurrency
+        }),
         Stream.flatMap((events) => Stream.fromIterable(events)),
         Stream.concat(
           Stream.succeed(
@@ -191,8 +217,7 @@ export const TriageServiceBody: Layer.Layer<
       yield* actions.clearLedgerForEmail(emailId);
       yield* conversations.deleteByEmail(emailId);
 
-      const { decision } = yield* agent.triageEmail(email).pipe(Effect.orDie);
-      yield* decisions.upsert(decision);
+      yield* persistTriage(email).pipe(Effect.orDie);
 
       return yield* inbox();
     });
@@ -207,7 +232,8 @@ export const TriageServiceLive = Layer.provide(TriageServiceBody, [
   EmailsServiceLive,
   DecisionsRepoLive,
   ActionServiceLive,
-  ConversationsRepoLive
+  ConversationsRepoLive,
+  TriageRunsRepoLive
 ]);
 
 /** Computes the current review status for an inbox item. */

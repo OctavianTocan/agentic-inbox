@@ -12,6 +12,7 @@ import {
   DecisionsRepo,
   DecisionsRepoBody
 } from '@/Modules/Triage/Decisions/Repo';
+import { TriageRunsRepoBody } from '@/Modules/Triage/Runs/Repo';
 import { TriageService, TriageServiceBody } from '@/Modules/Triage/Service';
 import { runDb } from '../../support/Database';
 
@@ -87,6 +88,7 @@ describe('inbox status after undo', () => {
           AgentLayer,
           EmailsLayer,
           DecisionsRepoBody,
+          TriageRunsRepoBody,
           RealActionsLayer,
           ConversationsRepoBody
         )

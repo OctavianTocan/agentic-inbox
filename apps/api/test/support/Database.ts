@@ -47,7 +47,7 @@ export const TestDatabaseLive = PgClient.layer({
 export const resetSchema = Effect.gen(function* () {
   const sql = yield* PgClient.PgClient;
   yield* initialMigration;
-  yield* sql`TRUNCATE decisions, action_ledger, conversations RESTART IDENTITY CASCADE`.pipe(
+  yield* sql`TRUNCATE decisions, action_ledger, conversations, triage_runs RESTART IDENTITY CASCADE`.pipe(
     Effect.orDie
   );
 });
