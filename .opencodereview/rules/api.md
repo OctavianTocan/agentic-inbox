@@ -20,6 +20,9 @@ Handlers, repos, agent loop, and Postgres live here. Contracts come from `@app/a
 - Demo-mode gate via dynamic `process.env[name]` in `runtime-mode.ts` (Next bundling exception — do not replace with Effect Config)
 - Effect `Config` / `ConfigProvider` / `AppConfig` for `DATABASE_URL`, `OPENROUTER_*`, server port/host, triage knobs
 - Preferring idiomatic patterns from `repos/effect-smol` (read-only) when reviewing Effect HttpApi/Config usage
+- `Effect.fn("Name")` / `Effect.gen` for sequential service/repo methods; short `.pipe` for one-shot adapters (`Effect.orDie` on SQL, HTTP error mapping, `Effect.catch` / `withSpan` after a gen)
+- Private `Effect.fn` helpers inside a Layer body that are **not** returned on the `Context.Service` interface (shared by public methods)
+- `Stream.mapEffect(namedFn, { concurrency })` where `namedFn` is an `Effect.fn`
 
 ## DO flag
 
@@ -42,3 +45,8 @@ Handlers, repos, agent loop, and Postgres live here. Contracts come from `@app/a
 - **Repo methods that patch single fields** on a mutable aggregate (`updateStatus`, `setPending`, `complete`, `updateProposal`, …) — use whole-entity `upsert` instead; keep transitions in the service
 - **Second Domain/Repo aggregate dumped flat** into the parent module when it should be a sub-module folder (`Module/Sub/{Repo.ts,…}` mirroring `api-core` `Module/Sub/Domain.ts`)
 - Exposing CRUD HTTP endpoints for internal persistence rows (e.g. triage runs) instead of domain intents (`run triage`, `resume by runId`)
+- **Nested `Effect.flatMap` / deep `.pipe` towers** for multi-step sequential logic (“do A then B then C”) — prefer `Effect.fn` / `Effect.gen` with `yield*`; see `docs/agent-patterns/effect-writing.md` and `repos/effect-smol/LLMS.md`
+- Functions that only `return Effect.gen(...)` instead of `Effect.fn("Name")(...)`
+- Duplicating the same sequential Effect path in two public service methods when a private Layer helper should be shared (e.g. batch triage vs retriage)
+- `try` / `catch` or `async` / `await` inside Effect services/handlers — use Effect error channels and Effect APIs
+- Placing two Effects on consecutive lines without composing them (`yield*` / `flatMap` / `andThen`) so only the last expression runs

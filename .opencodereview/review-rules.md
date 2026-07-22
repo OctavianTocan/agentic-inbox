@@ -6,7 +6,7 @@ Rules are split by path in `.opencodereview/rule.json`. OCR resolves the most sp
 |-----------|------------|
 | [rules/base.md](rules/base.md) | Universal Agentic Inbox conventions |
 | [rules/api-core.md](rules/api-core.md) | `packages/api-core/**` (branded params; declared errors; OpenAPI identifiers) |
-| [rules/api.md](rules/api.md) | `apps/api/**` (Effect.fail vs die; AppConfig; whole-entity repos; Schema SQL row decode) |
+| [rules/api.md](rules/api.md) | `apps/api/**` (Effect.fail vs die; Effect.fn/gen; AppConfig; whole-entity repos; Schema SQL row decode) |
 | [rules/web.md](rules/web.md) | `apps/web/**` (HttpApiClient; api-core types) |
 | [rules/design-system.md](rules/design-system.md) | `apps/web/src/design-system/**` |
 | [rules/data.md](rules/data.md) | `data/**` |

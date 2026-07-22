@@ -24,7 +24,7 @@ Anchors: `.opencodereview/review-rules.md`, `rules/{base,api-core,api,web,design
 | Path | Emphasizes |
 |------|------------|
 | `api-core` | Branded params, declared errors, OpenAPI identifiers, NullOr for SQL |
-| `apps/api` | Effect.fail vs die, whole-entity repos, decodeSqlRow, sensitive gate, AppConfig |
+| `apps/api` | Effect.fail vs die, Effect.fn/gen (no flatMap towers), whole-entity repos, decodeSqlRow, sensitive gate, AppConfig |
 | `apps/web` | HttpApiClient, no mirrored wire types, design-system boundaries |
 
 Excluded: `.agent`, `repos`, `node_modules`, build outputs, etc.
