@@ -87,7 +87,7 @@ export const ActionLedgerRepoBody: Layer.Layer<
       const ts = DateTime.formatIso(now);
       const id = crypto.randomUUID() as LedgerEntryIdType;
       const undoesId = entry.undoes ?? null;
-      const runId = entry.runId ?? (null as RunIdType | null);
+      const runId = entry.runId ?? null;
       const actionRevision = entry.actionRevision ?? 1;
 
       // An undo entry inserts itself and stamps the original's undone_by
