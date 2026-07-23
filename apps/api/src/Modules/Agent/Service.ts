@@ -28,7 +28,7 @@ import {
 import { TriageActed } from '@app/api-core/Modules/Triage/Events';
 import { type Config, Context, Effect, Layer, Schedule, Schema } from 'effect';
 import { type AiError, LanguageModel, Prompt } from 'effect/unstable/ai';
-import type { EmailIdType } from '@/Lib/Ids';
+import type { EmailIdType, RunIdType } from '@/Lib/Ids';
 import { isSensitive } from '@/Modules/Actions/Policy';
 import { ActionService, ActionServiceLive } from '@/Modules/Actions/Service';
 import { ConversationsRepo, ConversationsRepoLive } from '@/Modules/Chat/Repo';
@@ -52,6 +52,12 @@ import {
   makeTriageToolkit,
   TriageToolkit
 } from './Toolkit';
+
+/** Options for one TriageAgent walk. */
+export type TriageEmailOptions = {
+  /** Attempt id minted by InboxOrchestrator (wire: runId). */
+  readonly runId?: RunIdType | undefined;
+};
 
 const MAX_AGENT_TURNS = 6;
 /** Longer backoff than the old 250ms ramp — free OpenRouter keys reject bursts, and failed retries still count against the daily quota. */
@@ -112,7 +118,10 @@ type LoopResult = {
 export class AgentService extends Context.Service<
   AgentService,
   {
-    readonly triageEmail: (email: Email) => Effect.Effect<
+    readonly triageEmail: (
+      email: Email,
+      options?: TriageEmailOptions
+    ) => Effect.Effect<
       {
         readonly decision: Decision;
         readonly actions: ReadonlyArray<TriageActed>;
@@ -195,11 +204,17 @@ export const AgentServiceBody: Layer.Layer<
      * In triage mode the caller passes a per-email toolkit whose send/archive
      * tools require approval only for sensitive emails; chat mode uses the
      * static chat toolkit.
+     *
+     * @param initialPrompt - Starting prompt for the loop.
+     * @param mode - Triage vs chat toolkit selection.
+     * @param triageToolkit - Toolkit used when mode is triage (or chat resume on TriageToolkit).
+     * @param runId - Attempt id for triage ledger rows; omit for chat-only walks.
      */
     const runLoop = Effect.fn('AgentService.runLoop')(function* (
       initialPrompt: Prompt.Prompt,
       mode: 'triage' | 'chat',
-      triageToolkit: typeof TriageToolkit
+      triageToolkit: typeof TriageToolkit,
+      runId?: RunIdType
     ): Effect.fn.Return<
       LoopResult,
       Config.ConfigError | ActionNotFound | ActionNotUndoable | AiError.AiError,
@@ -231,7 +246,7 @@ export const AgentServiceBody: Layer.Layer<
                 }).pipe(
                   Effect.provide(
                     triageToolkit.toLayer(
-                      makeTriageHandlers(actions, 'batch_agent')
+                      makeTriageHandlers(actions, 'batch_agent', runId)
                     )
                   )
                 )
@@ -323,7 +338,8 @@ export const AgentServiceBody: Layer.Layer<
     );
 
     const triageEmail = Effect.fn('AgentService.triageEmail')(function* (
-      email: Email
+      email: Email,
+      options: TriageEmailOptions = {}
     ) {
       const before = yield* actions.listLedger(email.id);
       const decision = yield* generateDecision(email).pipe(
@@ -337,7 +353,8 @@ export const AgentServiceBody: Layer.Layer<
       const result = yield* runLoop(
         prompt,
         'triage',
-        makeTriageToolkit(decision.isSensitive)
+        makeTriageToolkit(decision.isSensitive),
+        options.runId
       );
       const approval =
         result.pending === null
