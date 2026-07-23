@@ -37,7 +37,9 @@ Second aggregate → nested folder on **both** sides:
 - `apps/api/.../Triage/Decisions/`, `Triage/Runs/`
 - `packages/api-core/.../Triage/Runs/Domain.ts`
 
-Prefer that over a second flat `Repo.ts` at the parent. Keep HTTP groups at the parent unless independently exposed. Intent routes (`run triage`), not CRUD on internal rows.
+Prefer that over a second flat `Repo.ts` at the parent. Keep HTTP groups at the parent unless independently exposed. Intent routes (`run triage`, resume by attempt id), not CRUD on internal rows.
+
+Ownership of InboxOrchestrator / TriageAgent / LedgerService: [triage-ownership-seams.md](./triage-ownership-seams.md).
 
 ## Anchors
 

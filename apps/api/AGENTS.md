@@ -12,6 +12,20 @@ This monorepo vendors Effect under `repos/` (git subtree). See [`repos/README.md
 - Before writing Effect code, read [`repos/effect-smol/LLMS.md`](../../repos/effect-smol/LLMS.md).
 - Index of distillations: [`docs/agent-patterns/README.md`](../../docs/agent-patterns/README.md) (layers, modules, repos, agent loop, demo, OCR, …).
 
+## Triage ownership seams
+
+Vocabulary: root [`GLOSSARY.md`](../../GLOSSARY.md). Full table: [`docs/agent-patterns/triage-ownership-seams.md`](../../docs/agent-patterns/triage-ownership-seams.md).
+
+Hard rules (new names; old symbols still in code until rename):
+
+1. Only InboxOrchestrator (`TriageService`) mints `attemptId` / `threadId` (wire may still say `runId`).
+2. Only LedgerService (`ActionService`) appends `action_ledger`.
+3. Only InboxOrchestrator writes Attempt rows and Classifications from agent outcomes.
+4. Triage resume key is `attemptId`; pause payload on the Attempt (`interrupted` + `pending`).
+5. Only InboxOrchestrator emits triage SSE.
+6. TriageAgent must not talk to ledger / attempt / classification repos directly.
+7. ChatAgent must not define the triage resume path.
+
 ## Local commands
 
 - `bun run --cwd apps/api typecheck`

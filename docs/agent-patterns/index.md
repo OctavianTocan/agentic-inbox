@@ -24,6 +24,7 @@ Short, pointed distillations of how this repository works, formatted as a [Googl
 - [module-layout.md](./module-layout.md) — api-core vs apps/api vs web; Domain/Errors/Api/Http/Service/Repo.
 - [repo-sql.md](./repo-sql.md) — Whole-entity repos, decodeSqlRow, ledger append.
 - [agent-loop.md](./agent-loop.md) — TriageModel vs ToolModel, tool loop, approvals.
+- [triage-ownership-seams.md](./triage-ownership-seams.md) — Attempt / InboxOrchestrator / TriageAgent / LedgerService ownership rules.
 - [sensitive-policy.md](./sensitive-policy.md) — Never auto-action sensitive mail.
 - [demo-mode.md](./demo-mode.md) — Missing DB/key → DemoAppLive.
 

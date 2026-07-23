@@ -44,9 +44,14 @@ Handlers, repos, agent loop, and Postgres live here. Contracts come from `@app/a
 - Missing regression tests for triage stream, policy gate, approval resume, or undo behavior changes
 - **Repo methods that patch single fields** on a mutable aggregate (`updateStatus`, `setPending`, `complete`, `updateProposal`, …) — use whole-entity `upsert` instead; keep transitions in the service
 - **Second Domain/Repo aggregate dumped flat** into the parent module when it should be a sub-module folder (`Module/Sub/{Repo.ts,…}` mirroring `api-core` `Module/Sub/Domain.ts`)
-- Exposing CRUD HTTP endpoints for internal persistence rows (e.g. triage runs) instead of domain intents (`run triage`, `resume by runId`)
+- Exposing CRUD HTTP endpoints for internal persistence rows (e.g. triage attempts) instead of domain intents (`run triage`, `resume by attemptId` / wire `runId`)
 - **Nested `Effect.flatMap` / deep `.pipe` towers** for multi-step sequential logic (“do A then B then C”) — prefer `Effect.fn` / `Effect.gen` with `yield*`; see `docs/agent-patterns/effect-writing.md` and `repos/effect-smol/LLMS.md`
 - Functions that only `return Effect.gen(...)` instead of `Effect.fn("Name")(...)`
 - Duplicating the same sequential Effect path in two public service methods when a private Layer helper should be shared (e.g. batch triage vs retriage)
 - `try` / `catch` or `async` / `await` inside Effect services/handlers — use Effect error channels and Effect APIs
 - Placing two Effects on consecutive lines without composing them (`yield*` / `flatMap` / `andThen`) so only the last expression runs
+- Minting triage attempt ids (`runId` / `attemptId`) outside InboxOrchestrator (`TriageService`)
+- Appending `action_ledger` outside LedgerService (`ActionService`) — including direct `ActionLedgerRepo` use from Toolkit or TriageAgent
+- Emitting triage SSE from TriageAgent / Toolkit instead of InboxOrchestrator
+- Dual Classification writers in one attempt (e.g. toolkit `record_triage` plus orchestrator upsert)
+- Using conversation `approvalId` as the long-term public triage resume key (target: Attempt `attemptId` / wire `runId`)
