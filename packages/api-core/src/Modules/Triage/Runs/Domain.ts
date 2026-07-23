@@ -1,5 +1,5 @@
 import { Schema } from 'effect';
-import { RunId } from '../../Actions/Domain';
+import { ActionKind, RunId } from '../../Actions/Domain';
 import { EmailId } from '../../Emails/Domain';
 import { Proposal } from '../Domain';
 
@@ -18,13 +18,32 @@ import { Proposal } from '../Domain';
 // Batch HTTP `TriageRunRequest` stays on the parent `Triage/Domain.ts`.
 //</skill-gen>
 
-/** Status of a triage run. */
+/** Lifecycle of a triage run (one attempt / thread). */
 export const TriageRunStatus: Schema.Literals<
-  readonly ['pending', 'completed', 'failed']
-> = Schema.Literals(['pending', 'completed', 'failed']).annotate({
-  identifier: 'TriageRunStatus',
-  description: 'Status of a triage run.'
-});
+  readonly ['running', 'interrupted', 'completed', 'failed']
+> = Schema.Literals(['running', 'interrupted', 'completed', 'failed']).annotate(
+  {
+    identifier: 'TriageRunStatus',
+    description:
+      'Lifecycle of a triage run: in progress, paused for human approval, finished, or failed.'
+  }
+);
+
+/** HITL payload stored on a run while it is interrupted for approval. */
+export class TriageRunPending extends Schema.Class<TriageRunPending>(
+  'TriageRunPending'
+)({
+  action: ActionKind,
+  summary: Schema.String.annotate({
+    description: 'What the agent proposes to do if approved.'
+  }),
+  payload: Schema.Record(Schema.String, Schema.Unknown).annotate({
+    description: 'Proposed tool arguments (e.g. the draft reply body).'
+  }),
+  actionRevision: Schema.Number.annotate({
+    description: 'Revision number of the action awaiting approval.'
+  })
+}) {}
 
 /** Error for a triage run. */
 export class TriageRunError extends Schema.Class<TriageRunError>(
@@ -48,8 +67,8 @@ export class TriageRun extends Schema.Class<TriageRun>('TriageRun')({
     description: 'Summary of the proposal for the triage run.'
   }),
   // `optional(NullOr(...))` so SQL NULL and omitted keys both decode cleanly.
-  pending: Schema.optional(Schema.NullOr(Schema.Boolean)).annotate({
-    description: 'Whether the triage run is pending.'
+  pending: Schema.optional(Schema.NullOr(TriageRunPending)).annotate({
+    description: 'Approval payload while status is interrupted; null otherwise.'
   }),
   decisionSnapshot: Schema.optional(Schema.NullOr(Schema.Json)).annotate({
     description: 'Snapshot of the decision for the triage run.'
