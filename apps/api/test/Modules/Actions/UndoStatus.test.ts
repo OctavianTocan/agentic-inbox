@@ -42,7 +42,7 @@ const EMAIL = new EmailSchema({
 });
 
 const RealActionsLayer = ActionServiceBody.pipe(
-  Layer.provideMerge(Layer.mergeAll(ActionLedgerRepoBody, DecisionsRepoBody))
+  Layer.provideMerge(ActionLedgerRepoBody)
 );
 
 describe('undo write path', () => {

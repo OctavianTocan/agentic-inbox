@@ -14,7 +14,6 @@ import { ToolModel, TriageModel } from '@/Modules/Agent/Model';
 import { AgentService, AgentServiceBody } from '@/Modules/Agent/Service';
 import { ConversationsRepoBody } from '@/Modules/Chat/Repo';
 import { EmailsService } from '@/Modules/Emails/Service';
-import { DecisionsRepoBody } from '@/Modules/Triage/Decisions/Repo';
 import { runDb } from '../../support/Database';
 import {
   type GenerateTextScript,
@@ -81,11 +80,7 @@ const agentLayer = (script: GenerateTextScript) =>
   AgentServiceBody.pipe(
     Layer.provideMerge(
       Layer.mergeAll(
-        ActionServiceBody.pipe(
-          Layer.provideMerge(
-            Layer.mergeAll(ActionLedgerRepoBody, DecisionsRepoBody)
-          )
-        ),
+        ActionServiceBody.pipe(Layer.provideMerge(ActionLedgerRepoBody)),
         ConversationsRepoBody,
         EmailsLayer,
         modelLayers(script)

@@ -1,16 +1,17 @@
+import { TriageRun } from '@app/api-core/Modules/Triage/Runs/Domain';
 import { type Context, Effect, Layer } from 'effect';
 import { describe, expect, it } from 'vitest';
-import type { EmailIdType, LedgerEntryIdType } from '@/Lib/Ids';
+import type { EmailIdType, LedgerEntryIdType, RunIdType } from '@/Lib/Ids';
 import { ActionLedgerRepo, ActionLedgerRepoBody } from '@/Modules/Actions/Repo';
 import { ActionService, ActionServiceBody } from '@/Modules/Actions/Service';
-import { DecisionsRepoBody } from '@/Modules/Triage/Decisions/Repo';
+import { TriageRunsRepo, TriageRunsRepoBody } from '@/Modules/Triage/Runs/Repo';
 import { runDb } from '../../support/Database';
 
 type Actions = Context.Service.Shape<typeof ActionService>;
 type Ledger = Context.Service.Shape<typeof ActionLedgerRepo>;
 
 const ServiceLayer = ActionServiceBody.pipe(
-  Layer.provideMerge(Layer.mergeAll(ActionLedgerRepoBody, DecisionsRepoBody))
+  Layer.provideMerge(ActionLedgerRepoBody)
 );
 
 const withService = <A, E>(
@@ -29,6 +30,7 @@ const withService = <A, E>(
 
 const EMAIL: EmailIdType = 'e-014';
 const MISSING_ID = '00000000-0000-0000-0000-000000000000' as LedgerEntryIdType;
+const ATTEMPT_ID = '11111111-1111-1111-1111-111111111111' as RunIdType;
 
 describe('ActionService', () => {
   it('sendReply appends a send_reply entry carrying the draft body', async () => {
@@ -46,7 +48,42 @@ describe('ActionService', () => {
 
     expect(entry.action).toBe('send_reply');
     expect(entry.payload).toEqual({ body: 'Confirmed.' });
+    expect(entry.runId).toBeNull();
     expect(ledgerRows).toHaveLength(1);
+  });
+
+  it('sendReply stamps runId on the ledger row when provided', async () => {
+    const WithRunsLayer = Layer.mergeAll(ServiceLayer, TriageRunsRepoBody);
+    const entry = await runDb(
+      Effect.gen(function* () {
+        const runs = yield* TriageRunsRepo;
+        const actions = yield* ActionService;
+        yield* runs.create(
+          new TriageRun({
+            id: ATTEMPT_ID,
+            emailId: EMAIL,
+            status: 'running',
+            createdAt: '2026-05-01T12:00:00Z',
+            updatedAt: '2026-05-01T12:00:00Z',
+            proposal: 'send_reply',
+            proposalSummary: 'In progress',
+            pending: null,
+            decisionSnapshot: null,
+            policyVersion: null,
+            promptVersion: null,
+            error: null
+          })
+        );
+        return yield* actions.sendReply({
+          emailId: EMAIL,
+          actor: 'batch_agent',
+          body: 'Confirmed with attempt.',
+          runId: ATTEMPT_ID
+        });
+      }).pipe(Effect.provide(WithRunsLayer))
+    );
+
+    expect(entry.runId).toBe(ATTEMPT_ID);
   });
 
   it('undoAction appends an undo linked to the original and marks it undone', async () => {
