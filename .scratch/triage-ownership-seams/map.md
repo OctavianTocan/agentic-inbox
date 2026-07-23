@@ -15,11 +15,12 @@ An ownership table plus hard seam rules — using the naming bundle in [Adopt cl
 - **Skills when resolving:** `/grilling`, `/domain-modeling`; research may read repo sources and v2 map tickets.
 - **Repo hotspots (today’s paths):** `apps/api/src/Modules/{Triage,Agent,Actions,Chat}/*` — map to InboxOrchestrator, TriageAgent, LedgerService, ChatAgent when renaming.
 - **Glossary:** root [`GLOSSARY.md`](../../GLOSSARY.md) uses the new names.
+- **Implementation progress (2026-07-23):** InboxOrchestrator mints/finalizes Attempt rows (`completed` / `interrupted` / `failed`); `runId` threads TriageAgent → Toolkit → LedgerService → ledger; `record_triage` no longer dual-writes Classifications. Still open: resume-by-attemptId (drop conversation/`approvalId`), inbox pending from Attempt, `no_action`, mass rename, LangGraph.
 - **Already settled in charting (not ticket answers — preferences that shape the map):**
   - Destination style: ownership table + hard PR/agent rules (not folder-move plan alone).
   - One ownership story before and after cutover (no temporary second architecture).
   - Publish targets: `apps/api/AGENTS.md`, `.opencodereview/rules/api.md`, `docs/agent-patterns/triage-ownership-seams.md`.
-  - Out of scope for this effort: Phase 1 product implementation, LangGraph build, mass code rename unless requested.
+  - Out of scope for *decision* tickets: LangGraph build and mass rename until asked.
 
 ## Decisions so far
 
@@ -41,9 +42,7 @@ An ownership table plus hard seam rules — using the naming bundle in [Adopt cl
 
 ## Out of scope
 
-- Implementing `attemptId` / `runId` threading through Toolkit / LedgerService (Phase 1 build work).
 - Building LangGraph adapter behind TriageAgent.
-- Mass rename of source files in this map session.
+- Mass rename of source files until asked.
 - Reopening [Freeze the TriageEngine Effect seam](../agentic-inbox-v2/issues/02-freeze-triage-engine-seam.md) role split (only the labels change).
-- Actually editing AGENTS / OpenCodeReview / agent-patterns files (placement decided in ticket 06; excerpts landed with naming bundle).
 - Web UI redesign; Redis; evals; traces UI.
