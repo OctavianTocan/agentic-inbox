@@ -18,10 +18,11 @@ import {
   InboxItem,
   InboxSummary
 } from '@app/api-core/Modules/Triage/Inbox';
+import { TriageRun } from '@app/api-core/Modules/Triage/Runs/Domain';
 import { Context, Effect, Layer, Schema, Stream } from 'effect';
 import { Prompt } from 'effect/unstable/ai';
 import { AppConfig } from '@/Infrastructure/AppConfig';
-import type { EmailIdType } from '@/Lib/Ids';
+import type { EmailIdType, RunIdType } from '@/Lib/Ids';
 import { ActionService, ActionServiceLive } from '@/Modules/Actions/Service';
 import { AgentService, AgentServiceLive } from '@/Modules/Agent/Service';
 import {
@@ -101,6 +102,24 @@ export const TriageServiceBody: Layer.Layer<
     const triageOneEmail = Effect.fn('TriageService.triageOneEmail')(function* (
       email: Email
     ): Effect.fn.Return<TriageEvent[]> {
+      // Create a new run for the email.
+      const runId = crypto.randomUUID() as RunIdType;
+      yield* runs.create(
+        new TriageRun({
+          id: runId,
+          emailId: email.id,
+          status: 'running',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          proposal: 'send_reply',
+          proposalSummary: 'Send reply',
+          pending: null,
+          decisionSnapshot: null,
+          policyVersion: null,
+          promptVersion: null
+        })
+      );
+
       const outcome = yield* persistTriage(email).pipe(
         Effect.map((ok) => ({ _tag: 'Ok' as const, ...ok })),
         Effect.catch((error) =>
