@@ -4,7 +4,7 @@ import {
 } from '@app/api-core/Modules/Actions/Domain';
 import type { Email, EmailStatus } from '@app/api-core/Modules/Emails/Domain';
 import { EmailNotFound } from '@app/api-core/Modules/Emails/Errors';
-import type { Decision } from '@app/api-core/Modules/Triage/Domain';
+import { Decision, type Proposal } from '@app/api-core/Modules/Triage/Domain';
 import {
   TriageApprovalPending,
   TriageDecided,
@@ -18,8 +18,12 @@ import {
   InboxItem,
   InboxSummary
 } from '@app/api-core/Modules/Triage/Inbox';
-import { TriageRun } from '@app/api-core/Modules/Triage/Runs/Domain';
-import { Context, Effect, Layer, Schema, Stream } from 'effect';
+import {
+  TriageRun,
+  TriageRunError,
+  TriageRunPending
+} from '@app/api-core/Modules/Triage/Runs/Domain';
+import { Context, DateTime, Effect, Layer, Schema, Stream } from 'effect';
 import { Prompt } from 'effect/unstable/ai';
 import { AppConfig } from '@/Infrastructure/AppConfig';
 import type { EmailIdType, RunIdType } from '@/Lib/Ids';
@@ -36,6 +40,10 @@ import { TriageRunsRepo, TriageRunsRepoLive } from './Runs/Repo';
 
 type EmailStatusType = Schema.Schema.Type<typeof EmailStatus>;
 type TriageEvent = Schema.Schema.Type<typeof TriageStreamEvent>;
+type ProposalType = Schema.Schema.Type<typeof Proposal>;
+
+const encodeDecision = Schema.encodeSync(Decision);
+const decodeJson = Schema.decodeUnknownSync(Schema.Json);
 
 /** True when Vitest is driving the process (skip batch pacing defaults). */
 const underVitest =
@@ -85,11 +93,15 @@ export const TriageServiceBody: Layer.Layer<
         : 0
       : Math.max(0, configuredGap);
 
-    /** Triage one email and persist its decision (shared by batch + retriage). */
+    /**
+     * Triage one email and persist its Classification (InboxOrchestrator
+     * sole writer for decisions).
+     */
     const persistTriage = Effect.fn('TriageService.persistTriage')(function* (
-      email: Email
+      email: Email,
+      runId: RunIdType
     ) {
-      const result = yield* agent.triageEmail(email);
+      const result = yield* agent.triageEmail(email, { runId });
       const storedDecision = yield* decisions.upsert(result.decision);
       return {
         decision: storedDecision,
@@ -98,29 +110,34 @@ export const TriageServiceBody: Layer.Layer<
       } as const;
     });
 
-    /** One email for the batch stream: persist triage and map to SSE events. */
-    const triageOneEmail = Effect.fn('TriageService.triageOneEmail')(function* (
+    /**
+     * Mint an Attempt (run), walk TriageAgent, finalize status.
+     * Failures are caught so batch SSE can emit TriageFailed.
+     */
+    const runAttempt = Effect.fn('TriageService.runAttempt')(function* (
       email: Email
-    ): Effect.fn.Return<TriageEvent[]> {
-      // Create a new run for the email.
+    ) {
       const runId = crypto.randomUUID() as RunIdType;
+      const now = yield* DateTime.now;
+      const ts = DateTime.formatIso(now);
       yield* runs.create(
         new TriageRun({
           id: runId,
           emailId: email.id,
           status: 'running',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          proposal: 'send_reply',
-          proposalSummary: 'Send reply',
+          createdAt: ts,
+          updatedAt: ts,
+          proposal: 'no_action',
+          proposalSummary: 'In progress',
           pending: null,
           decisionSnapshot: null,
           policyVersion: null,
-          promptVersion: null
+          promptVersion: null,
+          error: null
         })
       );
 
-      const outcome = yield* persistTriage(email).pipe(
+      const outcome = yield* persistTriage(email, runId).pipe(
         Effect.map((ok) => ({ _tag: 'Ok' as const, ...ok })),
         Effect.catch((error) =>
           Effect.succeed({
@@ -129,6 +146,86 @@ export const TriageServiceBody: Layer.Layer<
           })
         )
       );
+
+      const updatedAt = DateTime.formatIso(yield* DateTime.now);
+
+      if (outcome._tag === 'Fail') {
+        yield* runs.upsert(
+          new TriageRun({
+            id: runId,
+            emailId: email.id,
+            status: 'failed',
+            createdAt: ts,
+            updatedAt,
+            proposal: 'no_action',
+            proposalSummary: 'Triage failed',
+            pending: null,
+            decisionSnapshot: null,
+            policyVersion: null,
+            promptVersion: null,
+            error: new TriageRunError({ message: outcome.reason })
+          })
+        );
+        return { _tag: 'Fail' as const, reason: outcome.reason, runId };
+      }
+
+      const { decision, actions: acted, approval } = outcome;
+      const { proposal, proposalSummary } = proposalFromOutcome(
+        acted,
+        approval
+      );
+      const decisionSnapshot = decodeJson(encodeDecision(decision));
+
+      if (approval !== null) {
+        yield* runs.upsert(
+          new TriageRun({
+            id: runId,
+            emailId: email.id,
+            status: 'interrupted',
+            createdAt: ts,
+            updatedAt,
+            proposal,
+            proposalSummary,
+            pending: pendingFromApproval(approval),
+            decisionSnapshot,
+            policyVersion: null,
+            promptVersion: null,
+            error: null
+          })
+        );
+      } else {
+        yield* runs.upsert(
+          new TriageRun({
+            id: runId,
+            emailId: email.id,
+            status: 'completed',
+            createdAt: ts,
+            updatedAt,
+            proposal,
+            proposalSummary,
+            pending: null,
+            decisionSnapshot,
+            policyVersion: null,
+            promptVersion: null,
+            error: null
+          })
+        );
+      }
+
+      return {
+        _tag: 'Ok' as const,
+        runId,
+        decision,
+        actions: acted,
+        approval
+      };
+    });
+
+    /** One email for the batch stream: persist triage and map to SSE events. */
+    const triageOneEmail = Effect.fn('TriageService.triageOneEmail')(function* (
+      email: Email
+    ): Effect.fn.Return<TriageEvent[]> {
+      const outcome = yield* runAttempt(email);
 
       if (outcome._tag === 'Fail') {
         return [
@@ -236,7 +333,10 @@ export const TriageServiceBody: Layer.Layer<
       yield* actions.clearLedgerForEmail(emailId);
       yield* conversations.deleteByEmail(emailId);
 
-      yield* persistTriage(email).pipe(Effect.orDie);
+      const outcome = yield* runAttempt(email);
+      if (outcome._tag === 'Fail') {
+        return yield* Effect.die(new Error(outcome.reason));
+      }
 
       return yield* inbox();
     });
@@ -317,10 +417,58 @@ const findApprovalForEmail = (
   return null;
 };
 
+/** Derives NextAction (Proposal) fields from agent outcomes. */
+const proposalFromOutcome = (
+  acted: ReadonlyArray<{ readonly entry: LedgerEntry }>,
+  approval: ApprovalRequest | null
+): { readonly proposal: ProposalType; readonly proposalSummary: string } => {
+  if (approval !== null) {
+    return {
+      proposal: proposalFromAction(approval.action),
+      proposalSummary: approval.summary
+    };
+  }
+  const first = acted[0]?.entry;
+  if (first !== undefined) {
+    return {
+      proposal: proposalFromAction(first.action),
+      proposalSummary: first.summary
+    };
+  }
+  return { proposal: 'no_action', proposalSummary: 'No action' };
+};
+
+/** Maps a ledger/approval action kind onto the Proposal union. */
+const proposalFromAction = (action: LedgerEntry['action']): ProposalType => {
+  if (
+    action === 'send_reply' ||
+    action === 'archive' ||
+    action === 'flag_for_review'
+  ) {
+    return action;
+  }
+  return 'flag_for_review';
+};
+
+/** Builds Attempt pending payload from a legacy ApprovalRequest. */
+const pendingFromApproval = (approval: ApprovalRequest): TriageRunPending =>
+  new TriageRunPending({
+    action: approval.action,
+    summary: approval.summary,
+    payload: approval.payload,
+    actionRevision: approval.actionRevision
+  });
+
 /** Converts unknown failures into a stream-safe reason. */
 const errorMessage = (error: unknown): string => {
   if (error instanceof Error) {
-    return error.message;
+    return error.message.length > 0 ? error.message : error.name;
+  }
+  if (typeof error === 'object' && error !== null && '_tag' in error) {
+    const tag = error._tag;
+    if (typeof tag === 'string') {
+      return tag;
+    }
   }
   return 'triage failed';
 };

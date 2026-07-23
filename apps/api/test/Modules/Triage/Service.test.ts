@@ -2,6 +2,7 @@ import {
   type ApprovalDecisionRequest,
   LedgerEntry
 } from '@app/api-core/Modules/Actions/Domain';
+import { ActionNotFound } from '@app/api-core/Modules/Actions/Errors';
 import {
   type Email,
   Email as EmailSchema
@@ -20,7 +21,7 @@ import {
   DecisionsRepo,
   DecisionsRepoBody
 } from '@/Modules/Triage/Decisions/Repo';
-import { TriageRunsRepoBody } from '@/Modules/Triage/Runs/Repo';
+import { TriageRunsRepo, TriageRunsRepoBody } from '@/Modules/Triage/Runs/Repo';
 import { TriageService, TriageServiceBody } from '@/Modules/Triage/Service';
 import { runDb } from '../../support/Database';
 
@@ -155,6 +156,122 @@ describe('TriageService', () => {
     ]);
     expect(result.stored?.emailId).toBe(EMAIL_ID);
     expect(result.inbox.summary.processed).toBe(1);
+  });
+
+  it('mints a completed Attempt row after a successful triage walk', async () => {
+    const result = await runDb(
+      Effect.gen(function* () {
+        const triage = yield* TriageService;
+        const runs = yield* TriageRunsRepo;
+        const stream = yield* triage.run();
+        yield* Stream.runCollect(stream);
+        return yield* runs.listByEmail(EMAIL_ID);
+      }).pipe(Effect.provide(ServiceLayer))
+    );
+
+    expect(result).toHaveLength(1);
+    expect(result[0]?.status).toBe('completed');
+    expect(result[0]?.proposal).toBe('no_action');
+    expect(result[0]?.decisionSnapshot).not.toBeNull();
+    expect(result[0]?.error).toBeNull();
+  });
+
+  it('finalizes the Attempt as failed when TriageAgent fails', async () => {
+    const FailAgentLayer = Layer.succeed(AgentService, {
+      triageEmail: () =>
+        Effect.fail(
+          new ActionNotFound({
+            entryId: '00000000-0000-0000-0000-000000000001' as LedgerEntryIdType
+          })
+        ),
+      resolveApproval: (
+        _approvalId: string,
+        _input: ApprovalDecisionRequest
+      ): Effect.Effect<LedgerEntry, never> =>
+        Effect.die(new Error('resolveApproval is not used in this test')),
+      chat: () => Effect.die(new Error('chat is not used in this test'))
+    });
+    const FailServiceLayer = TriageServiceBody.pipe(
+      Layer.provideMerge(
+        Layer.mergeAll(
+          FailAgentLayer,
+          EmailsLayer,
+          DecisionsRepoBody,
+          TriageRunsRepoBody,
+          ActionsLayer,
+          ConversationsLayer
+        )
+      )
+    );
+
+    const result = await runDb(
+      Effect.gen(function* () {
+        const triage = yield* TriageService;
+        const runs = yield* TriageRunsRepo;
+        const stream = yield* triage.run();
+        const events = yield* Stream.runCollect(stream);
+        const attemptRows = yield* runs.listByEmail(EMAIL_ID);
+        return { events: [...events], attemptRows };
+      }).pipe(Effect.provide(FailServiceLayer))
+    );
+
+    expect(result.events.map((event) => event.type)).toEqual([
+      'started',
+      'failed',
+      'done'
+    ]);
+    expect(result.attemptRows).toHaveLength(1);
+    expect(result.attemptRows[0]?.status).toBe('failed');
+    expect(result.attemptRows[0]?.error).not.toBeNull();
+  });
+
+  it('mints an Attempt on retriage as well as batch', async () => {
+    const targetId: EmailIdType = 'e-retriage-run';
+    const target = emailFor(targetId);
+    const RetriageEmailsLayer = Layer.succeed(EmailsService, {
+      list: () => Effect.succeed([target]),
+      get: (id: EmailIdType) => Effect.succeed(id === targetId ? target : null),
+      thread: (id: EmailIdType) =>
+        Effect.succeed(id === targetId ? [target] : [])
+    });
+    const RetriageAgentLayer = Layer.succeed(AgentService, {
+      triageEmail: (_email: Email) =>
+        Effect.succeed({
+          decision: decisionFor(targetId),
+          actions: [],
+          approval: null
+        }),
+      resolveApproval: (
+        _approvalId: string,
+        _input: ApprovalDecisionRequest
+      ): Effect.Effect<LedgerEntry, never> =>
+        Effect.die(new Error('resolveApproval is not used in this test')),
+      chat: () => Effect.die(new Error('chat is not used in this test'))
+    });
+    const RetriageServiceLayer = TriageServiceBody.pipe(
+      Layer.provideMerge(
+        Layer.mergeAll(
+          RetriageAgentLayer,
+          RetriageEmailsLayer,
+          DecisionsRepoBody,
+          TriageRunsRepoBody,
+          ActionServiceBody.pipe(Layer.provideMerge(ActionLedgerRepoBody)),
+          ConversationsRepoBody
+        )
+      )
+    );
+
+    const result = await runDb(
+      Effect.gen(function* () {
+        const triage = yield* TriageService;
+        const runs = yield* TriageRunsRepo;
+        yield* triage.retriage(targetId);
+        return yield* runs.listByEmail(targetId);
+      }).pipe(Effect.provide(RetriageServiceLayer))
+    );
+
+    expect(result).toHaveLength(1);
+    expect(result[0]?.status).toBe('completed');
   });
 
   it('processes only undecided emails and reports their count as done.processed', async () => {
@@ -390,11 +507,7 @@ describe('TriageService fresh re-run', () => {
           FreshEmailsLayer,
           DecisionsRepoBody,
           TriageRunsRepoBody,
-          ActionServiceBody.pipe(
-            Layer.provideMerge(
-              Layer.mergeAll(ActionLedgerRepoBody, DecisionsRepoBody)
-            )
-          ),
+          ActionServiceBody.pipe(Layer.provideMerge(ActionLedgerRepoBody)),
           ConversationsRepoBody
         )
       )
@@ -500,11 +613,7 @@ describe('TriageService per-email re-triage', () => {
           RetriageEmailsLayer,
           DecisionsRepoBody,
           TriageRunsRepoBody,
-          ActionServiceBody.pipe(
-            Layer.provideMerge(
-              Layer.mergeAll(ActionLedgerRepoBody, DecisionsRepoBody)
-            )
-          ),
+          ActionServiceBody.pipe(Layer.provideMerge(ActionLedgerRepoBody)),
           ConversationsRepoBody
         )
       )
@@ -603,11 +712,7 @@ describe('TriageService per-email re-triage', () => {
           MissingEmailsLayer,
           DecisionsRepoBody,
           TriageRunsRepoBody,
-          ActionServiceBody.pipe(
-            Layer.provideMerge(
-              Layer.mergeAll(ActionLedgerRepoBody, DecisionsRepoBody)
-            )
-          ),
+          ActionServiceBody.pipe(Layer.provideMerge(ActionLedgerRepoBody)),
           ConversationsRepoBody
         )
       )
