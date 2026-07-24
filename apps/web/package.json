@@ -12,6 +12,7 @@
     "lint": "biome check ."
   },
   "dependencies": {
+    "@app/api-core": "workspace:*",
     "@apps/api": "workspace:*",
     "@base-ui/react": "catalog:",
     "@fontsource-variable/dm-sans": "^5.2.8",
@@ -29,6 +30,7 @@
     "clsx": "catalog:",
     "cmdk": "catalog:",
     "date-fns": "catalog:",
+    "effect": "catalog:",
     "embla-carousel-react": "catalog:",
     "fumadocs-core": "catalog:",
     "hast": "catalog:",

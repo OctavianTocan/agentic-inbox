@@ -33,15 +33,18 @@ const fakeItem: InboxItem = {
     rationale:
       'Routine customer request with a documented answer, safe to auto-reply.',
     keyFacts: ['Delivery address'],
-    isSensitive: false
+    isSensitive: false,
+    policyReasons: []
   },
   pendingApproval: null,
   actions: [
     {
       id: 'l-001',
+      runId: null,
       actor: 'batch_agent',
       emailId: 'e-001',
       action: 'send_reply',
+      actionRevision: 1,
       summary: 'Replied with the approved duct routing',
       payload: { to: 'priya@acme-mech.com' },
       undoneBy: null,

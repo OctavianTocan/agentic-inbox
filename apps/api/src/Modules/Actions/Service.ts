@@ -5,8 +5,12 @@ import {
 } from '@app/api-core/Modules/Actions/Errors';
 import type { Decision } from '@app/api-core/Modules/Triage/Domain';
 import { Context, Effect, Layer } from 'effect';
-import type { ActorType, EmailIdType, LedgerEntryIdType } from '@/Lib/Ids';
-import { DecisionsRepo, DecisionsRepoLive } from '@/Modules/Triage/Repo';
+import type {
+  ActorType,
+  EmailIdType,
+  LedgerEntryIdType,
+  RunIdType
+} from '@/Lib/Ids';
 import { ActionLedgerRepo, ActionLedgerRepoLive } from './Repo';
 
 /** Arguments for simulating a reply to an email. */
@@ -15,6 +19,8 @@ export type SendReplyInput = {
   readonly actor: ActorType;
   readonly body: string;
   readonly summary?: string | undefined;
+  /** Attempt id when this mutation is part of a triage walk (wire: runId). */
+  readonly runId?: RunIdType | undefined;
 };
 
 /** Arguments for archiving or flagging an email. */
@@ -22,12 +28,18 @@ export type FileInput = {
   readonly emailId: EmailIdType;
   readonly actor: ActorType;
   readonly summary?: string | undefined;
+  /** Attempt id when this mutation is part of a triage walk (wire: runId). */
+  readonly runId?: RunIdType | undefined;
 };
 
 /** Shared tool logic invoked by both agent toolkits and HTTP handlers; every mutation appends to the ledger. */
 export class ActionService extends Context.Service<
   ActionService,
   {
+    /**
+     * Acknowledgment-only for the `record_triage` tool. Classification
+     * persistence is owned by InboxOrchestrator (`TriageService.persistTriage`).
+     */
     readonly recordTriage: (decision: Decision) => Effect.Effect<Decision>;
     readonly sendReply: (input: SendReplyInput) => Effect.Effect<LedgerEntry>;
     readonly archive: (input: FileInput) => Effect.Effect<LedgerEntry>;
@@ -37,7 +49,8 @@ export class ActionService extends Context.Service<
     ) => Effect.Effect<ReadonlyArray<LedgerEntry>>;
     readonly undoAction: (
       entryId: LedgerEntryIdType,
-      actor: ActorType
+      actor: ActorType,
+      runId?: RunIdType
     ) => Effect.Effect<LedgerEntry, ActionNotFound | ActionNotUndoable>;
     readonly clearLedgerForEmail: (emailId: EmailIdType) => Effect.Effect<void>;
     readonly clearLedger: () => Effect.Effect<void>;
@@ -48,21 +61,21 @@ export class ActionService extends Context.Service<
 export const ActionServiceBody: Layer.Layer<
   ActionService,
   never,
-  ActionLedgerRepo | DecisionsRepo
+  ActionLedgerRepo
 > = Layer.effect(
   ActionService,
   Effect.gen(function* () {
     const ledger = yield* ActionLedgerRepo;
-    const decisions = yield* DecisionsRepo;
 
     const recordTriage = Effect.fn('ActionService.recordTriage')(
-      (decision: Decision) => decisions.upsert(decision)
+      (decision: Decision) => Effect.succeed(decision)
     );
 
     const sendReply = Effect.fn('ActionService.sendReply')(
       (input: SendReplyInput) =>
         ledger.append({
           actor: input.actor,
+          runId: input.runId,
           emailId: input.emailId,
           action: 'send_reply',
           summary: input.summary ?? `Replied to ${input.emailId}`,
@@ -73,6 +86,7 @@ export const ActionServiceBody: Layer.Layer<
     const archive = Effect.fn('ActionService.archive')((input: FileInput) =>
       ledger.append({
         actor: input.actor,
+        runId: input.runId,
         emailId: input.emailId,
         action: 'archive',
         summary: input.summary ?? `Archived ${input.emailId}`,
@@ -84,6 +98,7 @@ export const ActionServiceBody: Layer.Layer<
       (input: FileInput) =>
         ledger.append({
           actor: input.actor,
+          runId: input.runId,
           emailId: input.emailId,
           action: 'flag_for_review',
           summary: input.summary ?? `Flagged ${input.emailId} for review`,
@@ -98,7 +113,8 @@ export const ActionServiceBody: Layer.Layer<
 
     const undoAction = Effect.fn('ActionService.undoAction')(function* (
       entryId: LedgerEntryIdType,
-      actor: ActorType
+      actor: ActorType,
+      runId?: RunIdType
     ) {
       const original = yield* ledger.get(entryId);
       if (original === null) {
@@ -122,6 +138,7 @@ export const ActionServiceBody: Layer.Layer<
       }
       return yield* ledger.append({
         actor,
+        runId: runId ?? original.runId ?? undefined,
         emailId: original.emailId,
         action: 'undo',
         summary: `Undid ${original.action} on ${original.emailId}`,
@@ -153,6 +170,5 @@ export const ActionServiceBody: Layer.Layer<
 
 /** `ActionService` alongside its repos, so orchestrators and handlers share one datastore. */
 export const ActionServiceLive = Layer.provide(ActionServiceBody, [
-  DecisionsRepoLive,
   ActionLedgerRepoLive
 ]);

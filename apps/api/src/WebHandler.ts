@@ -4,12 +4,17 @@ import { AppLive } from './App';
 import { DemoAppLive } from './Modules/Demo/Layers';
 import { isDemoMode } from './runtime-mode';
 
+/** Options for {@link createApiWebHandler}. */
 export type ApiWebHandlerOptions = {
+  /** When true, skip Effect HTTP request logging (useful in unit tests). */
   readonly disableLogger?: boolean;
 };
 
+/** Web-standard handler plus dispose for releasing layer resources. */
 export type ApiWebHandler = {
+  /** Handle one Fetch API request. */
   readonly handler: (request: Request) => Promise<Response>;
+  /** Tear down the layer graph (e.g. Postgres pool when live). */
   readonly dispose: () => Promise<void>;
 };
 

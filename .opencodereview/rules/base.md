@@ -18,6 +18,7 @@ Bun workspace: Next.js frontend (`apps/web`), Effect v4 API (`apps/api`), shared
 - Health at `GET /api/v1/health`, OpenAPI/docs at `/docs`; API port `8001`, web via `WEB_PORT`
 - `bun run test` / `bun run ci` — not bare `bun test`
 - Frontend-only AI experiments kept in `apps/web` until a backend path is chosen
+- Read-only `repos/effect-smol` subtree as Effect reference (do not import from it in app code)
 
 ## DO flag
 
@@ -31,6 +32,7 @@ Bun workspace: Next.js frontend (`apps/web`), Effect v4 API (`apps/api`), shared
 - Secrets in source, docs, fixtures, or logs (`OPENROUTER_API_KEY`, DB URLs with credentials in committed files)
 - Missing regression tests for behavioral triage / policy / undo fixes
 - Files mixing Domain schemas, Errors, Service/Layer, and I/O adapters past ~300 lines without a split
+- Per-field mutable-repo writers (`updateStatus`, `setPending`, …) — upsert the whole entity; nest a second aggregate as `Module/Sub/`
 
 ## TypeScript
 

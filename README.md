@@ -26,6 +26,15 @@ ledger entry.
 - PostgreSQL 17 for decisions, actions, and conversation history.
 - OpenRouter-backed model calls, configured through `.env`.
 
+## Vendored repositories (for coding agents)
+
+External library source is vendored under [`repos/`](./repos/) as git subtrees so agents can explore real implementations ([Effect’s guide](https://effect.website/blog/the-one-weird-git-trick-that-makes-coding-agents-more-effect-ive/)).
+
+- Read-only reference — do not edit `repos/` unless asked; do not import from `repos/` in app code.
+- Prefer `repos/effect-smol` over web search / `node_modules` when writing Effect.
+- Always start Effect work with [`repos/effect-smol/LLMS.md`](./repos/effect-smol/LLMS.md).
+- Project distillations: [`docs/agent-patterns/`](./docs/agent-patterns/). Full rules: [`repos/README.md`](./repos/README.md).
+
 ## Architecture
 
 <!-- project-structure-gen:start -->
@@ -47,7 +56,10 @@ ledger entry.
 |   |-- skill-gen - Generates repo-local skills from //<skill-gen> fragments.
 |   |-- gen-github-workflow - Generates GitHub Actions workflows from marked YAML fragments.
 |   `-- workflow-fragments - CI workflow fragments and required-workflows sync source.
-|-- docs - Operator notes and plans when tracked under docs/plans/.
+|-- docs
+|   |-- agent-patterns - Short pattern distillations for agents (Effect, modules, repos, agent loop, demo, web, OCR) formatted in Google OKF. See docs/agent-patterns/README.md.
+|   `-- plans - Operator notes and plans when tracked under docs/plans/.
+|-- repos - Git-subtree vendored library source for agents (Effect under effect-smol). Read-only; do not import.
 `-- .agent
     |-- skills - Repo-local agent brain skills. Do not hand-edit generated SKILL.md files directly.
     |-- memory - Project-local working, semantic, episodic, and preference memory.

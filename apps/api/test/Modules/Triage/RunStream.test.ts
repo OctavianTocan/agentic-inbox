@@ -8,13 +8,17 @@ import { Effect, Layer, type Schema, Stream } from 'effect';
 import { LanguageModel, type Prompt } from 'effect/unstable/ai';
 import { describe, expect, it } from 'vitest';
 import type { EmailIdType } from '@/Lib/Ids';
-import { ActionLedgerRepoBody } from '@/Modules/Actions/Repo';
+import { ActionLedgerRepo, ActionLedgerRepoBody } from '@/Modules/Actions/Repo';
 import { ActionServiceBody } from '@/Modules/Actions/Service';
 import { ToolModel, TriageModel } from '@/Modules/Agent/Model';
 import { AgentServiceBody } from '@/Modules/Agent/Service';
 import { ConversationsRepoBody } from '@/Modules/Chat/Repo';
 import { EmailsService } from '@/Modules/Emails/Service';
-import { DecisionsRepo, DecisionsRepoBody } from '@/Modules/Triage/Repo';
+import {
+  DecisionsRepo,
+  DecisionsRepoBody
+} from '@/Modules/Triage/Decisions/Repo';
+import { TriageRunsRepo, TriageRunsRepoBody } from '@/Modules/Triage/Runs/Repo';
 import { TriageService, TriageServiceBody } from '@/Modules/Triage/Service';
 import { runDb } from '../../support/Database';
 import {
@@ -35,7 +39,8 @@ const routineDecisionJson = JSON.stringify({
   whyPreview: 'Activity update needs no reply',
   rationale: 'An activity update is informational; archive it.',
   keyFacts: ['activity update'],
-  isSensitive: false
+  isSensitive: false,
+  policyReasons: []
 });
 
 const sensitiveDecisionJson = JSON.stringify({
@@ -46,7 +51,8 @@ const sensitiveDecisionJson = JSON.stringify({
   whyPreview: 'Safety incident needs a human',
   rationale: 'A safety incident carries legal exposure; defer to the human.',
   keyFacts: ['safety'],
-  isSensitive: true
+  isSensitive: true,
+  policyReasons: []
 });
 
 /** A routine email whose body carries no dollar, legal, safety, or escalation signal. */
@@ -147,12 +153,10 @@ const triageLayer = (options: {
   readonly decisionJson: string;
 }) => {
   const dependencies = Layer.mergeAll(
-    ActionServiceBody.pipe(
-      Layer.provideMerge(
-        Layer.mergeAll(ActionLedgerRepoBody, DecisionsRepoBody)
-      )
-    ),
+    ActionServiceBody.pipe(Layer.provideMerge(ActionLedgerRepoBody)),
+    DecisionsRepoBody,
     ConversationsRepoBody,
+    TriageRunsRepoBody,
     emailsLayerFor(options.emails),
     modelLayers(options.script, options.decisionJson)
   );
@@ -201,7 +205,8 @@ describe('TriageService.run SSE ordering (real agent, fake models)', () => {
             whyPreview: 'already decided',
             rationale: 'Seeded so the run skips it.',
             keyFacts: [],
-            isSensitive: false
+            isSensitive: false,
+            policyReasons: []
           })
         );
         const stream = yield* triage.run();
@@ -240,6 +245,43 @@ describe('TriageService.run SSE ordering (real agent, fake models)', () => {
       (event) => event.type === 'action' && event.entry.action === 'archive'
     );
     expect(archived).toHaveLength(2);
+    // Triage ledger rows must carry the Attempt id minted by InboxOrchestrator.
+    for (const event of archived) {
+      if (event.type === 'action') {
+        expect(event.entry.runId).not.toBeNull();
+      }
+    }
+  });
+
+  it('persists completed Attempts whose id matches ledger runId for executed actions', async () => {
+    const email = routineEmailFor('e-run-attempt-1');
+
+    const result = await runDb(
+      Effect.gen(function* () {
+        const triage = yield* TriageService;
+        const runs = yield* TriageRunsRepo;
+        const ledger = yield* ActionLedgerRepo;
+        const stream = yield* triage.run();
+        yield* Stream.runCollect(stream);
+        const attemptRows = yield* runs.listByEmail(email.id);
+        const ledgerRows = yield* ledger.listByEmail(email.id);
+        return { attemptRows, ledgerRows };
+      }).pipe(
+        Effect.provide(
+          triageLayer({
+            emails: [email],
+            script: archiveScript,
+            decisionJson: routineDecisionJson
+          })
+        )
+      )
+    );
+
+    expect(result.attemptRows).toHaveLength(1);
+    expect(result.attemptRows[0]?.status).toBe('completed');
+    expect(result.attemptRows[0]?.proposal).toBe('archive');
+    expect(result.ledgerRows).toHaveLength(1);
+    expect(result.ledgerRows[0]?.runId).toBe(result.attemptRows[0]?.id);
   });
 
   it('emits started then decision then approval_pending for a sensitive email', async () => {
@@ -248,9 +290,11 @@ describe('TriageService.run SSE ordering (real agent, fake models)', () => {
     const result = await runDb(
       Effect.gen(function* () {
         const triage = yield* TriageService;
+        const runs = yield* TriageRunsRepo;
         const stream = yield* triage.run();
         const collected = yield* Stream.runCollect(stream);
-        return [...collected];
+        const attemptRows = yield* runs.listByEmail(email.id);
+        return { events: [...collected], attemptRows };
       }).pipe(
         Effect.provide(
           triageLayer({
@@ -262,12 +306,15 @@ describe('TriageService.run SSE ordering (real agent, fake models)', () => {
       )
     );
 
-    const grouped = eventsByEmail(result);
+    const grouped = eventsByEmail(result.events);
     expect(grouped.get('e-sensitive-1')).toEqual([
       'started',
       'decision',
       'approval_pending'
     ]);
+    expect(result.attemptRows).toHaveLength(1);
+    expect(result.attemptRows[0]?.status).toBe('interrupted');
+    expect(result.attemptRows[0]?.pending?.action).toBe('send_reply');
   });
 
   it('fresh=true clears prior decisions and reprocesses every email', async () => {
@@ -287,7 +334,8 @@ describe('TriageService.run SSE ordering (real agent, fake models)', () => {
             whyPreview: 'stale decision',
             rationale: 'A non-fresh run would skip this email.',
             keyFacts: [],
-            isSensitive: false
+            isSensitive: false,
+            policyReasons: []
           })
         );
         const stream = yield* triage.run(true);

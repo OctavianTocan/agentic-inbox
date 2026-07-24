@@ -76,17 +76,6 @@ refs/
 .omo/
 
 #########################################
-# Documentation (local only), except committed plans
-#########################################
-docs/*
-!docs/plans/
-!docs/plans/**
-AGENTS.md
-CLAUDE.md
-!tools/AGENTS.md
-!tools/CLAUDE.md
-
-#########################################
 # Monorepo build artifacts
 #########################################
 dist/
@@ -96,12 +85,6 @@ dist/
 #########################################
 # Directories to ignore
 #########################################
-.cursor/
-.codex/
-.claude/
-.agents/
-.agent/*
-!.agent/plans/
 vendor/
 .data/
 
@@ -110,7 +93,6 @@ vendor/
 #########################################
 .context
 .mcp.json
-apps/docs/openapi.json
 
 #########################################
 # Editor/IDE

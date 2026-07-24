@@ -10,7 +10,12 @@ import { EmailId } from '@app/api-core/Modules/Emails/Domain';
 import { Category, Severity } from '@app/api-core/Modules/Triage/Domain';
 import { type Context, Effect, Schema } from 'effect';
 import { Tool, Toolkit } from 'effect/unstable/ai';
-import type { ActorType, CategoryType, LedgerEntryIdType } from '@/Lib/Ids';
+import type {
+  ActorType,
+  CategoryType,
+  LedgerEntryIdType,
+  RunIdType
+} from '@/Lib/Ids';
 import type { ActionService } from '@/Modules/Actions/Service';
 import type { EmailsService } from '@/Modules/Emails/Service';
 
@@ -43,10 +48,13 @@ const UndoParams = Schema.Struct({
   entryId: LedgerEntryId
 });
 
-/** Records the model's triage verdict for one email. */
+/**
+ * Acknowledges the Classification before action tools.
+ * Persistence is owned by InboxOrchestrator — this tool does not upsert.
+ */
 export const RecordTriage = Tool.make('record_triage', {
   description:
-    'Record the triage decision before taking any other action on an email.',
+    'Acknowledge the triage decision before taking any other action on an email. Does not persist; the orchestrator writes the classification.',
   parameters: RecordTriageParams,
   success: ToolDecisionResult
 }).annotate(Tool.Strict, true);
@@ -204,32 +212,29 @@ export const ChatToolkit = Toolkit.make(
   ListLedger
 );
 
-/** Builds handlers for the batch agent's mutating tools. */
+/**
+ * Builds handlers for the batch agent's mutating tools.
+ *
+ * @param actions - LedgerService (ActionService) for ledger appends.
+ * @param actor - Actor stamped on ledger rows.
+ * @param runId - Attempt id threaded into ledger rows for triage walks.
+ */
 export const makeTriageHandlers = (
   actions: Context.Service.Shape<typeof ActionService>,
-  actor: ActorType
+  actor: ActorType,
+  runId?: RunIdType
 ): Toolkit.HandlersFrom<typeof TriageToolkit.tools> =>
   TriageToolkit.of({
-    record_triage: (params) =>
-      actions
-        .recordTriage({
-          emailId: params.emailId,
-          category: params.category,
-          severity: params.severity,
-          confidence: params.confidence,
-          whyPreview: params.whyPreview,
-          rationale: params.rationale,
-          keyFacts: params.keyFacts,
-          isSensitive: params.isSensitive
-        })
-        .pipe(Effect.as({ recorded: true })),
+    // Acknowledgment only — InboxOrchestrator persists Classification.
+    record_triage: () => Effect.succeed({ recorded: true }),
     send_reply: (params) =>
       actions
         .sendReply({
           emailId: params.emailId,
           actor,
           body: params.body,
-          summary: params.summary
+          summary: params.summary,
+          runId
         })
         .pipe(Effect.map((entry) => ({ entryId: entry.id }))),
     archive: (params) =>
@@ -237,7 +242,8 @@ export const makeTriageHandlers = (
         .archive({
           emailId: params.emailId,
           actor,
-          summary: params.summary
+          summary: params.summary,
+          runId
         })
         .pipe(Effect.map((entry) => ({ entryId: entry.id }))),
     flag_for_review: (params) =>
@@ -245,7 +251,8 @@ export const makeTriageHandlers = (
         .flagForReview({
           emailId: params.emailId,
           actor,
-          summary: params.summary
+          summary: params.summary,
+          runId
         })
         .pipe(Effect.map((entry) => ({ entryId: entry.id })))
   });

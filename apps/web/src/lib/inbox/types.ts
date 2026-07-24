@@ -1,102 +1,44 @@
 /**
- * Frontend mirrors of the `@app/api-core` inbox domain shapes. These stay in
- * sync with `packages/api-core/src/Modules/{Emails,Triage,Actions}/Domain.ts`
- * so the mock client and the wave-3 HTTP client are interchangeable behind
- * `InboxClient`.
+ * Wire types from `@app/api-core` — the single source of truth for inbox shapes.
+ * `TriageRunEvent` stays local: it is a UI-narrowed SSE progress subset.
  */
+import type {
+  ActionKind as ActionKindSchema,
+  Actor as ActorSchema,
+  ApprovalRequest as ApprovalRequestSchema,
+  LedgerEntry as LedgerEntrySchema
+} from '@app/api-core/Modules/Actions/Domain';
+import type {
+  Email as EmailSchema,
+  EmailStatus as EmailStatusSchema
+} from '@app/api-core/Modules/Emails/Domain';
+import type {
+  Category as CategorySchema,
+  Decision as DecisionSchema,
+  Severity as SeveritySchema
+} from '@app/api-core/Modules/Triage/Domain';
+import type {
+  InboxItem as InboxItemSchema,
+  Inbox as InboxSchema,
+  InboxSummary as InboxSummarySchema
+} from '@app/api-core/Modules/Triage/Inbox';
+import type { Schema } from 'effect';
 
-export type EmailStatus = 'needs_attention' | 'done_for_you' | 'filed';
-
-export type Category =
-  | 'request'
-  | 'activity_update'
-  | 'document_review'
-  | 'supplier_update'
-  | 'schedule'
-  | 'status_update'
-  | 'financial'
-  | 'dispute'
-  | 'safety'
-  | 'escalation'
-  | 'other';
-
-export type Severity = 'low' | 'medium' | 'high' | 'critical';
-
-export type Actor = 'batch_agent' | 'chat_agent' | 'user';
-
-export type ActionKind = 'send_reply' | 'archive' | 'flag_for_review' | 'undo';
-
+export type EmailStatus = Schema.Schema.Type<typeof EmailStatusSchema>;
+export type Category = Schema.Schema.Type<typeof CategorySchema>;
+export type Severity = Schema.Schema.Type<typeof SeveritySchema>;
+export type Actor = Schema.Schema.Type<typeof ActorSchema>;
+export type ActionKind = Schema.Schema.Type<typeof ActionKindSchema>;
+/** Human verdict when resolving a pending approval. */
 export type ApprovalVerdict = 'approve' | 'deny';
 
-/** A single email from the static inbox dataset. */
-export type Email = {
-  readonly id: string;
-  readonly from: string;
-  readonly to: readonly string[];
-  readonly cc: readonly string[];
-  readonly subject: string;
-  readonly body: string;
-  readonly timestamp: string;
-  readonly inReplyTo: string | null;
-};
-
-/** The agent's structured verdict for a single email. */
-export type Decision = {
-  readonly emailId: string;
-  readonly category: Category;
-  readonly severity: Severity;
-  readonly confidence: number;
-  readonly whyPreview: string;
-  readonly rationale: string;
-  readonly keyFacts: readonly string[];
-  readonly isSensitive: boolean;
-};
-
-/** An append-only record of one executed action, shown in the agent trace. */
-export type LedgerEntry = {
-  readonly id: string;
-  readonly actor: Actor;
-  readonly emailId: string;
-  readonly action: ActionKind;
-  readonly summary: string;
-  readonly payload: Readonly<Record<string, unknown>>;
-  readonly undoneBy: string | null;
-  readonly undoes: string | null;
-  readonly createdAt: string;
-};
-
-/** A sensitive action paused awaiting human approval. */
-export type ApprovalRequest = {
-  readonly id: string;
-  readonly emailId: string;
-  readonly action: ActionKind;
-  readonly summary: string;
-  readonly payload: Readonly<Record<string, unknown>>;
-  readonly createdAt: string;
-};
-
-/** An email joined with its triage decision, status, and pending state. */
-export type InboxItem = {
-  readonly email: Email;
-  readonly status: EmailStatus;
-  readonly decision: Decision | null;
-  readonly pendingApproval: ApprovalRequest | null;
-  readonly actions: readonly LedgerEntry[];
-};
-
-/** Roll-up counts across the whole inbox for the summary block. */
-export type InboxSummary = {
-  readonly processed: number;
-  readonly handled: number;
-  readonly needsAttention: number;
-  readonly filed: number;
-};
-
-/** Full inbox payload: summary plus the joined item list. */
-export type Inbox = {
-  readonly summary: InboxSummary;
-  readonly items: readonly InboxItem[];
-};
+export type Email = Schema.Schema.Type<typeof EmailSchema>;
+export type Decision = Schema.Schema.Type<typeof DecisionSchema>;
+export type LedgerEntry = Schema.Schema.Type<typeof LedgerEntrySchema>;
+export type ApprovalRequest = Schema.Schema.Type<typeof ApprovalRequestSchema>;
+export type InboxItem = Schema.Schema.Type<typeof InboxItemSchema>;
+export type InboxSummary = Schema.Schema.Type<typeof InboxSummarySchema>;
+export type Inbox = Schema.Schema.Type<typeof InboxSchema>;
 
 /** Browser-facing subset of events emitted while the batch triage agent runs. */
 export type TriageRunEvent =

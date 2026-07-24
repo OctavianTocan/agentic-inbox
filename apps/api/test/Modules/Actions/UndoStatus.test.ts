@@ -8,7 +8,11 @@ import { ActionService, ActionServiceBody } from '@/Modules/Actions/Service';
 import { AgentService } from '@/Modules/Agent/Service';
 import { ConversationsRepoBody } from '@/Modules/Chat/Repo';
 import { EmailsService } from '@/Modules/Emails/Service';
-import { DecisionsRepo, DecisionsRepoBody } from '@/Modules/Triage/Repo';
+import {
+  DecisionsRepo,
+  DecisionsRepoBody
+} from '@/Modules/Triage/Decisions/Repo';
+import { TriageRunsRepoBody } from '@/Modules/Triage/Runs/Repo';
 import { TriageService, TriageServiceBody } from '@/Modules/Triage/Service';
 import { runDb } from '../../support/Database';
 
@@ -22,7 +26,8 @@ const routineDecision = new Decision({
   whyPreview: 'Customer request needs confirmation',
   rationale: 'Sender asks for a routine clarification.',
   keyFacts: ['detail'],
-  isSensitive: false
+  isSensitive: false,
+  policyReasons: []
 });
 
 const EMAIL = new EmailSchema({
@@ -37,7 +42,7 @@ const EMAIL = new EmailSchema({
 });
 
 const RealActionsLayer = ActionServiceBody.pipe(
-  Layer.provideMerge(Layer.mergeAll(ActionLedgerRepoBody, DecisionsRepoBody))
+  Layer.provideMerge(ActionLedgerRepoBody)
 );
 
 describe('undo write path', () => {
@@ -83,6 +88,7 @@ describe('inbox status after undo', () => {
           AgentLayer,
           EmailsLayer,
           DecisionsRepoBody,
+          TriageRunsRepoBody,
           RealActionsLayer,
           ConversationsRepoBody
         )

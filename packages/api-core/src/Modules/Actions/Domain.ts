@@ -17,6 +17,14 @@ export const ApprovalId: Schema.String = Schema.String.pipe(
   description: 'Unique id of a pending approval request.'
 });
 
+/** Identifier of a triage run. */
+export const RunId: Schema.String = Schema.String.pipe(
+  Schema.check(Schema.isNonEmpty())
+).annotate({
+  identifier: 'RunId',
+  description: 'Unique id of a triage run (runId === thread_id).'
+});
+
 /** Who performed an action. */
 export const Actor: Schema.Literals<
   readonly ['batch_agent', 'chat_agent', 'user']
@@ -42,9 +50,17 @@ export const ActionKind: Schema.Literals<
 /** An append-only record of one executed action, shown in the agent trace. */
 export class LedgerEntry extends Schema.Class<LedgerEntry>('LedgerEntry')({
   id: LedgerEntryId,
+  runId: Schema.NullOr(RunId).annotate({
+    identifier: 'runId',
+    description:
+      'The run id of the action, or null if the action is not part of a run.'
+  }),
   actor: Actor,
   emailId: EmailId,
   action: ActionKind,
+  actionRevision: Schema.Number.annotate({
+    description: 'Revision number of the action.'
+  }),
   summary: Schema.String.annotate({
     description: 'Human-readable one-line description of what happened.'
   }),
@@ -71,6 +87,9 @@ export class ApprovalRequest extends Schema.Class<ApprovalRequest>(
   id: ApprovalId,
   emailId: EmailId,
   action: ActionKind,
+  actionRevision: Schema.Number.annotate({
+    description: 'Revision number of the action.'
+  }),
   summary: Schema.String.annotate({
     description: 'What the agent proposes to do if approved.'
   }),

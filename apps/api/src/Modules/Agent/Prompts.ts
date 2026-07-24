@@ -28,7 +28,7 @@ export const triageActionPrompt = (
 ): string => `Process this one email using tools.
 
 Rules:
-- Call record_triage first with the exact decision below.
+- Call record_triage first to acknowledge the exact decision below (acknowledgment only; the orchestrator persists the classification).
 - Then choose one next action.
 - For activity updates and status updates, archive when no reply is needed.
 - For routine requests, document reviews, supplier updates, schedule pings, or other routine coordination, send a short plain-text acknowledgement only.
@@ -54,7 +54,7 @@ ${email.body}`;
 
 /** System prompt for the batch triage agent. */
 export const TRIAGE_SYSTEM_PROMPT =
-  'You are a careful shared-inbox agent. Record triage before action. Auto-handle only routine work. For sensitive, disputed, safety, escalated, legal, financial, or low-confidence items, defer to the human. Write plain-text email replies.';
+  'You are a careful shared-inbox agent. Acknowledge triage before action. Auto-handle only routine work. For sensitive, disputed, safety, escalated, legal, financial, or low-confidence items, defer to the human. Write plain-text email replies.';
 
 /** System prompt for the interactive inbox assistant. */
 export const CHAT_SYSTEM_PROMPT =

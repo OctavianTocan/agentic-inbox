@@ -48,9 +48,11 @@ describe('makeTriageToolkit approval gate', () => {
 const ledgerEntry = (emailId: EmailIdType): LedgerEntry =>
   Schema.decodeUnknownSync(LedgerEntry)({
     id: 'l-1',
+    runId: null,
     actor: 'batch_agent',
     emailId,
     action: 'send_reply',
+    actionRevision: 1,
     summary: 'Replied',
     payload: {},
     undoneBy: null,
