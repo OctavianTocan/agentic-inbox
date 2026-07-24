@@ -1,7 +1,7 @@
 import { Schema } from 'effect';
 import { ApprovalRequest, LedgerEntry } from '../Actions/Domain';
 import { EmailId } from '../Emails/Domain';
-import { Decision } from './Domain';
+import { Classification } from './Domain';
 
 /** The agent began processing an email. */
 export class TriageStarted extends Schema.Class<TriageStarted>('TriageStarted')(
@@ -15,7 +15,7 @@ export class TriageStarted extends Schema.Class<TriageStarted>('TriageStarted')(
 export class TriageDecided extends Schema.Class<TriageDecided>('TriageDecided')(
   {
     type: Schema.tag('decision'),
-    decision: Decision
+    classification: Classification
   }
 ) {}
 

@@ -185,6 +185,15 @@
         ],
         "type": "string"
       },
+      "AttemptId": {
+        "allOf": [
+          {
+            "description": "Unique id of a triage attempt (runId === thread_id).",
+            "minLength": 1
+          }
+        ],
+        "type": "string"
+      },
       "Category": {
         "description": "Email category. The last four (financial, dispute, safety, escalation) are always sensitive.",
         "enum": [
@@ -398,6 +407,56 @@
         },
         "type": "string"
       },
+      "Classification": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "$ref": "#/components/schemas/Category"
+          },
+          "confidence": {
+            "$ref": "#/components/schemas/Confidence1"
+          },
+          "emailId": {
+            "$ref": "#/components/schemas/EmailId"
+          },
+          "isSensitive": {
+            "description": "Whether the policy classifies this email as sensitive (never auto-actioned).",
+            "type": "boolean"
+          },
+          "keyFacts": {
+            "description": "Extracted salient facts the reviewer should see (amounts, dates, parties).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "policyReasons": {
+            "$ref": "#/components/schemas/PolicyReasons"
+          },
+          "rationale": {
+            "description": "Full plain-language explanation of the classification, rendered as markdown.",
+            "type": "string"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/Severity"
+          },
+          "whyPreview": {
+            "$ref": "#/components/schemas/WhyPreview"
+          }
+        },
+        "required": [
+          "emailId",
+          "category",
+          "severity",
+          "confidence",
+          "whyPreview",
+          "rationale",
+          "keyFacts",
+          "isSensitive",
+          "policyReasons"
+        ],
+        "type": "object"
+      },
       "Confidence": {
         "anyOf": [
           {
@@ -422,7 +481,7 @@
             "type": "string"
           }
         ],
-        "description": "Model confidence in the decision, between 0 and 1 inclusive."
+        "description": "Model confidence in the classification, between 0 and 1 inclusive."
       },
       "Confidence1": {
         "anyOf": [
@@ -460,56 +519,6 @@
             "type": "string"
           }
         ]
-      },
-      "Decision": {
-        "additionalProperties": false,
-        "properties": {
-          "category": {
-            "$ref": "#/components/schemas/Category"
-          },
-          "confidence": {
-            "$ref": "#/components/schemas/Confidence1"
-          },
-          "emailId": {
-            "$ref": "#/components/schemas/EmailId"
-          },
-          "isSensitive": {
-            "description": "Whether the policy classifies this email as sensitive (never auto-actioned).",
-            "type": "boolean"
-          },
-          "keyFacts": {
-            "description": "Extracted salient facts the reviewer should see (amounts, dates, parties).",
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "policyReasons": {
-            "$ref": "#/components/schemas/PolicyReasons"
-          },
-          "rationale": {
-            "description": "Full plain-language explanation of the decision, rendered as markdown.",
-            "type": "string"
-          },
-          "severity": {
-            "$ref": "#/components/schemas/Severity"
-          },
-          "whyPreview": {
-            "$ref": "#/components/schemas/WhyPreview"
-          }
-        },
-        "required": [
-          "emailId",
-          "category",
-          "severity",
-          "confidence",
-          "whyPreview",
-          "rationale",
-          "keyFacts",
-          "isSensitive",
-          "policyReasons"
-        ],
-        "type": "object"
       },
       "Email": {
         "additionalProperties": false,
@@ -637,10 +646,10 @@
             },
             "type": "array"
           },
-          "decision": {
+          "classification": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/Decision"
+                "$ref": "#/components/schemas/Classification"
               },
               {
                 "type": "null"
@@ -669,7 +678,7 @@
         "required": [
           "email",
           "status",
-          "decision",
+          "classification",
           "pendingApproval",
           "actions"
         ],
@@ -916,7 +925,7 @@
         "type": "string"
       },
       "PolicyReasons": {
-        "description": "Reasons the policy applied to the decision, if any.",
+        "description": "Reasons the policy applied to the classification, if any.",
         "items": {
           "type": "string"
         },
@@ -944,22 +953,13 @@
       "runId": {
         "anyOf": [
           {
-            "$ref": "#/components/schemas/RunId"
+            "$ref": "#/components/schemas/AttemptId"
           },
           {
             "type": "null"
           }
         ],
-        "description": "The run id of the action, or null if the action is not part of a run."
-      },
-      "RunId": {
-        "allOf": [
-          {
-            "description": "Unique id of a triage run (runId === thread_id).",
-            "minLength": 1
-          }
-        ],
-        "type": "string"
+        "description": "The attempt id for this action, or null if the action is not part of an attempt."
       },
       "Severity": {
         "description": "Urgency of the email, from low to critical.",
@@ -1033,7 +1033,7 @@
                 "type": "null"
               }
             ],
-            "description": "When true, clear all prior decisions, actions, and triage conversations, then re-triage every email."
+            "description": "When true, clear all prior classifications, actions, and triage conversations, then re-triage every email."
           }
         },
         "type": "object"
@@ -1062,7 +1062,7 @@
           {
             "additionalProperties": false,
             "properties": {
-              "decision": {
+              "classification": {
                 "additionalProperties": false,
                 "properties": {
                   "category": {
@@ -1089,7 +1089,7 @@
                     "$ref": "#/components/schemas/PolicyReasons"
                   },
                   "rationale": {
-                    "description": "Full plain-language explanation of the decision, rendered as markdown.",
+                    "description": "Full plain-language explanation of the classification, rendered as markdown.",
                     "type": "string"
                   },
                   "severity": {
@@ -1121,7 +1121,7 @@
             },
             "required": [
               "type",
-              "decision"
+              "classification"
             ],
             "type": "object"
           },

@@ -12,11 +12,11 @@ import { type Context, Effect, Schema } from 'effect';
 import { Tool, Toolkit } from 'effect/unstable/ai';
 import type {
   ActorType,
+  AttemptIdType,
   CategoryType,
-  LedgerEntryIdType,
-  RunIdType
+  LedgerEntryIdType
 } from '@/Lib/Ids';
-import type { ActionService } from '@/Modules/Actions/Service';
+import type { LedgerService } from '@/Modules/Actions/Service';
 import type { EmailsService } from '@/Modules/Emails/Service';
 
 const ToolEntryResult = Schema.Struct({ entryId: LedgerEntryId });
@@ -215,14 +215,14 @@ export const ChatToolkit = Toolkit.make(
 /**
  * Builds handlers for the batch agent's mutating tools.
  *
- * @param actions - LedgerService (ActionService) for ledger appends.
+ * @param actions - LedgerService for ledger appends.
  * @param actor - Actor stamped on ledger rows.
  * @param runId - Attempt id threaded into ledger rows for triage walks.
  */
 export const makeTriageHandlers = (
-  actions: Context.Service.Shape<typeof ActionService>,
+  actions: Context.Service.Shape<typeof LedgerService>,
   actor: ActorType,
-  runId?: RunIdType
+  runId?: AttemptIdType
 ): Toolkit.HandlersFrom<typeof TriageToolkit.tools> =>
   TriageToolkit.of({
     // Acknowledgment only — InboxOrchestrator persists Classification.
@@ -259,7 +259,7 @@ export const makeTriageHandlers = (
 
 /** Builds handlers for the chat agent's read and mutating tools. */
 export const makeChatHandlers = (
-  actions: Context.Service.Shape<typeof ActionService>,
+  actions: Context.Service.Shape<typeof LedgerService>,
   emails: Context.Service.Shape<typeof EmailsService>,
   actor: ActorType
 ): Toolkit.HandlersFrom<typeof ChatToolkit.tools> =>

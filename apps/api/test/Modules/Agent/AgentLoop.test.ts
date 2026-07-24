@@ -1,13 +1,13 @@
-import { Decision } from '@app/api-core/Modules/Triage/Domain';
-import { TriageRun } from '@app/api-core/Modules/Triage/Runs/Domain';
+import { Attempt } from '@app/api-core/Modules/Triage/Attempts/Domain';
+import { Classification } from '@app/api-core/Modules/Triage/Domain';
 import { Effect, Layer } from 'effect';
 import { LanguageModel, Prompt } from 'effect/unstable/ai';
 import { describe, expect, it } from 'vitest';
-import type { RunIdType } from '@/Lib/Ids';
-import { ActionLedgerRepoBody } from '@/Modules/Actions/Repo';
-import { ActionService, ActionServiceBody } from '@/Modules/Actions/Service';
+import type { AttemptIdType } from '@/Lib/Ids';
+import { LedgerRepoBody } from '@/Modules/Actions/Repo';
+import { LedgerService, LedgerServiceBody } from '@/Modules/Actions/Service';
 import { makeTriageHandlers, makeTriageToolkit } from '@/Modules/Agent/Toolkit';
-import { TriageRunsRepo, TriageRunsRepoBody } from '@/Modules/Triage/Runs/Repo';
+import { AttemptsRepo, AttemptsRepoBody } from '@/Modules/Triage/Attempts/Repo';
 import { runDb } from '../../support/Database';
 import {
   hasApprovalResponse,
@@ -17,11 +17,9 @@ import {
   toolCallPart
 } from '../../support/LanguageModelFake';
 
-const ActionsLayer = ActionServiceBody.pipe(
-  Layer.provideMerge(ActionLedgerRepoBody)
-);
+const ActionsLayer = LedgerServiceBody.pipe(Layer.provideMerge(LedgerRepoBody));
 
-const ActionsWithRunsLayer = Layer.mergeAll(ActionsLayer, TriageRunsRepoBody);
+const ActionsWithRunsLayer = Layer.mergeAll(ActionsLayer, AttemptsRepoBody);
 
 const routineDecisionJson = JSON.stringify({
   emailId: 'e-001',
@@ -45,8 +43,8 @@ describe('triage decision via generateObject (fake model)', () => {
       Effect.gen(function* () {
         const model = yield* LanguageModel.LanguageModel;
         const response = yield* model.generateObject({
-          objectName: 'Decision',
-          schema: Decision,
+          objectName: 'Classification',
+          schema: Classification,
           prompt: [{ role: 'user', content: 'classify e-001' }]
         });
         return response.value;
@@ -76,7 +74,7 @@ describe('routine triage tool loop (fake model)', () => {
 
     const { parts, ledger } = await runDb(
       Effect.gen(function* () {
-        const actions = yield* ActionService;
+        const actions = yield* LedgerService;
         const response = yield* LanguageModel.generateText({
           toolkit,
           prompt: [{ role: 'user', content: 'reply to e-001' }],
@@ -101,7 +99,7 @@ describe('routine triage tool loop (fake model)', () => {
 
   it('threads Attempt runId onto the ledger row when handlers receive one', async () => {
     const toolkit = makeTriageToolkit(false);
-    const runId = '22222222-2222-2222-2222-222222222222' as RunIdType;
+    const runId = '22222222-2222-2222-2222-222222222222' as AttemptIdType;
     const fake = makeLanguageModelFake({
       generateText: (prompt) =>
         hasToolResult(prompt)
@@ -117,16 +115,16 @@ describe('routine triage tool loop (fake model)', () => {
 
     const ledger = await runDb(
       Effect.gen(function* () {
-        const runs = yield* TriageRunsRepo;
-        const actions = yield* ActionService;
+        const runs = yield* AttemptsRepo;
+        const actions = yield* LedgerService;
         yield* runs.create(
-          new TriageRun({
+          new Attempt({
             id: runId,
             emailId: 'e-001',
             status: 'running',
             createdAt: '2026-05-01T12:00:00Z',
             updatedAt: '2026-05-01T12:00:00Z',
-            proposal: 'send_reply',
+            nextAction: 'send_reply',
             proposalSummary: 'In progress',
             pending: null,
             decisionSnapshot: null,
@@ -172,7 +170,7 @@ describe('sensitive triage tool loop (fake model)', () => {
 
     const { parts, ledger } = await runDb(
       Effect.gen(function* () {
-        const actions = yield* ActionService;
+        const actions = yield* LedgerService;
         const response = yield* LanguageModel.generateText({
           toolkit,
           prompt: [{ role: 'user', content: 'reply to e-050' }],
@@ -214,7 +212,7 @@ describe('approval resume with edited body (fake model)', () => {
 
     const ledger = await runDb(
       Effect.gen(function* () {
-        const actions = yield* ActionService;
+        const actions = yield* LedgerService;
         const handlers = toolkit.toLayer(
           makeTriageHandlers(actions, 'batch_agent')
         );
@@ -289,7 +287,7 @@ describe('approval resume with edited body (fake model)', () => {
 
     const ledger = await runDb(
       Effect.gen(function* () {
-        const actions = yield* ActionService;
+        const actions = yield* LedgerService;
         const handlers = toolkit.toLayer(
           makeTriageHandlers(actions, 'batch_agent')
         );

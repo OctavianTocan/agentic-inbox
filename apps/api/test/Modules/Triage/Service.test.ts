@@ -1,28 +1,28 @@
-import {
-  type ApprovalDecisionRequest,
-  LedgerEntry
-} from '@app/api-core/Modules/Actions/Domain';
+import { LedgerEntry } from '@app/api-core/Modules/Actions/Domain';
 import { ActionNotFound } from '@app/api-core/Modules/Actions/Errors';
 import {
   type Email,
   Email as EmailSchema
 } from '@app/api-core/Modules/Emails/Domain';
 import { EmailNotFound } from '@app/api-core/Modules/Emails/Errors';
-import { Decision } from '@app/api-core/Modules/Triage/Domain';
+import { Classification } from '@app/api-core/Modules/Triage/Domain';
 import { type Cause, Effect, Exit, Layer, Stream } from 'effect';
 import { describe, expect, it } from 'vitest';
 import type { ActorType, EmailIdType, LedgerEntryIdType } from '@/Lib/Ids';
-import { ActionLedgerRepo, ActionLedgerRepoBody } from '@/Modules/Actions/Repo';
-import { ActionService, ActionServiceBody } from '@/Modules/Actions/Service';
-import { AgentService } from '@/Modules/Agent/Service';
+import { LedgerRepo, LedgerRepoBody } from '@/Modules/Actions/Repo';
+import { LedgerService, LedgerServiceBody } from '@/Modules/Actions/Service';
+import { TriageAgent } from '@/Modules/Agent/TriageAgent';
 import { ConversationsRepo, ConversationsRepoBody } from '@/Modules/Chat/Repo';
 import { EmailsService } from '@/Modules/Emails/Service';
+import { AttemptsRepo, AttemptsRepoBody } from '@/Modules/Triage/Attempts/Repo';
 import {
-  DecisionsRepo,
-  DecisionsRepoBody
-} from '@/Modules/Triage/Decisions/Repo';
-import { TriageRunsRepo, TriageRunsRepoBody } from '@/Modules/Triage/Runs/Repo';
-import { TriageService, TriageServiceBody } from '@/Modules/Triage/Service';
+  ClassificationsRepo,
+  ClassificationsRepoBody
+} from '@/Modules/Triage/Classifications/Repo';
+import {
+  InboxOrchestrator,
+  InboxOrchestratorBody
+} from '@/Modules/Triage/Service';
 import { runDb } from '../../support/Database';
 
 const EMAIL_ID: EmailIdType = 'e-service-test';
@@ -36,7 +36,7 @@ const EMAIL = new EmailSchema({
   timestamp: '2026-05-01T12:00:00Z',
   inReplyTo: null
 });
-const DECISION = new Decision({
+const DECISION = new Classification({
   emailId: EMAIL_ID,
   category: 'request',
   severity: 'medium',
@@ -50,19 +50,13 @@ const DECISION = new Decision({
 
 const emptyLedger: ReadonlyArray<LedgerEntry> = [];
 
-const AgentLayer = Layer.succeed(AgentService, {
+const AgentLayer = Layer.succeed(TriageAgent, {
   triageEmail: (_email: Email) =>
     Effect.succeed({
-      decision: DECISION,
+      classification: DECISION,
       actions: [],
       approval: null
-    }),
-  resolveApproval: (
-    _approvalId: string,
-    _input: ApprovalDecisionRequest
-  ): Effect.Effect<LedgerEntry, never> =>
-    Effect.die(new Error('resolveApproval is not used in this test')),
-  chat: () => Effect.die(new Error('chat is not used in this test'))
+    })
 });
 
 const EmailsLayer = Layer.succeed(EmailsService, {
@@ -71,8 +65,9 @@ const EmailsLayer = Layer.succeed(EmailsService, {
   thread: (id: EmailIdType) => Effect.succeed(id === EMAIL_ID ? [EMAIL] : [])
 });
 
-const ActionsLayer = Layer.succeed(ActionService, {
-  recordTriage: (decision: Decision) => Effect.succeed(decision),
+const ActionsLayer = Layer.succeed(LedgerService, {
+  recordTriage: (classification: Classification) =>
+    Effect.succeed(classification),
   sendReply: () => Effect.die(new Error('sendReply is not used in this test')),
   archive: () => Effect.die(new Error('archive is not used in this test')),
   flagForReview: () =>
@@ -97,21 +92,21 @@ const ConversationsLayer = Layer.succeed(ConversationsRepo, {
     Effect.die(new Error('deleteTriage is not used in this test'))
 });
 
-const ServiceLayer = TriageServiceBody.pipe(
+const ServiceLayer = InboxOrchestratorBody.pipe(
   Layer.provideMerge(
     Layer.mergeAll(
       AgentLayer,
       EmailsLayer,
-      DecisionsRepoBody,
-      TriageRunsRepoBody,
+      ClassificationsRepoBody,
+      AttemptsRepoBody,
       ActionsLayer,
       ConversationsLayer
     )
   )
 );
 
-const decisionFor = (emailId: EmailIdType): Decision =>
-  new Decision({
+const decisionFor = (emailId: EmailIdType): Classification =>
+  new Classification({
     emailId,
     category: 'request',
     severity: 'medium',
@@ -135,12 +130,12 @@ const emailFor = (id: EmailIdType): Email =>
     inReplyTo: null
   });
 
-describe('TriageService', () => {
+describe('InboxOrchestrator', () => {
   it('persists generated decisions even when no action tool records triage', async () => {
     const result = await runDb(
       Effect.gen(function* () {
-        const triage = yield* TriageService;
-        const decisions = yield* DecisionsRepo;
+        const triage = yield* InboxOrchestrator;
+        const decisions = yield* ClassificationsRepo;
         const stream = yield* triage.run();
         const events = yield* Stream.runCollect(stream);
         const stored = yield* decisions.get(EMAIL_ID);
@@ -161,8 +156,8 @@ describe('TriageService', () => {
   it('mints a completed Attempt row after a successful triage walk', async () => {
     const result = await runDb(
       Effect.gen(function* () {
-        const triage = yield* TriageService;
-        const runs = yield* TriageRunsRepo;
+        const triage = yield* InboxOrchestrator;
+        const runs = yield* AttemptsRepo;
         const stream = yield* triage.run();
         yield* Stream.runCollect(stream);
         return yield* runs.listByEmail(EMAIL_ID);
@@ -171,33 +166,27 @@ describe('TriageService', () => {
 
     expect(result).toHaveLength(1);
     expect(result[0]?.status).toBe('completed');
-    expect(result[0]?.proposal).toBe('no_action');
+    expect(result[0]?.nextAction).toBe('no_action');
     expect(result[0]?.decisionSnapshot).not.toBeNull();
     expect(result[0]?.error).toBeNull();
   });
 
   it('finalizes the Attempt as failed when TriageAgent fails', async () => {
-    const FailAgentLayer = Layer.succeed(AgentService, {
+    const FailAgentLayer = Layer.succeed(TriageAgent, {
       triageEmail: () =>
         Effect.fail(
           new ActionNotFound({
             entryId: '00000000-0000-0000-0000-000000000001' as LedgerEntryIdType
           })
-        ),
-      resolveApproval: (
-        _approvalId: string,
-        _input: ApprovalDecisionRequest
-      ): Effect.Effect<LedgerEntry, never> =>
-        Effect.die(new Error('resolveApproval is not used in this test')),
-      chat: () => Effect.die(new Error('chat is not used in this test'))
+        )
     });
-    const FailServiceLayer = TriageServiceBody.pipe(
+    const FailServiceLayer = InboxOrchestratorBody.pipe(
       Layer.provideMerge(
         Layer.mergeAll(
           FailAgentLayer,
           EmailsLayer,
-          DecisionsRepoBody,
-          TriageRunsRepoBody,
+          ClassificationsRepoBody,
+          AttemptsRepoBody,
           ActionsLayer,
           ConversationsLayer
         )
@@ -206,8 +195,8 @@ describe('TriageService', () => {
 
     const result = await runDb(
       Effect.gen(function* () {
-        const triage = yield* TriageService;
-        const runs = yield* TriageRunsRepo;
+        const triage = yield* InboxOrchestrator;
+        const runs = yield* AttemptsRepo;
         const stream = yield* triage.run();
         const events = yield* Stream.runCollect(stream);
         const attemptRows = yield* runs.listByEmail(EMAIL_ID);
@@ -234,28 +223,22 @@ describe('TriageService', () => {
       thread: (id: EmailIdType) =>
         Effect.succeed(id === targetId ? [target] : [])
     });
-    const RetriageAgentLayer = Layer.succeed(AgentService, {
+    const RetriageAgentLayer = Layer.succeed(TriageAgent, {
       triageEmail: (_email: Email) =>
         Effect.succeed({
-          decision: decisionFor(targetId),
+          classification: decisionFor(targetId),
           actions: [],
           approval: null
-        }),
-      resolveApproval: (
-        _approvalId: string,
-        _input: ApprovalDecisionRequest
-      ): Effect.Effect<LedgerEntry, never> =>
-        Effect.die(new Error('resolveApproval is not used in this test')),
-      chat: () => Effect.die(new Error('chat is not used in this test'))
+        })
     });
-    const RetriageServiceLayer = TriageServiceBody.pipe(
+    const RetriageServiceLayer = InboxOrchestratorBody.pipe(
       Layer.provideMerge(
         Layer.mergeAll(
           RetriageAgentLayer,
           RetriageEmailsLayer,
-          DecisionsRepoBody,
-          TriageRunsRepoBody,
-          ActionServiceBody.pipe(Layer.provideMerge(ActionLedgerRepoBody)),
+          ClassificationsRepoBody,
+          AttemptsRepoBody,
+          LedgerServiceBody.pipe(Layer.provideMerge(LedgerRepoBody)),
           ConversationsRepoBody
         )
       )
@@ -263,8 +246,8 @@ describe('TriageService', () => {
 
     const result = await runDb(
       Effect.gen(function* () {
-        const triage = yield* TriageService;
-        const runs = yield* TriageRunsRepo;
+        const triage = yield* InboxOrchestrator;
+        const runs = yield* AttemptsRepo;
         yield* triage.retriage(targetId);
         return yield* runs.listByEmail(targetId);
       }).pipe(Effect.provide(RetriageServiceLayer))
@@ -293,27 +276,22 @@ describe('TriageService', () => {
       thread: (id: EmailIdType) =>
         Effect.succeed(allEmails.filter((email) => email.id === id))
     });
-    const MultiAgentLayer = Layer.succeed(AgentService, {
+    const MultiAgentLayer = Layer.succeed(TriageAgent, {
       triageEmail: (email: Email) =>
         Effect.succeed({
-          decision: decisionByEmail.get(email.id) ?? decisionFor(email.id),
+          classification:
+            decisionByEmail.get(email.id) ?? decisionFor(email.id),
           actions: [],
           approval: null
-        }),
-      resolveApproval: (
-        _approvalId: string,
-        _input: ApprovalDecisionRequest
-      ): Effect.Effect<LedgerEntry, never> =>
-        Effect.die(new Error('resolveApproval is not used in this test')),
-      chat: () => Effect.die(new Error('chat is not used in this test'))
+        })
     });
-    const MultiServiceLayer = TriageServiceBody.pipe(
+    const MultiServiceLayer = InboxOrchestratorBody.pipe(
       Layer.provideMerge(
         Layer.mergeAll(
           MultiAgentLayer,
           MultiEmailsLayer,
-          DecisionsRepoBody,
-          TriageRunsRepoBody,
+          ClassificationsRepoBody,
+          AttemptsRepoBody,
           ActionsLayer,
           ConversationsLayer
         )
@@ -322,8 +300,8 @@ describe('TriageService', () => {
 
     const result = await runDb(
       Effect.gen(function* () {
-        const triage = yield* TriageService;
-        const decisions = yield* DecisionsRepo;
+        const triage = yield* InboxOrchestrator;
+        const decisions = yield* ClassificationsRepo;
         yield* decisions.upsert(decisionFor('e-batch-1'));
         const stream = yield* triage.run();
         const events = yield* Stream.runCollect(stream);
@@ -367,8 +345,8 @@ const ledgerEntryFor = (
     createdAt: '2026-05-01T12:05:00Z'
   });
 
-const sensitiveDecisionFor = (emailId: EmailIdType): Decision =>
-  new Decision({
+const sensitiveDecisionFor = (emailId: EmailIdType): Classification =>
+  new Classification({
     emailId,
     category: 'financial',
     severity: 'high',
@@ -381,17 +359,17 @@ const sensitiveDecisionFor = (emailId: EmailIdType): Decision =>
   });
 
 const inboxWithLedger = (
-  decision: Decision,
+  classification: Classification,
   ledger: ReadonlyArray<LedgerEntry>
 ) => {
-  const email = emailFor(decision.emailId);
+  const email = emailFor(classification.emailId);
   const EmailsLayerOne = Layer.succeed(EmailsService, {
     list: () => Effect.succeed([email]),
     get: (id: EmailIdType) => Effect.succeed(id === email.id ? email : null),
     thread: (id: EmailIdType) => Effect.succeed(id === email.id ? [email] : [])
   });
-  const LedgerActionsLayer = Layer.succeed(ActionService, {
-    recordTriage: (recorded: Decision) => Effect.succeed(recorded),
+  const LedgerActionsLayer = Layer.succeed(LedgerService, {
+    recordTriage: (recorded: Classification) => Effect.succeed(recorded),
     sendReply: () =>
       Effect.die(new Error('sendReply is not used in this test')),
     archive: () => Effect.die(new Error('archive is not used in this test')),
@@ -405,13 +383,13 @@ const inboxWithLedger = (
     clearLedger: () =>
       Effect.die(new Error('clearLedger is not used in this test'))
   });
-  const Layered = TriageServiceBody.pipe(
+  const Layered = InboxOrchestratorBody.pipe(
     Layer.provideMerge(
       Layer.mergeAll(
         AgentLayer,
         EmailsLayerOne,
-        DecisionsRepoBody,
-        TriageRunsRepoBody,
+        ClassificationsRepoBody,
+        AttemptsRepoBody,
         LedgerActionsLayer,
         ConversationsLayer
       )
@@ -419,16 +397,16 @@ const inboxWithLedger = (
   );
   return runDb(
     Effect.gen(function* () {
-      const triage = yield* TriageService;
-      const decisions = yield* DecisionsRepo;
-      yield* decisions.upsert(decision);
+      const triage = yield* InboxOrchestrator;
+      const decisions = yield* ClassificationsRepo;
+      yield* decisions.upsert(classification);
       const inbox = yield* triage.inbox();
       return inbox;
     }).pipe(Effect.provide(Layered))
   );
 };
 
-describe('TriageService inbox status mapping', () => {
+describe('InboxOrchestrator inbox status mapping', () => {
   it('marks a sensitive email with a flag_for_review entry as needs_attention', async () => {
     const emailId: EmailIdType = 'e-flagged-sensitive';
     const inbox = await inboxWithLedger(sensitiveDecisionFor(emailId), [
@@ -465,7 +443,7 @@ describe('TriageService inbox status mapping', () => {
   });
 });
 
-describe('TriageService fresh re-run', () => {
+describe('InboxOrchestrator fresh re-run', () => {
   it('clears prior decisions, ledger, and triage conversations, then re-processes every email', async () => {
     const emailIds: readonly EmailIdType[] = [
       'e-fresh-1',
@@ -484,30 +462,25 @@ describe('TriageService fresh re-run', () => {
       thread: (id: EmailIdType) =>
         Effect.succeed(allEmails.filter((email) => email.id === id))
     });
-    const FreshAgentLayer = Layer.succeed(AgentService, {
+    const FreshAgentLayer = Layer.succeed(TriageAgent, {
       triageEmail: (email: Email) =>
         Effect.succeed({
-          decision: decisionByEmail.get(email.id) ?? decisionFor(email.id),
+          classification:
+            decisionByEmail.get(email.id) ?? decisionFor(email.id),
           actions: [],
           approval: null
-        }),
-      resolveApproval: (
-        _approvalId: string,
-        _input: ApprovalDecisionRequest
-      ): Effect.Effect<LedgerEntry, never> =>
-        Effect.die(new Error('resolveApproval is not used in this test')),
-      chat: () => Effect.die(new Error('chat is not used in this test'))
+        })
     });
-    // Real repos + ActionService so deleteAll / clearLedger / deleteTriage
+    // Real repos + LedgerService so deleteAll / clearLedger / deleteTriage
     // actually hit the test database; only the model-driven layers are stubbed.
-    const FreshServiceLayer = TriageServiceBody.pipe(
+    const FreshServiceLayer = InboxOrchestratorBody.pipe(
       Layer.provideMerge(
         Layer.mergeAll(
           FreshAgentLayer,
           FreshEmailsLayer,
-          DecisionsRepoBody,
-          TriageRunsRepoBody,
-          ActionServiceBody.pipe(Layer.provideMerge(ActionLedgerRepoBody)),
+          ClassificationsRepoBody,
+          AttemptsRepoBody,
+          LedgerServiceBody.pipe(Layer.provideMerge(LedgerRepoBody)),
           ConversationsRepoBody
         )
       )
@@ -515,9 +488,9 @@ describe('TriageService fresh re-run', () => {
 
     const result = await runDb(
       Effect.gen(function* () {
-        const triage = yield* TriageService;
-        const decisions = yield* DecisionsRepo;
-        const ledger = yield* ActionLedgerRepo;
+        const triage = yield* InboxOrchestrator;
+        const decisions = yield* ClassificationsRepo;
+        const ledger = yield* LedgerRepo;
         const conversations = yield* ConversationsRepo;
 
         // Seed stale state: two decisions on unrelated ids, one ledger row, and
@@ -563,7 +536,7 @@ describe('TriageService fresh re-run', () => {
   });
 });
 
-describe('TriageService per-email re-triage', () => {
+describe('InboxOrchestrator per-email re-triage', () => {
   it('clears one email’s stale decision and ledger, then writes a fresh decision', async () => {
     const targetId: EmailIdType = 'e-retriage-1';
     const otherId: EmailIdType = 'e-retriage-2';
@@ -572,7 +545,7 @@ describe('TriageService per-email re-triage', () => {
 
     // The agent regenerates a distinct decision so the test can prove the row
     // was actually re-derived, not left untouched.
-    const freshDecision = new Decision({
+    const freshDecision = new Classification({
       emailId: targetId,
       category: 'status_update',
       severity: 'low',
@@ -592,28 +565,22 @@ describe('TriageService per-email re-triage', () => {
       thread: (id: EmailIdType) =>
         Effect.succeed([target, other].filter((email) => email.id === id))
     });
-    const RetriageAgentLayer = Layer.succeed(AgentService, {
+    const RetriageAgentLayer = Layer.succeed(TriageAgent, {
       triageEmail: (_email: Email) =>
         Effect.succeed({
-          decision: freshDecision,
+          classification: freshDecision,
           actions: [],
           approval: null
-        }),
-      resolveApproval: (
-        _approvalId: string,
-        _input: ApprovalDecisionRequest
-      ): Effect.Effect<LedgerEntry, never> =>
-        Effect.die(new Error('resolveApproval is not used in this test')),
-      chat: () => Effect.die(new Error('chat is not used in this test'))
+        })
     });
-    const RetriageServiceLayer = TriageServiceBody.pipe(
+    const RetriageServiceLayer = InboxOrchestratorBody.pipe(
       Layer.provideMerge(
         Layer.mergeAll(
           RetriageAgentLayer,
           RetriageEmailsLayer,
-          DecisionsRepoBody,
-          TriageRunsRepoBody,
-          ActionServiceBody.pipe(Layer.provideMerge(ActionLedgerRepoBody)),
+          ClassificationsRepoBody,
+          AttemptsRepoBody,
+          LedgerServiceBody.pipe(Layer.provideMerge(LedgerRepoBody)),
           ConversationsRepoBody
         )
       )
@@ -621,9 +588,9 @@ describe('TriageService per-email re-triage', () => {
 
     const result = await runDb(
       Effect.gen(function* () {
-        const triage = yield* TriageService;
-        const decisions = yield* DecisionsRepo;
-        const ledger = yield* ActionLedgerRepo;
+        const triage = yield* InboxOrchestrator;
+        const decisions = yield* ClassificationsRepo;
+        const ledger = yield* LedgerRepo;
         const conversations = yield* ConversationsRepo;
 
         // Seed the target as already decided with a stale category, an executed
@@ -682,7 +649,7 @@ describe('TriageService per-email re-triage', () => {
     const otherItem = result.inbox.items.find(
       (item) => item.email.id === otherId
     );
-    expect(otherItem?.decision?.category).toBe('request');
+    expect(otherItem?.classification?.category).toBe('request');
   });
 
   it('fails with EmailNotFound for an id outside the dataset', async () => {
@@ -690,29 +657,23 @@ describe('TriageService per-email re-triage', () => {
     const presentId = inbox.items[0]?.email.id;
     expect(presentId).toBe('e-present');
 
-    const EmptyAgentLayer = Layer.succeed(AgentService, {
+    const EmptyAgentLayer = Layer.succeed(TriageAgent, {
       triageEmail: () =>
-        Effect.die(new Error('triageEmail must not run for a missing email')),
-      resolveApproval: (
-        _approvalId: string,
-        _input: ApprovalDecisionRequest
-      ): Effect.Effect<LedgerEntry, never> =>
-        Effect.die(new Error('resolveApproval is not used in this test')),
-      chat: () => Effect.die(new Error('chat is not used in this test'))
+        Effect.die(new Error('triageEmail must not run for a missing email'))
     });
     const MissingEmailsLayer = Layer.succeed(EmailsService, {
       list: () => Effect.succeed([]),
       get: (_id: EmailIdType) => Effect.succeed(null),
       thread: (_id: EmailIdType) => Effect.succeed([])
     });
-    const MissingServiceLayer = TriageServiceBody.pipe(
+    const MissingServiceLayer = InboxOrchestratorBody.pipe(
       Layer.provideMerge(
         Layer.mergeAll(
           EmptyAgentLayer,
           MissingEmailsLayer,
-          DecisionsRepoBody,
-          TriageRunsRepoBody,
-          ActionServiceBody.pipe(Layer.provideMerge(ActionLedgerRepoBody)),
+          ClassificationsRepoBody,
+          AttemptsRepoBody,
+          LedgerServiceBody.pipe(Layer.provideMerge(LedgerRepoBody)),
           ConversationsRepoBody
         )
       )
@@ -720,7 +681,7 @@ describe('TriageService per-email re-triage', () => {
 
     const exit = await runDb(
       Effect.gen(function* () {
-        const triage = yield* TriageService;
+        const triage = yield* InboxOrchestrator;
         return yield* Effect.exit(triage.retriage('e-missing'));
       }).pipe(Effect.provide(MissingServiceLayer))
     );

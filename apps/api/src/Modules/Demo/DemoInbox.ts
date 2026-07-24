@@ -27,7 +27,7 @@ export const DemoInbox: Inbox = decodeInbox({
         inReplyTo: null
       },
       status: 'needs_attention',
-      decision: {
+      classification: {
         emailId: 'e-016',
         category: 'safety',
         severity: 'critical',
@@ -64,7 +64,7 @@ export const DemoInbox: Inbox = decodeInbox({
         inReplyTo: null
       },
       status: 'needs_attention',
-      decision: {
+      classification: {
         emailId: 'e-014',
         category: 'financial',
         severity: 'high',
@@ -102,7 +102,7 @@ export const DemoInbox: Inbox = decodeInbox({
         inReplyTo: null
       },
       status: 'done_for_you',
-      decision: {
+      classification: {
         emailId: 'e-001',
         category: 'request',
         severity: 'low',
@@ -145,7 +145,7 @@ export const DemoInbox: Inbox = decodeInbox({
         inReplyTo: null
       },
       status: 'done_for_you',
-      decision: {
+      classification: {
         emailId: 'e-003',
         category: 'supplier_update',
         severity: 'low',
@@ -188,7 +188,7 @@ export const DemoInbox: Inbox = decodeInbox({
         inReplyTo: null
       },
       status: 'filed',
-      decision: {
+      classification: {
         emailId: 'e-002',
         category: 'activity_update',
         severity: 'low',

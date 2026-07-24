@@ -1,13 +1,13 @@
 import { Schema } from 'effect';
 import { ApprovalRequest, LedgerEntry } from '../Actions/Domain';
 import { Email, EmailStatus } from '../Emails/Domain';
-import { Decision } from './Domain';
+import { Classification } from './Domain';
 
-/** An email joined with its triage decision, status, and pending state for the inbox view. */
+/** An email joined with its classification, status, and pending state for the inbox view. */
 export class InboxItem extends Schema.Class<InboxItem>('InboxItem')({
   email: Email,
   status: EmailStatus,
-  decision: Schema.NullOr(Decision).annotate({
+  classification: Schema.NullOr(Classification).annotate({
     description:
       'The agent verdict, or null if this email has not been triaged yet.'
   }),

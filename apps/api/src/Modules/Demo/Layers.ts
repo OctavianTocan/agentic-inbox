@@ -9,12 +9,12 @@ import { TriageRunDone } from '@app/api-core/Modules/Triage/Events';
 import { Effect, Layer, Stream } from 'effect';
 import { HttpApiBuilder, HttpApiScalar } from 'effect/unstable/httpapi';
 import { HttpActionsLive } from '@/Modules/Actions/Http';
-import { ActionService } from '@/Modules/Actions/Service';
-import { AgentService } from '@/Modules/Agent/Service';
+import { LedgerService } from '@/Modules/Actions/Service';
+import { ChatAgent } from '@/Modules/Agent/ChatAgent';
 import { HttpChatLive } from '@/Modules/Chat/Http';
 import { HttpSystemLive } from '@/Modules/System/Http';
 import { HttpTriageLive } from '@/Modules/Triage/Http';
-import { TriageService } from '@/Modules/Triage/Service';
+import { InboxOrchestrator } from '@/Modules/Triage/Service';
 import { DemoInbox } from './DemoInbox';
 
 const DEMO_UNAVAILABLE = 'Not available in demo mode';
@@ -23,8 +23,8 @@ const demoLedger: ReadonlyArray<LedgerEntry> = DemoInbox.items.flatMap(
   (item) => item.actions
 );
 
-/** Read-only triage service backed by the seeded showcase inbox. */
-const DemoTriageServiceLive = Layer.succeed(TriageService, {
+/** Read-only inbox orchestrator backed by the seeded showcase inbox. */
+const DemoInboxOrchestratorLive = Layer.succeed(InboxOrchestrator, {
   run: () =>
     Effect.succeed(
       Stream.succeed(
@@ -38,8 +38,8 @@ const DemoTriageServiceLive = Layer.succeed(TriageService, {
   inbox: () => Effect.succeed(DemoInbox)
 });
 
-/** Action service that lists the demo ledger and rejects mutations. */
-const DemoActionServiceLive = Layer.succeed(ActionService, {
+/** Ledger service that lists the demo ledger and rejects mutations. */
+const DemoLedgerServiceLive = Layer.succeed(LedgerService, {
   recordTriage: () => Effect.die(new Error(DEMO_UNAVAILABLE)),
   sendReply: () => Effect.die(new Error(DEMO_UNAVAILABLE)),
   archive: () => Effect.die(new Error(DEMO_UNAVAILABLE)),
@@ -55,9 +55,8 @@ const DemoActionServiceLive = Layer.succeed(ActionService, {
   clearLedger: () => Effect.die(new Error(DEMO_UNAVAILABLE))
 });
 
-/** Agent service that rejects AI-backed operations in demo mode. */
-const DemoAgentServiceLive = Layer.succeed(AgentService, {
-  triageEmail: () => Effect.die(new Error(DEMO_UNAVAILABLE)),
+/** Chat agent that rejects AI-backed operations in demo mode. */
+const DemoChatAgentLive = Layer.succeed(ChatAgent, {
   resolveApproval: (approvalId) =>
     Effect.fail(new ApprovalNotFound({ approvalId })),
   chat: () => Effect.die(new Error(DEMO_UNAVAILABLE))
@@ -66,11 +65,11 @@ const DemoAgentServiceLive = Layer.succeed(AgentService, {
 /** HttpApi groups for demo mode: no Postgres, no OpenRouter. */
 const DemoCoreModulesLive = Layer.mergeAll(
   HttpSystemLive,
-  HttpTriageLive.pipe(Layer.provide(DemoTriageServiceLive)),
+  HttpTriageLive.pipe(Layer.provide(DemoInboxOrchestratorLive)),
   HttpActionsLive.pipe(
-    Layer.provide([DemoActionServiceLive, DemoAgentServiceLive])
+    Layer.provide([DemoLedgerServiceLive, DemoChatAgentLive])
   ),
-  HttpChatLive.pipe(Layer.provide(DemoAgentServiceLive))
+  HttpChatLive.pipe(Layer.provide(DemoChatAgentLive))
 );
 
 /** Root demo layer: same routes as live, seeded inbox, no external deps. */

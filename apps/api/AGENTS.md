@@ -16,10 +16,10 @@ This monorepo vendors Effect under `repos/` (git subtree). See [`repos/README.md
 
 Vocabulary: root [`GLOSSARY.md`](../../GLOSSARY.md). Full table: [`docs/agent-patterns/triage-ownership-seams.md`](../../docs/agent-patterns/triage-ownership-seams.md).
 
-Hard rules (new names; old symbols still in code until rename):
+Hard rules:
 
-1. Only InboxOrchestrator (`TriageService`) mints `attemptId` / `threadId` (wire may still say `runId`).
-2. Only LedgerService (`ActionService`) appends `action_ledger`.
+1. Only InboxOrchestrator mints `attemptId` / `threadId` (ledger wire field may still say `runId`).
+2. Only LedgerService appends `action_ledger`.
 3. Only InboxOrchestrator writes Attempt rows and Classifications from agent outcomes.
 4. Triage resume key is `attemptId`; pause payload on the Attempt (`interrupted` + `pending`).
 5. Only InboxOrchestrator emits triage SSE.

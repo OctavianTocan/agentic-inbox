@@ -2,7 +2,7 @@ import { LedgerEntry } from '@app/api-core/Modules/Actions/Domain';
 import { type Context, Effect, Schema } from 'effect';
 import { describe, expect, it } from 'vitest';
 import type { ActorType, EmailIdType } from '@/Lib/Ids';
-import type { ActionService } from '@/Modules/Actions/Service';
+import type { LedgerService } from '@/Modules/Actions/Service';
 import {
   ListLedger,
   makeChatHandlers,
@@ -70,7 +70,7 @@ describe('list_ledger null tolerance', () => {
     expect(decoded.emailId).toBeNull();
 
     const calls: Array<EmailIdType | undefined> = [];
-    const actions: Partial<Context.Service.Shape<typeof ActionService>> = {
+    const actions: Partial<Context.Service.Shape<typeof LedgerService>> = {
       listLedger: (emailId?: EmailIdType) => {
         calls.push(emailId);
         return Effect.succeed<ReadonlyArray<LedgerEntry>>([
@@ -98,7 +98,7 @@ describe('list_ledger null tolerance', () => {
 });
 
 /** Every action method fails loudly; individual tests override the ones they exercise. */
-const emptyActions: Context.Service.Shape<typeof ActionService> = {
+const emptyActions: Context.Service.Shape<typeof LedgerService> = {
   recordTriage: () => Effect.die(new Error('recordTriage not used')),
   sendReply: () => Effect.die(new Error('sendReply not used')),
   archive: () => Effect.die(new Error('archive not used')),

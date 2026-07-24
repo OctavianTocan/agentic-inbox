@@ -17,12 +17,12 @@ export const ApprovalId: Schema.String = Schema.String.pipe(
   description: 'Unique id of a pending approval request.'
 });
 
-/** Identifier of a triage run. */
-export const RunId: Schema.String = Schema.String.pipe(
+/** Identifier of a triage attempt (wire: runId). */
+export const AttemptId: Schema.String = Schema.String.pipe(
   Schema.check(Schema.isNonEmpty())
 ).annotate({
-  identifier: 'RunId',
-  description: 'Unique id of a triage run (runId === thread_id).'
+  identifier: 'AttemptId',
+  description: 'Unique id of a triage attempt (runId === thread_id).'
 });
 
 /** Who performed an action. */
@@ -50,10 +50,10 @@ export const ActionKind: Schema.Literals<
 /** An append-only record of one executed action, shown in the agent trace. */
 export class LedgerEntry extends Schema.Class<LedgerEntry>('LedgerEntry')({
   id: LedgerEntryId,
-  runId: Schema.NullOr(RunId).annotate({
+  runId: Schema.NullOr(AttemptId).annotate({
     identifier: 'runId',
     description:
-      'The run id of the action, or null if the action is not part of a run.'
+      'The attempt id for this action, or null if the action is not part of an attempt.'
   }),
   actor: Actor,
   emailId: EmailId,

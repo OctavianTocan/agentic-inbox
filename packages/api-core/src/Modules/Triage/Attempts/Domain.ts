@@ -1,7 +1,7 @@
 import { Schema } from 'effect';
-import { ActionKind, RunId } from '../../Actions/Domain';
+import { ActionKind, AttemptId } from '../../Actions/Domain';
 import { EmailId } from '../../Emails/Domain';
-import { Proposal } from '../Domain';
+import { NextAction } from '../Domain';
 
 //<skill-gen>
 // ---
@@ -13,25 +13,25 @@ import { Proposal } from '../Domain';
 //
 // Extra aggregates under a parent module live in a subfolder (`$$directory`):
 // `Domain.ts` here, runtime `Repo.ts` / services under the matching
-// `apps/api/src/Modules/Triage/Runs/` path. Keep HttpApi groups at the parent
+// `apps/api/src/Modules/Triage/Attempts/` path. Keep HttpApi groups at the parent
 // unless the sub-module is independently HTTP-exposed.
 // Batch HTTP `TriageRunRequest` stays on the parent `Triage/Domain.ts`.
 //</skill-gen>
 
-/** Lifecycle of a triage run (one attempt / thread). */
-export const TriageRunStatus: Schema.Literals<
+/** Lifecycle of a triage attempt (one attempt / thread). */
+export const AttemptStatus: Schema.Literals<
   readonly ['running', 'interrupted', 'completed', 'failed']
 > = Schema.Literals(['running', 'interrupted', 'completed', 'failed']).annotate(
   {
-    identifier: 'TriageRunStatus',
+    identifier: 'AttemptStatus',
     description:
-      'Lifecycle of a triage run: in progress, paused for human approval, finished, or failed.'
+      'Lifecycle of a triage attempt: in progress, paused for human approval, finished, or failed.'
   }
 );
 
-/** HITL payload stored on a run while it is interrupted for approval. */
-export class TriageRunPending extends Schema.Class<TriageRunPending>(
-  'TriageRunPending'
+/** HITL payload stored on an attempt while it is interrupted for approval. */
+export class AttemptPending extends Schema.Class<AttemptPending>(
+  'AttemptPending'
 )({
   action: ActionKind,
   summary: Schema.String.annotate({
@@ -45,50 +45,48 @@ export class TriageRunPending extends Schema.Class<TriageRunPending>(
   })
 }) {}
 
-/** Error for a triage run. */
-export class TriageRunError extends Schema.Class<TriageRunError>(
-  'TriageRunError'
-)({
+/** Error for a triage attempt. */
+export class AttemptError extends Schema.Class<AttemptError>('AttemptError')({
   message: Schema.String.annotate({
-    description: 'Error message for the triage run.'
+    description: 'Error message for the triage attempt.'
   }),
   stack: Schema.optional(Schema.String).annotate({
-    description: 'Stack trace for the triage run.'
+    description: 'Stack trace for the triage attempt.'
   })
 }) {}
 
-/** Triage run. */
-export class TriageRun extends Schema.Class<TriageRun>('TriageRun')({
-  id: RunId,
+/** One triage attempt (persisted as `triage_runs`). */
+export class Attempt extends Schema.Class<Attempt>('Attempt')({
+  id: AttemptId,
   emailId: EmailId,
-  status: TriageRunStatus,
-  proposal: Proposal,
+  status: AttemptStatus,
+  nextAction: NextAction,
   proposalSummary: Schema.String.annotate({
-    description: 'Summary of the proposal for the triage run.'
+    description: 'Summary of the next action for the triage attempt.'
   }),
   // `optional(NullOr(...))` so SQL NULL and omitted keys both decode cleanly.
-  pending: Schema.optional(Schema.NullOr(TriageRunPending)).annotate({
+  pending: Schema.optional(Schema.NullOr(AttemptPending)).annotate({
     description: 'Approval payload while status is interrupted; null otherwise.'
   }),
   decisionSnapshot: Schema.optional(Schema.NullOr(Schema.Json)).annotate({
-    description: 'Snapshot of the decision for the triage run.'
+    description: 'Snapshot of the classification for the triage attempt.'
   }),
   policyVersion: Schema.optional(Schema.NullOr(Schema.String)).annotate({
-    description: 'Version of the policy used for the triage run.'
+    description: 'Version of the policy used for the triage attempt.'
   }),
   promptVersion: Schema.optional(Schema.NullOr(Schema.String)).annotate({
-    description: 'Version of the prompt used for the triage run.'
+    description: 'Version of the prompt used for the triage attempt.'
   }),
   graphVersion: Schema.optional(Schema.NullOr(Schema.String)).annotate({
-    description: 'Version of the graph used for the triage run.'
+    description: 'Version of the graph used for the triage attempt.'
   }),
-  error: Schema.optional(Schema.NullOr(TriageRunError)).annotate({
-    description: 'Error message for the triage run.'
+  error: Schema.optional(Schema.NullOr(AttemptError)).annotate({
+    description: 'Error message for the triage attempt.'
   }),
   createdAt: Schema.String.annotate({
-    description: 'Timestamp of the creation of the triage run.'
+    description: 'Timestamp of the creation of the triage attempt.'
   }),
   updatedAt: Schema.String.annotate({
-    description: 'Timestamp of the last update of the triage run.'
+    description: 'Timestamp of the last update of the triage attempt.'
   })
 }) {}

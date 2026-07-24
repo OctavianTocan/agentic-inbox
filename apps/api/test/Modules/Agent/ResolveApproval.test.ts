@@ -8,10 +8,11 @@ import { type Cause, Effect, Exit, Layer } from 'effect';
 import { LanguageModel } from 'effect/unstable/ai';
 import { describe, expect, it } from 'vitest';
 import type { EmailIdType } from '@/Lib/Ids';
-import { ActionLedgerRepoBody } from '@/Modules/Actions/Repo';
-import { ActionService, ActionServiceBody } from '@/Modules/Actions/Service';
+import { LedgerRepoBody } from '@/Modules/Actions/Repo';
+import { LedgerService, LedgerServiceBody } from '@/Modules/Actions/Service';
+import { ChatAgent, ChatAgentBody } from '@/Modules/Agent/ChatAgent';
 import { ToolModel, TriageModel } from '@/Modules/Agent/Model';
-import { AgentService, AgentServiceBody } from '@/Modules/Agent/Service';
+import { TriageAgent, TriageAgentBody } from '@/Modules/Agent/TriageAgent';
 import { ConversationsRepoBody } from '@/Modules/Chat/Repo';
 import { EmailsService } from '@/Modules/Emails/Service';
 import { runDb } from '../../support/Database';
@@ -75,18 +76,18 @@ const modelLayers = (
   );
 };
 
-/** Assembles the real `AgentService` over test repos with the scripted fake driving both model roles. */
-const agentLayer = (script: GenerateTextScript) =>
-  AgentServiceBody.pipe(
-    Layer.provideMerge(
-      Layer.mergeAll(
-        ActionServiceBody.pipe(Layer.provideMerge(ActionLedgerRepoBody)),
-        ConversationsRepoBody,
-        EmailsLayer,
-        modelLayers(script)
-      )
-    )
+/** Assembles TriageAgent + ChatAgent over test repos with the scripted fake. */
+const agentsLayer = (script: GenerateTextScript) => {
+  const deps = Layer.mergeAll(
+    LedgerServiceBody.pipe(Layer.provideMerge(LedgerRepoBody)),
+    ConversationsRepoBody,
+    EmailsLayer,
+    modelLayers(script)
   );
+  return Layer.mergeAll(TriageAgentBody, ChatAgentBody).pipe(
+    Layer.provideMerge(deps)
+  );
+};
 
 /** Scripts a sensitive send_reply that pauses, then a closing line once the approval resumes. */
 const pauseThenSendScript: GenerateTextScript = (prompt) =>
@@ -100,25 +101,26 @@ const pauseThenSendScript: GenerateTextScript = (prompt) =>
         })
       ];
 
-describe('AgentService.resolveApproval (real service, fake models)', () => {
+describe('ChatAgent.resolveApproval (real service, fake models)', () => {
   it('approve resumes the paused send and records exactly the sent reply in the ledger', async () => {
     // TASK req 2/3 (the HITL spine): a sensitive send pauses for the human; on
     // approve the resumed loop executes the send and the ledger carries it, so
     // the audit trail proves the human authorized this money-relevant action.
     const entry = await runDb(
       Effect.gen(function* () {
-        const agent = yield* AgentService;
-        const triaged = yield* agent.triageEmail(SENSITIVE_EMAIL);
+        const triage = yield* TriageAgent;
+        const chat = yield* ChatAgent;
+        const triaged = yield* triage.triageEmail(SENSITIVE_EMAIL);
         if (triaged.approval === null) {
           return yield* Effect.die(
             new Error('sensitive email must pause for approval')
           );
         }
-        return yield* agent.resolveApproval(
+        return yield* chat.resolveApproval(
           triaged.approval.id,
           new ApprovalDecisionRequest({ verdict: 'approve' })
         );
-      }).pipe(Effect.provide(agentLayer(pauseThenSendScript)))
+      }).pipe(Effect.provide(agentsLayer(pauseThenSendScript)))
     );
 
     expect(entry.action).toBe('send_reply');
@@ -133,18 +135,19 @@ describe('AgentService.resolveApproval (real service, fake models)', () => {
     const editedBody = 'Thanks for the report; our safety lead will follow up.';
     const entry = await runDb(
       Effect.gen(function* () {
-        const agent = yield* AgentService;
-        const triaged = yield* agent.triageEmail(SENSITIVE_EMAIL);
+        const triage = yield* TriageAgent;
+        const chat = yield* ChatAgent;
+        const triaged = yield* triage.triageEmail(SENSITIVE_EMAIL);
         if (triaged.approval === null) {
           return yield* Effect.die(
             new Error('sensitive email must pause for approval')
           );
         }
-        return yield* agent.resolveApproval(
+        return yield* chat.resolveApproval(
           triaged.approval.id,
           new ApprovalDecisionRequest({ verdict: 'approve', editedBody })
         );
-      }).pipe(Effect.provide(agentLayer(pauseThenSendScript)))
+      }).pipe(Effect.provide(agentsLayer(pauseThenSendScript)))
     );
 
     expect(entry.action).toBe('send_reply');
@@ -168,21 +171,22 @@ describe('AgentService.resolveApproval (real service, fake models)', () => {
 
     const result = await runDb(
       Effect.gen(function* () {
-        const agent = yield* AgentService;
-        const actions = yield* ActionService;
-        const triaged = yield* agent.triageEmail(SENSITIVE_EMAIL);
+        const triage = yield* TriageAgent;
+        const chat = yield* ChatAgent;
+        const actions = yield* LedgerService;
+        const triaged = yield* triage.triageEmail(SENSITIVE_EMAIL);
         if (triaged.approval === null) {
           return yield* Effect.die(
             new Error('sensitive email must pause for approval')
           );
         }
-        const entry = yield* agent.resolveApproval(
+        const entry = yield* chat.resolveApproval(
           triaged.approval.id,
           new ApprovalDecisionRequest({ verdict: 'deny' })
         );
         const ledger = yield* actions.listLedger(SENSITIVE_EMAIL_ID);
         return { entry, ledger };
-      }).pipe(Effect.provide(agentLayer(denyScript)))
+      }).pipe(Effect.provide(agentsLayer(denyScript)))
     );
 
     // With no auto-action executed, resolveApproval falls back to recording a
@@ -199,14 +203,14 @@ describe('AgentService.resolveApproval (real service, fake models)', () => {
     // to a 404 — it must not crash the request or resume an arbitrary send.
     const exit = await runDb(
       Effect.gen(function* () {
-        const agent = yield* AgentService;
+        const chat = yield* ChatAgent;
         return yield* Effect.exit(
-          agent.resolveApproval(
+          chat.resolveApproval(
             'ap-does-not-exist',
             new ApprovalDecisionRequest({ verdict: 'approve' })
           )
         );
-      }).pipe(Effect.provide(agentLayer(pauseThenSendScript)))
+      }).pipe(Effect.provide(agentsLayer(pauseThenSendScript)))
     );
 
     expect(Exit.isFailure(exit)).toBe(true);
@@ -225,24 +229,25 @@ describe('AgentService.resolveApproval (real service, fake models)', () => {
     // awaiting_approval, so a repeat claim finds nothing and reports not-found.
     const exit = await runDb(
       Effect.gen(function* () {
-        const agent = yield* AgentService;
-        const triaged = yield* agent.triageEmail(SENSITIVE_EMAIL);
+        const triage = yield* TriageAgent;
+        const chat = yield* ChatAgent;
+        const triaged = yield* triage.triageEmail(SENSITIVE_EMAIL);
         if (triaged.approval === null) {
           return yield* Effect.die(
             new Error('sensitive email must pause for approval')
           );
         }
-        yield* agent.resolveApproval(
+        yield* chat.resolveApproval(
           triaged.approval.id,
           new ApprovalDecisionRequest({ verdict: 'approve' })
         );
         return yield* Effect.exit(
-          agent.resolveApproval(
+          chat.resolveApproval(
             triaged.approval.id,
             new ApprovalDecisionRequest({ verdict: 'approve' })
           )
         );
-      }).pipe(Effect.provide(agentLayer(pauseThenSendScript)))
+      }).pipe(Effect.provide(agentsLayer(pauseThenSendScript)))
     );
 
     expect(Exit.isFailure(exit)).toBe(true);

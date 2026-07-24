@@ -1,29 +1,29 @@
-import { Decision } from '@app/api-core/Modules/Triage/Domain';
+import { Classification } from '@app/api-core/Modules/Triage/Domain';
 import { type Context, Effect } from 'effect';
 import { describe, expect, it } from 'vitest';
 import type { EmailIdType } from '@/Lib/Ids';
 import {
-  DecisionsRepo,
-  DecisionsRepoBody
-} from '@/Modules/Triage/Decisions/Repo';
+  ClassificationsRepo,
+  ClassificationsRepoBody
+} from '@/Modules/Triage/Classifications/Repo';
 import { runDb } from '../../support/Database';
 
-type Decisions = Context.Service.Shape<typeof DecisionsRepo>;
+type Decisions = Context.Service.Shape<typeof ClassificationsRepo>;
 
 const withDecisions = <A, E>(
   use: (repo: Decisions) => Effect.Effect<A, E>
 ): Promise<A> =>
   runDb(
     Effect.gen(function* () {
-      const repo = yield* DecisionsRepo;
+      const repo = yield* ClassificationsRepo;
       return yield* use(repo);
-    }).pipe(Effect.provide(DecisionsRepoBody))
+    }).pipe(Effect.provide(ClassificationsRepoBody))
   );
 
 const EMAIL: EmailIdType = 'e-016';
 
-const makeDecision = (overrides?: Partial<Decision>): Decision =>
-  new Decision({
+const makeDecision = (overrides?: Partial<Classification>): Classification =>
+  new Classification({
     emailId: EMAIL,
     category: 'safety',
     severity: 'critical',
@@ -36,7 +36,7 @@ const makeDecision = (overrides?: Partial<Decision>): Decision =>
     ...overrides
   });
 
-describe('DecisionsRepo', () => {
+describe('ClassificationsRepo', () => {
   it('persists and reads back a decision with its JSONB key facts', async () => {
     const stored = await withDecisions((repo) =>
       Effect.gen(function* () {

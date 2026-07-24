@@ -2,24 +2,27 @@ import {
   type Email,
   Email as EmailSchema
 } from '@app/api-core/Modules/Emails/Domain';
-import { Decision } from '@app/api-core/Modules/Triage/Domain';
+import { Classification } from '@app/api-core/Modules/Triage/Domain';
 import type { TriageStreamEvent } from '@app/api-core/Modules/Triage/Events';
 import { Effect, Layer, type Schema, Stream } from 'effect';
 import { LanguageModel, type Prompt } from 'effect/unstable/ai';
 import { describe, expect, it } from 'vitest';
 import type { EmailIdType } from '@/Lib/Ids';
-import { ActionLedgerRepo, ActionLedgerRepoBody } from '@/Modules/Actions/Repo';
-import { ActionServiceBody } from '@/Modules/Actions/Service';
+import { LedgerRepo, LedgerRepoBody } from '@/Modules/Actions/Repo';
+import { LedgerServiceBody } from '@/Modules/Actions/Service';
 import { ToolModel, TriageModel } from '@/Modules/Agent/Model';
-import { AgentServiceBody } from '@/Modules/Agent/Service';
+import { TriageAgentBody } from '@/Modules/Agent/TriageAgent';
 import { ConversationsRepoBody } from '@/Modules/Chat/Repo';
 import { EmailsService } from '@/Modules/Emails/Service';
+import { AttemptsRepo, AttemptsRepoBody } from '@/Modules/Triage/Attempts/Repo';
 import {
-  DecisionsRepo,
-  DecisionsRepoBody
-} from '@/Modules/Triage/Decisions/Repo';
-import { TriageRunsRepo, TriageRunsRepoBody } from '@/Modules/Triage/Runs/Repo';
-import { TriageService, TriageServiceBody } from '@/Modules/Triage/Service';
+  ClassificationsRepo,
+  ClassificationsRepoBody
+} from '@/Modules/Triage/Classifications/Repo';
+import {
+  InboxOrchestrator,
+  InboxOrchestratorBody
+} from '@/Modules/Triage/Service';
 import { runDb } from '../../support/Database';
 import {
   type GenerateTextScript,
@@ -146,22 +149,22 @@ const modelLayers = (
   );
 };
 
-/** Assembles the real `TriageService` over the real agent and test repos, driven by the scripted fake. */
+/** Assembles the real `InboxOrchestrator` over the real agent and test repos, driven by the scripted fake. */
 const triageLayer = (options: {
   readonly emails: ReadonlyArray<Email>;
   readonly script: GenerateTextScript;
   readonly decisionJson: string;
 }) => {
   const dependencies = Layer.mergeAll(
-    ActionServiceBody.pipe(Layer.provideMerge(ActionLedgerRepoBody)),
-    DecisionsRepoBody,
+    LedgerServiceBody.pipe(Layer.provideMerge(LedgerRepoBody)),
+    ClassificationsRepoBody,
     ConversationsRepoBody,
-    TriageRunsRepoBody,
+    AttemptsRepoBody,
     emailsLayerFor(options.emails),
     modelLayers(options.script, options.decisionJson)
   );
-  const agent = AgentServiceBody.pipe(Layer.provide(dependencies));
-  return TriageServiceBody.pipe(
+  const agent = TriageAgentBody.pipe(Layer.provide(dependencies));
+  return InboxOrchestratorBody.pipe(
     Layer.provideMerge(Layer.mergeAll(agent, dependencies))
   );
 };
@@ -186,7 +189,7 @@ const eventsByEmail = (
   return grouped;
 };
 
-describe('TriageService.run SSE ordering (real agent, fake models)', () => {
+describe('InboxOrchestrator.run SSE ordering (real agent, fake models)', () => {
   it('emits started then decision then the action event per routine email, and done.processed equals the untriaged count', async () => {
     // skips already-triaged mail and reports only the remaining count as done.
     const emailIds: readonly EmailIdType[] = ['e-run-1', 'e-run-2', 'e-run-3'];
@@ -194,10 +197,10 @@ describe('TriageService.run SSE ordering (real agent, fake models)', () => {
 
     const result = await runDb(
       Effect.gen(function* () {
-        const triage = yield* TriageService;
-        const decisions = yield* DecisionsRepo;
+        const triage = yield* InboxOrchestrator;
+        const decisions = yield* ClassificationsRepo;
         yield* decisions.upsert(
-          new Decision({
+          new Classification({
             emailId: 'e-run-1',
             category: 'activity_update',
             severity: 'low',
@@ -258,9 +261,9 @@ describe('TriageService.run SSE ordering (real agent, fake models)', () => {
 
     const result = await runDb(
       Effect.gen(function* () {
-        const triage = yield* TriageService;
-        const runs = yield* TriageRunsRepo;
-        const ledger = yield* ActionLedgerRepo;
+        const triage = yield* InboxOrchestrator;
+        const runs = yield* AttemptsRepo;
+        const ledger = yield* LedgerRepo;
         const stream = yield* triage.run();
         yield* Stream.runCollect(stream);
         const attemptRows = yield* runs.listByEmail(email.id);
@@ -279,7 +282,7 @@ describe('TriageService.run SSE ordering (real agent, fake models)', () => {
 
     expect(result.attemptRows).toHaveLength(1);
     expect(result.attemptRows[0]?.status).toBe('completed');
-    expect(result.attemptRows[0]?.proposal).toBe('archive');
+    expect(result.attemptRows[0]?.nextAction).toBe('archive');
     expect(result.ledgerRows).toHaveLength(1);
     expect(result.ledgerRows[0]?.runId).toBe(result.attemptRows[0]?.id);
   });
@@ -289,8 +292,8 @@ describe('TriageService.run SSE ordering (real agent, fake models)', () => {
 
     const result = await runDb(
       Effect.gen(function* () {
-        const triage = yield* TriageService;
-        const runs = yield* TriageRunsRepo;
+        const triage = yield* InboxOrchestrator;
+        const runs = yield* AttemptsRepo;
         const stream = yield* triage.run();
         const collected = yield* Stream.runCollect(stream);
         const attemptRows = yield* runs.listByEmail(email.id);
@@ -323,10 +326,10 @@ describe('TriageService.run SSE ordering (real agent, fake models)', () => {
 
     const result = await runDb(
       Effect.gen(function* () {
-        const triage = yield* TriageService;
-        const decisions = yield* DecisionsRepo;
+        const triage = yield* InboxOrchestrator;
+        const decisions = yield* ClassificationsRepo;
         yield* decisions.upsert(
-          new Decision({
+          new Classification({
             emailId: 'e-fresh-a',
             category: 'activity_update',
             severity: 'low',

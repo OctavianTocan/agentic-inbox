@@ -1,7 +1,7 @@
 import { Schema } from 'effect';
 import { Prompt } from 'effect/unstable/ai';
 import { describe, expect, it } from 'vitest';
-import { withSendReplyBody } from '@/Modules/Agent/Service';
+import { withSendReplyBody } from '@/Modules/Agent/Loop';
 
 const encodePrompt = Schema.encodeSync(Prompt.Prompt);
 

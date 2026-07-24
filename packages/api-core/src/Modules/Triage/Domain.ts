@@ -35,8 +35,8 @@ export const Category: Schema.Literals<
     'Email category. The last four (financial, dispute, safety, escalation) are always sensitive.'
 });
 
-/** Proposal for the triage run. */
-export const Proposal: Schema.Literals<
+/** Next action the agent proposes for the email. */
+export const NextAction: Schema.Literals<
   readonly ['send_reply', 'archive', 'flag_for_review', 'no_action']
 > = Schema.Literals([
   'send_reply',
@@ -44,12 +44,12 @@ export const Proposal: Schema.Literals<
   'flag_for_review',
   'no_action'
 ]).annotate({
-  identifier: 'Proposal',
+  identifier: 'NextAction',
   description: 'Action the agent proposes to take for the email.'
 });
 
 // TODO: Why is 'sensitive_category' a 'category'?
-/** Policy category applied to the decision, if any. */
+/** Policy category applied to the classification, if any. */
 export const PolicyCategory: Schema.Literals<
   readonly [
     'sesitive_category',
@@ -68,7 +68,7 @@ export const PolicyCategory: Schema.Literals<
   'escalation_keyword'
 ]).annotate({
   identifier: 'PolicyCategory',
-  description: 'Policy category applied to the decision, if any.'
+  description: 'Policy category applied to the classification, if any.'
 });
 
 /** How urgent or consequential the email is. */
@@ -82,10 +82,11 @@ export const Severity: Schema.Literals<
 // Deliberately unrefined: gpt-5.5 strict structured output rejects schemas
 // carrying check filters ("Expected <filter>"); bounds are enforced in code
 // after decode (see docs/SPIKE-NOTES.md finding 1).
-/** Agent confidence in its own decision, from 0 (guess) to 1 (certain). */
+/** Agent confidence in its own classification, from 0 (guess) to 1 (certain). */
 export const Confidence: Schema.Number = Schema.Number.annotate({
   identifier: 'Confidence',
-  description: 'Model confidence in the decision, between 0 and 1 inclusive.'
+  description:
+    'Model confidence in the classification, between 0 and 1 inclusive.'
 });
 
 /** One-line reason shown in the list row (soft cap 65 characters). */
@@ -94,14 +95,16 @@ export const WhyPreview: Schema.String = Schema.String.annotate({
   description: 'At-a-glance rationale for the list row, at most 65 characters.'
 });
 
-/** Reasons the policy applied to the decision. */
+/** Reasons the policy applied to the classification. */
 export const PolicyReasons = Schema.Array(Schema.String).annotate({
   identifier: 'PolicyReasons',
-  description: 'Reasons the policy applied to the decision, if any.'
+  description: 'Reasons the policy applied to the classification, if any.'
 });
 
 /** The agent's structured verdict for a single email. */
-export class Decision extends Schema.Class<Decision>('Decision')({
+export class Classification extends Schema.Class<Classification>(
+  'Classification'
+)({
   emailId: EmailId,
   category: Category,
   severity: Severity,
@@ -109,7 +112,7 @@ export class Decision extends Schema.Class<Decision>('Decision')({
   whyPreview: WhyPreview,
   rationale: Schema.String.annotate({
     description:
-      'Full plain-language explanation of the decision, rendered as markdown.'
+      'Full plain-language explanation of the classification, rendered as markdown.'
   }),
   keyFacts: Schema.Array(Schema.String).annotate({
     description:
@@ -128,6 +131,6 @@ export class TriageRunRequest extends Schema.Class<TriageRunRequest>(
 )({
   fresh: Schema.optional(Schema.Boolean).annotate({
     description:
-      'When true, clear all prior decisions, actions, and triage conversations, then re-triage every email.'
+      'When true, clear all prior classifications, actions, and triage conversations, then re-triage every email.'
   })
 }) {}

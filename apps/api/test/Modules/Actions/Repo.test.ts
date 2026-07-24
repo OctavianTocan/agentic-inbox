@@ -1,24 +1,24 @@
 import { type Context, Effect } from 'effect';
 import { describe, expect, it } from 'vitest';
 import type { EmailIdType, LedgerEntryIdType } from '@/Lib/Ids';
-import { ActionLedgerRepo, ActionLedgerRepoBody } from '@/Modules/Actions/Repo';
+import { LedgerRepo, LedgerRepoBody } from '@/Modules/Actions/Repo';
 import { runDb } from '../../support/Database';
 
-type Ledger = Context.Service.Shape<typeof ActionLedgerRepo>;
+type Ledger = Context.Service.Shape<typeof LedgerRepo>;
 
 const runLedger = <A, E>(
   build: (repo: Ledger) => Effect.Effect<A, E>
 ): Promise<A> =>
   runDb(
     Effect.gen(function* () {
-      const repo = yield* ActionLedgerRepo;
+      const repo = yield* LedgerRepo;
       return yield* build(repo);
-    }).pipe(Effect.provide(ActionLedgerRepoBody))
+    }).pipe(Effect.provide(LedgerRepoBody))
   );
 
 const EMAIL: EmailIdType = 'e-001';
 
-describe('ActionLedgerRepo', () => {
+describe('LedgerRepo', () => {
   it('appends entries and returns them newest-first', async () => {
     const entries = await runLedger((repo) =>
       Effect.gen(function* () {

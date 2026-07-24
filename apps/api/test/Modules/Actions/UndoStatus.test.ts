@@ -1,24 +1,27 @@
 import { Email as EmailSchema } from '@app/api-core/Modules/Emails/Domain';
-import { Decision } from '@app/api-core/Modules/Triage/Domain';
+import { Classification } from '@app/api-core/Modules/Triage/Domain';
 import { Effect, Layer } from 'effect';
 import { describe, expect, it } from 'vitest';
 import type { EmailIdType } from '@/Lib/Ids';
-import { ActionLedgerRepo, ActionLedgerRepoBody } from '@/Modules/Actions/Repo';
-import { ActionService, ActionServiceBody } from '@/Modules/Actions/Service';
-import { AgentService } from '@/Modules/Agent/Service';
+import { LedgerRepo, LedgerRepoBody } from '@/Modules/Actions/Repo';
+import { LedgerService, LedgerServiceBody } from '@/Modules/Actions/Service';
+import { TriageAgent } from '@/Modules/Agent/TriageAgent';
 import { ConversationsRepoBody } from '@/Modules/Chat/Repo';
 import { EmailsService } from '@/Modules/Emails/Service';
+import { AttemptsRepoBody } from '@/Modules/Triage/Attempts/Repo';
 import {
-  DecisionsRepo,
-  DecisionsRepoBody
-} from '@/Modules/Triage/Decisions/Repo';
-import { TriageRunsRepoBody } from '@/Modules/Triage/Runs/Repo';
-import { TriageService, TriageServiceBody } from '@/Modules/Triage/Service';
+  ClassificationsRepo,
+  ClassificationsRepoBody
+} from '@/Modules/Triage/Classifications/Repo';
+import {
+  InboxOrchestrator,
+  InboxOrchestratorBody
+} from '@/Modules/Triage/Service';
 import { runDb } from '../../support/Database';
 
 const EMAIL_ID: EmailIdType = 'e-014';
 
-const routineDecision = new Decision({
+const routineDecision = new Classification({
   emailId: EMAIL_ID,
   category: 'request',
   severity: 'medium',
@@ -41,16 +44,16 @@ const EMAIL = new EmailSchema({
   inReplyTo: null
 });
 
-const RealActionsLayer = ActionServiceBody.pipe(
-  Layer.provideMerge(ActionLedgerRepoBody)
+const RealActionsLayer = LedgerServiceBody.pipe(
+  Layer.provideMerge(LedgerRepoBody)
 );
 
 describe('undo write path', () => {
   it('stamps undoneBy on the original entry and links the undo back to it', async () => {
     const result = await runDb(
       Effect.gen(function* () {
-        const actions = yield* ActionService;
-        const ledger = yield* ActionLedgerRepo;
+        const actions = yield* LedgerService;
+        const ledger = yield* LedgerRepo;
         const original = yield* actions.sendReply({
           emailId: EMAIL_ID,
           actor: 'batch_agent',
@@ -77,18 +80,16 @@ describe('inbox status after undo', () => {
       thread: (id: EmailIdType) =>
         Effect.succeed(id === EMAIL_ID ? [EMAIL] : [])
     });
-    const AgentLayer = Layer.succeed(AgentService, {
-      triageEmail: () => Effect.die(new Error('triageEmail not used')),
-      resolveApproval: () => Effect.die(new Error('resolveApproval not used')),
-      chat: () => Effect.die(new Error('chat not used'))
+    const AgentLayer = Layer.succeed(TriageAgent, {
+      triageEmail: () => Effect.die(new Error('triageEmail not used'))
     });
-    const ServiceLayer = TriageServiceBody.pipe(
+    const ServiceLayer = InboxOrchestratorBody.pipe(
       Layer.provideMerge(
         Layer.mergeAll(
           AgentLayer,
           EmailsLayer,
-          DecisionsRepoBody,
-          TriageRunsRepoBody,
+          ClassificationsRepoBody,
+          AttemptsRepoBody,
           RealActionsLayer,
           ConversationsRepoBody
         )
@@ -97,9 +98,9 @@ describe('inbox status after undo', () => {
 
     const { before, after } = await runDb(
       Effect.gen(function* () {
-        const triage = yield* TriageService;
-        const decisions = yield* DecisionsRepo;
-        const actions = yield* ActionService;
+        const triage = yield* InboxOrchestrator;
+        const decisions = yield* ClassificationsRepo;
+        const actions = yield* LedgerService;
 
         yield* decisions.upsert(routineDecision);
         const sent = yield* actions.sendReply({

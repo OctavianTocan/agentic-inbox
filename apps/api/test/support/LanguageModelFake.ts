@@ -69,7 +69,7 @@ export const hasToolResult = (prompt: Prompt.Prompt): boolean =>
  * sensitive tools or execute the handler and append `tool-result` otherwise.
  *
  * @param options.generateText - Maps the live prompt to the model's next parts on text requests.
- * @param options.decisionJson - JSON string a structured-output (`generateObject`) request resolves to.
+ * @param options.classificationJson - JSON string a structured-output (`generateObject`) request resolves to.
  * @returns A layer providing `LanguageModel.LanguageModel`; it never fails.
  */
 export const makeLanguageModelFake = (options: {

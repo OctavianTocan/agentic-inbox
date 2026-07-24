@@ -1,5 +1,5 @@
 import type { Email } from '@app/api-core/Modules/Emails/Domain';
-import type { Decision } from '@app/api-core/Modules/Triage/Domain';
+import type { Classification } from '@app/api-core/Modules/Triage/Domain';
 
 /** Builds the strict structured-output prompt for one email. */
 export const triageDecisionPrompt = (
@@ -24,7 +24,7 @@ ${email.body}`;
 /** Builds the tool-loop prompt for one email after structured triage. */
 export const triageActionPrompt = (
   email: Email,
-  decision: Decision
+  classification: Classification
 ): string => `Process this one email using tools.
 
 Rules:
@@ -36,16 +36,16 @@ Rules:
 - Use flag_for_review only for sensitive or low-confidence email where no reply fits, such as an FYI safety report; it is the fallback when no action is appropriate.
 - Never promise financial, schedule, legal, or safety commitments; a sensitive draft proposes wording for the human, it does not commit anything.
 
-Decision:
-emailId: ${decision.emailId}
-category: ${decision.category}
-severity: ${decision.severity}
-confidence: ${decision.confidence}
-whyPreview: ${decision.whyPreview}
-rationale: ${decision.rationale}
-isSensitive: ${decision.isSensitive}
+Classification:
+emailId: ${classification.emailId}
+category: ${classification.category}
+severity: ${classification.severity}
+confidence: ${classification.confidence}
+whyPreview: ${classification.whyPreview}
+rationale: ${classification.rationale}
+isSensitive: ${classification.isSensitive}
 keyFacts:
-${decision.keyFacts.map((fact) => `- ${fact}`).join('\n')}
+${classification.keyFacts.map((fact) => `- ${fact}`).join('\n')}
 
 Email:
 subject: ${email.subject}

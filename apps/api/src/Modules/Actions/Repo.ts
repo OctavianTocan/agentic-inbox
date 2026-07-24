@@ -6,9 +6,9 @@ import { DatabaseLive } from '@/Infrastructure/Database/Postgres';
 import type {
   ActionKindType,
   ActorType,
+  AttemptIdType,
   EmailIdType,
-  LedgerEntryIdType,
-  RunIdType
+  LedgerEntryIdType
 } from '@/Lib/Ids';
 
 const ledgerColumns =
@@ -29,7 +29,7 @@ const decodeEntry = decodeSqlRow(LedgerEntryFromRow);
 /** Fields an actor supplies when appending an action; id, timestamp, and undo pointers are set by the repo. */
 export type AppendLedgerEntry = {
   readonly actor: ActorType;
-  readonly runId?: RunIdType | undefined;
+  readonly runId?: AttemptIdType | undefined;
   readonly emailId: EmailIdType;
   readonly action: ActionKindType;
   readonly actionRevision?: number | undefined;
@@ -51,8 +51,8 @@ export type AppendLedgerEntry = {
 // (+ get/list/delete for wipe). Idempotency is `(run_id, action, action_revision)`
 // at the DB layer, not an in-place update of a prior row.
 //</skill-gen>
-export class ActionLedgerRepo extends Context.Service<
-  ActionLedgerRepo,
+export class LedgerRepo extends Context.Service<
+  LedgerRepo,
   {
     readonly append: (entry: AppendLedgerEntry) => Effect.Effect<LedgerEntry>;
     readonly get: (id: LedgerEntryIdType) => Effect.Effect<LedgerEntry | null>;
@@ -63,99 +63,91 @@ export class ActionLedgerRepo extends Context.Service<
     readonly deleteByEmail: (emailId: EmailIdType) => Effect.Effect<void>;
     readonly deleteAll: () => Effect.Effect<void>;
   }
->()('@apps/api/Actions/ActionLedgerRepo') {}
+>()('@apps/api/Actions/LedgerRepo') {}
 
-/** `ActionLedgerRepo` without a client; wire with {@link ActionLedgerRepoLive} or a test DB layer. */
-export const ActionLedgerRepoBody: Layer.Layer<
-  ActionLedgerRepo,
-  never,
-  PgClient.PgClient
-> = Layer.effect(
-  ActionLedgerRepo,
-  Effect.gen(function* () {
-    const sql = yield* PgClient.PgClient;
+/** `LedgerRepo` without a client; wire with {@link LedgerRepoLive} or a test DB layer. */
+export const LedgerRepoBody: Layer.Layer<LedgerRepo, never, PgClient.PgClient> =
+  Layer.effect(
+    LedgerRepo,
+    Effect.gen(function* () {
+      const sql = yield* PgClient.PgClient;
 
-    const getById = (id: LedgerEntryIdType) =>
-      sql`SELECT ${sql.literal(ledgerColumns)} FROM action_ledger WHERE id = ${id}`.pipe(
-        Effect.orDie
-      );
+      const getById = (id: LedgerEntryIdType) =>
+        sql`SELECT ${sql.literal(ledgerColumns)} FROM action_ledger WHERE id = ${id}`.pipe(
+          Effect.orDie
+        );
 
-    const append = Effect.fn('ActionLedgerRepo.append')(function* (
-      entry: AppendLedgerEntry
-    ) {
-      const now = yield* DateTime.now;
-      const ts = DateTime.formatIso(now);
-      const id = crypto.randomUUID() as LedgerEntryIdType;
-      const undoesId = entry.undoes ?? null;
-      const runId = entry.runId ?? null;
-      const actionRevision = entry.actionRevision ?? 1;
+      const append = Effect.fn('LedgerRepo.append')(function* (
+        entry: AppendLedgerEntry
+      ) {
+        const now = yield* DateTime.now;
+        const ts = DateTime.formatIso(now);
+        const id = crypto.randomUUID() as LedgerEntryIdType;
+        const undoesId = entry.undoes ?? null;
+        const runId = entry.runId ?? null;
+        const actionRevision = entry.actionRevision ?? 1;
 
-      // An undo entry inserts itself and stamps the original's undone_by
-      // pointer in one transaction, so the two rows always agree.
-      yield* Effect.gen(function* () {
-        yield* sql`
+        yield* Effect.gen(function* () {
+          yield* sql`
           INSERT INTO action_ledger (id, run_id, actor, email_id, action, action_revision, summary, payload, undoes, created_at)
           VALUES (${id}, ${runId}, ${entry.actor}, ${entry.emailId}, ${entry.action}, ${actionRevision}, ${entry.summary}, ${JSON.stringify(entry.payload)}::jsonb, ${undoesId}, ${ts})
         `;
-        if (undoesId !== null) {
-          yield* sql`UPDATE action_ledger SET undone_by = ${id} WHERE id = ${undoesId}`;
-        }
-      }).pipe(sql.withTransaction, Effect.orDie);
+          if (undoesId !== null) {
+            yield* sql`UPDATE action_ledger SET undone_by = ${id} WHERE id = ${undoesId}`;
+          }
+        }).pipe(sql.withTransaction, Effect.orDie);
 
-      const rows = yield* getById(id);
-      return decodeEntry(rows[0]);
-    });
+        const rows = yield* getById(id);
+        return decodeEntry(rows[0]);
+      });
 
-    const get = Effect.fn('ActionLedgerRepo.get')(function* (
-      id: LedgerEntryIdType
-    ) {
-      const rows = yield* getById(id);
-      return rows[0] ? decodeEntry(rows[0]) : null;
-    });
+      const get = Effect.fn('LedgerRepo.get')(function* (
+        id: LedgerEntryIdType
+      ) {
+        const rows = yield* getById(id);
+        return rows[0] ? decodeEntry(rows[0]) : null;
+      });
 
-    const listByEmail = Effect.fn('ActionLedgerRepo.listByEmail')(function* (
-      emailId: EmailIdType
-    ) {
-      const rows =
-        yield* sql`SELECT ${sql.literal(ledgerColumns)} FROM action_ledger WHERE email_id = ${emailId} ORDER BY created_at DESC`.pipe(
-          Effect.orDie
-        );
-      return rows.map((row) => decodeEntry(row));
-    });
+      const listByEmail = Effect.fn('LedgerRepo.listByEmail')(function* (
+        emailId: EmailIdType
+      ) {
+        const rows =
+          yield* sql`SELECT ${sql.literal(ledgerColumns)} FROM action_ledger WHERE email_id = ${emailId} ORDER BY created_at DESC`.pipe(
+            Effect.orDie
+          );
+        return rows.map((row) => decodeEntry(row));
+      });
 
-    const list = Effect.fn('ActionLedgerRepo.list')(function* () {
-      const rows =
-        yield* sql`SELECT ${sql.literal(ledgerColumns)} FROM action_ledger ORDER BY created_at DESC`.pipe(
-          Effect.orDie
-        );
-      return rows.map((row) => decodeEntry(row));
-    });
+      const list = Effect.fn('LedgerRepo.list')(function* () {
+        const rows =
+          yield* sql`SELECT ${sql.literal(ledgerColumns)} FROM action_ledger ORDER BY created_at DESC`.pipe(
+            Effect.orDie
+          );
+        return rows.map((row) => decodeEntry(row));
+      });
 
-    const deleteByEmail = Effect.fn('ActionLedgerRepo.deleteByEmail')(
-      function* (emailId: EmailIdType) {
+      const deleteByEmail = Effect.fn('LedgerRepo.deleteByEmail')(function* (
+        emailId: EmailIdType
+      ) {
         yield* sql`DELETE FROM action_ledger WHERE email_id = ${emailId}`.pipe(
           Effect.orDie
         );
-      }
-    );
+      });
 
-    const deleteAll = Effect.fn('ActionLedgerRepo.deleteAll')(function* () {
-      yield* sql`DELETE FROM action_ledger`.pipe(Effect.orDie);
-    });
+      const deleteAll = Effect.fn('LedgerRepo.deleteAll')(function* () {
+        yield* sql`DELETE FROM action_ledger`.pipe(Effect.orDie);
+      });
 
-    return {
-      append,
-      get,
-      listByEmail,
-      list,
-      deleteByEmail,
-      deleteAll
-    } as const;
-  })
-);
+      return {
+        append,
+        get,
+        listByEmail,
+        list,
+        deleteByEmail,
+        deleteAll
+      } as const;
+    })
+  );
 
-/** Production `ActionLedgerRepo` backed by Postgres. */
-export const ActionLedgerRepoLive = Layer.provide(
-  ActionLedgerRepoBody,
-  DatabaseLive
-);
+/** Production `LedgerRepo` backed by Postgres. */
+export const LedgerRepoLive = Layer.provide(LedgerRepoBody, DatabaseLive);

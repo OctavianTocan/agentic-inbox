@@ -4,7 +4,15 @@ import {
 } from '@app/api-core/Modules/Actions/Domain';
 import type { Email, EmailStatus } from '@app/api-core/Modules/Emails/Domain';
 import { EmailNotFound } from '@app/api-core/Modules/Emails/Errors';
-import { Decision, type Proposal } from '@app/api-core/Modules/Triage/Domain';
+import {
+  Attempt,
+  AttemptError,
+  AttemptPending
+} from '@app/api-core/Modules/Triage/Attempts/Domain';
+import {
+  Classification,
+  type NextAction
+} from '@app/api-core/Modules/Triage/Domain';
 import {
   TriageApprovalPending,
   TriageDecided,
@@ -18,31 +26,29 @@ import {
   InboxItem,
   InboxSummary
 } from '@app/api-core/Modules/Triage/Inbox';
-import {
-  TriageRun,
-  TriageRunError,
-  TriageRunPending
-} from '@app/api-core/Modules/Triage/Runs/Domain';
 import { Context, DateTime, Effect, Layer, Schema, Stream } from 'effect';
 import { Prompt } from 'effect/unstable/ai';
 import { AppConfig } from '@/Infrastructure/AppConfig';
-import type { EmailIdType, RunIdType } from '@/Lib/Ids';
-import { ActionService, ActionServiceLive } from '@/Modules/Actions/Service';
-import { AgentService, AgentServiceLive } from '@/Modules/Agent/Service';
+import type { AttemptIdType, EmailIdType } from '@/Lib/Ids';
+import { LedgerService, LedgerServiceLive } from '@/Modules/Actions/Service';
+import { TriageAgent, TriageAgentLive } from '@/Modules/Agent/TriageAgent';
 import {
   type ConversationRecord,
   ConversationsRepo,
   ConversationsRepoLive
 } from '@/Modules/Chat/Repo';
 import { EmailsService, EmailsServiceLive } from '@/Modules/Emails/Service';
-import { DecisionsRepo, DecisionsRepoLive } from './Decisions/Repo';
-import { TriageRunsRepo, TriageRunsRepoLive } from './Runs/Repo';
+import { AttemptsRepo, AttemptsRepoLive } from './Attempts/Repo';
+import {
+  ClassificationsRepo,
+  ClassificationsRepoLive
+} from './Classifications/Repo';
 
 type EmailStatusType = Schema.Schema.Type<typeof EmailStatus>;
 type TriageEvent = Schema.Schema.Type<typeof TriageStreamEvent>;
-type ProposalType = Schema.Schema.Type<typeof Proposal>;
+type NextActionType = Schema.Schema.Type<typeof NextAction>;
 
-const encodeDecision = Schema.encodeSync(Decision);
+const encodeClassification = Schema.encodeSync(Classification);
 const decodeJson = Schema.decodeUnknownSync(Schema.Json);
 
 /** True when Vitest is driving the process (skip batch pacing defaults). */
@@ -50,8 +56,8 @@ const underVitest =
   process.env.VITEST !== undefined && process.env.VITEST.length > 0;
 
 /** Orchestrates batch triage and joined inbox reads. */
-export class TriageService extends Context.Service<
-  TriageService,
+export class InboxOrchestrator extends Context.Service<
+  InboxOrchestrator,
   {
     readonly run: (
       fresh?: boolean
@@ -61,31 +67,30 @@ export class TriageService extends Context.Service<
     ) => Effect.Effect<Inbox, EmailNotFound>;
     readonly inbox: () => Effect.Effect<Inbox>;
   }
->()('@apps/api/Triage/TriageService') {}
+>()('@apps/api/Triage/InboxOrchestrator') {}
 
-/** `TriageService` without its dependencies; use {@link TriageServiceLive}. */
-export const TriageServiceBody: Layer.Layer<
-  TriageService,
+/** `InboxOrchestrator` without its dependencies; use {@link InboxOrchestratorLive}. */
+export const InboxOrchestratorBody: Layer.Layer<
+  InboxOrchestrator,
   never,
-  | AgentService
+  | TriageAgent
   | EmailsService
-  | DecisionsRepo
-  | ActionService
+  | ClassificationsRepo
+  | LedgerService
   | ConversationsRepo
-  | TriageRunsRepo
+  | AttemptsRepo
 > = Layer.effect(
-  TriageService,
+  InboxOrchestrator,
   Effect.gen(function* () {
-    const agent = yield* AgentService;
+    const agent = yield* TriageAgent;
     const emails = yield* EmailsService;
-    const decisions = yield* DecisionsRepo;
-    const actions = yield* ActionService;
+    const classifications = yield* ClassificationsRepo;
+    const actions = yield* LedgerService;
     const conversations = yield* ConversationsRepo;
-    const runs = yield* TriageRunsRepo;
+    const attempts = yield* AttemptsRepo;
     const { triageConcurrency: rawConcurrency, triageGapMs: configuredGap } =
       yield* AppConfig.pipe(Effect.orDie);
     const triageConcurrency = Math.max(1, rawConcurrency);
-    // Under Vitest skip pacing unless TRIAGE_GAP_MS is explicitly set.
     const triageGapMs = underVitest
       ? process.env.TRIAGE_GAP_MS !== undefined &&
         process.env.TRIAGE_GAP_MS.length > 0
@@ -93,41 +98,34 @@ export const TriageServiceBody: Layer.Layer<
         : 0
       : Math.max(0, configuredGap);
 
-    /**
-     * Triage one email and persist its Classification (InboxOrchestrator
-     * sole writer for decisions).
-     */
-    const persistTriage = Effect.fn('TriageService.persistTriage')(function* (
-      email: Email,
-      runId: RunIdType
-    ) {
-      const result = yield* agent.triageEmail(email, { runId });
-      const storedDecision = yield* decisions.upsert(result.decision);
-      return {
-        decision: storedDecision,
-        actions: result.actions,
-        approval: result.approval
-      } as const;
-    });
+    /** Triage one email and persist its Classification. */
+    const persistTriage = Effect.fn('InboxOrchestrator.persistTriage')(
+      function* (email: Email, attemptId: AttemptIdType) {
+        const result = yield* agent.triageEmail(email, { runId: attemptId });
+        const stored = yield* classifications.upsert(result.classification);
+        return {
+          classification: stored,
+          actions: result.actions,
+          approval: result.approval
+        } as const;
+      }
+    );
 
-    /**
-     * Mint an Attempt (run), walk TriageAgent, finalize status.
-     * Failures are caught so batch SSE can emit TriageFailed.
-     */
-    const runAttempt = Effect.fn('TriageService.runAttempt')(function* (
+    /** Mint an Attempt, walk TriageAgent, finalize status. */
+    const runAttempt = Effect.fn('InboxOrchestrator.runAttempt')(function* (
       email: Email
     ) {
-      const runId = crypto.randomUUID() as RunIdType;
+      const attemptId = crypto.randomUUID() as AttemptIdType;
       const now = yield* DateTime.now;
       const ts = DateTime.formatIso(now);
-      yield* runs.create(
-        new TriageRun({
-          id: runId,
+      yield* attempts.create(
+        new Attempt({
+          id: attemptId,
           emailId: email.id,
           status: 'running',
           createdAt: ts,
           updatedAt: ts,
-          proposal: 'no_action',
+          nextAction: 'no_action',
           proposalSummary: 'In progress',
           pending: null,
           decisionSnapshot: null,
@@ -137,7 +135,7 @@ export const TriageServiceBody: Layer.Layer<
         })
       );
 
-      const outcome = yield* persistTriage(email, runId).pipe(
+      const outcome = yield* persistTriage(email, attemptId).pipe(
         Effect.map((ok) => ({ _tag: 'Ok' as const, ...ok })),
         Effect.catch((error) =>
           Effect.succeed({
@@ -150,41 +148,41 @@ export const TriageServiceBody: Layer.Layer<
       const updatedAt = DateTime.formatIso(yield* DateTime.now);
 
       if (outcome._tag === 'Fail') {
-        yield* runs.upsert(
-          new TriageRun({
-            id: runId,
+        yield* attempts.upsert(
+          new Attempt({
+            id: attemptId,
             emailId: email.id,
             status: 'failed',
             createdAt: ts,
             updatedAt,
-            proposal: 'no_action',
+            nextAction: 'no_action',
             proposalSummary: 'Triage failed',
             pending: null,
             decisionSnapshot: null,
             policyVersion: null,
             promptVersion: null,
-            error: new TriageRunError({ message: outcome.reason })
+            error: new AttemptError({ message: outcome.reason })
           })
         );
-        return { _tag: 'Fail' as const, reason: outcome.reason, runId };
+        return { _tag: 'Fail' as const, reason: outcome.reason, attemptId };
       }
 
-      const { decision, actions: acted, approval } = outcome;
-      const { proposal, proposalSummary } = proposalFromOutcome(
+      const { classification, actions: acted, approval } = outcome;
+      const { nextAction, proposalSummary } = nextActionFromOutcome(
         acted,
         approval
       );
-      const decisionSnapshot = decodeJson(encodeDecision(decision));
+      const decisionSnapshot = decodeJson(encodeClassification(classification));
 
       if (approval !== null) {
-        yield* runs.upsert(
-          new TriageRun({
-            id: runId,
+        yield* attempts.upsert(
+          new Attempt({
+            id: attemptId,
             emailId: email.id,
             status: 'interrupted',
             createdAt: ts,
             updatedAt,
-            proposal,
+            nextAction,
             proposalSummary,
             pending: pendingFromApproval(approval),
             decisionSnapshot,
@@ -194,14 +192,14 @@ export const TriageServiceBody: Layer.Layer<
           })
         );
       } else {
-        yield* runs.upsert(
-          new TriageRun({
-            id: runId,
+        yield* attempts.upsert(
+          new Attempt({
+            id: attemptId,
             emailId: email.id,
             status: 'completed',
             createdAt: ts,
             updatedAt,
-            proposal,
+            nextAction,
             proposalSummary,
             pending: null,
             decisionSnapshot,
@@ -214,67 +212,65 @@ export const TriageServiceBody: Layer.Layer<
 
       return {
         _tag: 'Ok' as const,
-        runId,
-        decision,
+        attemptId,
+        classification,
         actions: acted,
         approval
       };
     });
 
-    /** One email for the batch stream: persist triage and map to SSE events. */
-    const triageOneEmail = Effect.fn('TriageService.triageOneEmail')(function* (
-      email: Email
-    ): Effect.fn.Return<TriageEvent[]> {
-      const outcome = yield* runAttempt(email);
+    const triageOneEmail = Effect.fn('InboxOrchestrator.triageOneEmail')(
+      function* (email: Email): Effect.fn.Return<TriageEvent[]> {
+        const outcome = yield* runAttempt(email);
 
-      if (outcome._tag === 'Fail') {
+        if (outcome._tag === 'Fail') {
+          return [
+            new TriageStarted({ type: 'started', emailId: email.id }),
+            new TriageFailed({
+              type: 'failed',
+              emailId: email.id,
+              reason: outcome.reason
+            })
+          ];
+        }
+
+        const { classification, actions: acted, approval } = outcome;
+
         return [
           new TriageStarted({ type: 'started', emailId: email.id }),
-          new TriageFailed({
-            type: 'failed',
-            emailId: email.id,
-            reason: outcome.reason
-          })
+          new TriageDecided({ type: 'decision', classification }),
+          ...acted,
+          ...(approval === null
+            ? []
+            : [
+                new TriageApprovalPending({
+                  type: 'approval_pending',
+                  approval
+                })
+              ])
         ];
-      }
-
-      const { decision, actions: acted, approval } = outcome;
-
-      return [
-        new TriageStarted({ type: 'started', emailId: email.id }),
-        new TriageDecided({ type: 'decision', decision }),
-        ...acted,
-        ...(approval === null
-          ? []
-          : [
-              new TriageApprovalPending({
-                type: 'approval_pending',
-                approval
-              })
-            ])
-      ];
-    });
-
-    /** Pace then triage one email (batch concurrency entry point). */
-    const triageEmailWithGap = Effect.fn('TriageService.triageEmailWithGap')(
-      function* (email: Email, index: number): Effect.fn.Return<TriageEvent[]> {
-        if (index > 0 && triageGapMs > 0) {
-          yield* Effect.sleep(`${triageGapMs} millis`);
-        }
-        return yield* triageOneEmail(email);
       }
     );
 
-    const run = Effect.fn('TriageService.run')(function* (fresh = false) {
+    const triageEmailWithGap = Effect.fn(
+      'InboxOrchestrator.triageEmailWithGap'
+    )(function* (email: Email, index: number): Effect.fn.Return<TriageEvent[]> {
+      if (index > 0 && triageGapMs > 0) {
+        yield* Effect.sleep(`${triageGapMs} millis`);
+      }
+      return yield* triageOneEmail(email);
+    });
+
+    const run = Effect.fn('InboxOrchestrator.run')(function* (fresh = false) {
       if (fresh) {
-        yield* decisions.deleteAll();
+        yield* classifications.deleteAll();
         yield* actions.clearLedger();
         yield* conversations.deleteTriage();
-        yield* runs.deleteAll();
+        yield* attempts.deleteAll();
       }
       const all = yield* emails.list();
-      const existing = yield* decisions.list();
-      const existingIds = new Set(existing.map((decision) => decision.emailId));
+      const existing = yield* classifications.list();
+      const existingIds = new Set(existing.map((row) => row.emailId));
       const emailsToProcess = all.filter((email) => !existingIds.has(email.id));
 
       return Stream.fromIterable(emailsToProcess).pipe(
@@ -293,24 +289,26 @@ export const TriageServiceBody: Layer.Layer<
       );
     });
 
-    const inbox = Effect.fn('TriageService.inbox')(function* () {
+    const inbox = Effect.fn('InboxOrchestrator.inbox')(function* () {
       const all = yield* emails.list();
-      const decisionRows = yield* decisions.list();
+      const classificationRows = yield* classifications.list();
       const ledger = yield* actions.listLedger();
       const awaiting = yield* conversations.listAwaitingApproval();
-      const decisionByEmail = new Map(
-        decisionRows.map((decision) => [decision.emailId, decision] as const)
+      const classificationByEmail = new Map(
+        classificationRows.map(
+          (classification) => [classification.emailId, classification] as const
+        )
       );
       const items = all.map((email) => {
-        const decision = decisionByEmail.get(email.id) ?? null;
+        const classification = classificationByEmail.get(email.id) ?? null;
         const emailActions = ledger.filter(
           (entry) => entry.emailId === email.id
         );
         const pendingApproval = findApprovalForEmail(email.id, awaiting);
         return new InboxItem({
           email,
-          status: statusForItem(decision, pendingApproval, emailActions),
-          decision,
+          status: statusForItem(classification, pendingApproval, emailActions),
+          classification,
           pendingApproval,
           actions: emailActions
         });
@@ -321,7 +319,7 @@ export const TriageServiceBody: Layer.Layer<
       });
     });
 
-    const retriage = Effect.fn('TriageService.retriage')(function* (
+    const retriage = Effect.fn('InboxOrchestrator.retriage')(function* (
       emailId: EmailIdType
     ) {
       const email = yield* emails.get(emailId);
@@ -329,7 +327,7 @@ export const TriageServiceBody: Layer.Layer<
         return yield* Effect.fail(new EmailNotFound({ emailId }));
       }
 
-      yield* decisions.deleteByEmail(emailId);
+      yield* classifications.deleteByEmail(emailId);
       yield* actions.clearLedgerForEmail(emailId);
       yield* conversations.deleteByEmail(emailId);
 
@@ -345,23 +343,23 @@ export const TriageServiceBody: Layer.Layer<
   })
 );
 
-/** Production `TriageService` backed by Postgres repos and the shared agent. */
-export const TriageServiceLive = Layer.provide(TriageServiceBody, [
-  AgentServiceLive,
+/** Production `InboxOrchestrator` backed by Postgres repos and TriageAgent. */
+export const InboxOrchestratorLive = Layer.provide(InboxOrchestratorBody, [
+  TriageAgentLive,
   EmailsServiceLive,
-  DecisionsRepoLive,
-  ActionServiceLive,
+  ClassificationsRepoLive,
+  LedgerServiceLive,
   ConversationsRepoLive,
-  TriageRunsRepoLive
+  AttemptsRepoLive
 ]);
 
 /** Computes the current review status for an inbox item. */
 const statusForItem = (
-  decision: Decision | null,
+  classification: Classification | null,
   approval: ApprovalRequest | null,
   actions: ReadonlyArray<LedgerEntry>
 ): EmailStatusType => {
-  if (approval !== null || decision === null) {
+  if (approval !== null || classification === null) {
     return 'needs_attention';
   }
   const activeFlag = actions.some(
@@ -385,7 +383,7 @@ const statusForItem = (
 /** Builds roll-up counts for the inbox summary. */
 const summaryForItems = (items: ReadonlyArray<InboxItem>): InboxSummary =>
   new InboxSummary({
-    processed: items.filter((item) => item.decision !== null).length,
+    processed: items.filter((item) => item.classification !== null).length,
     handled: items.filter((item) => item.status === 'done_for_you').length,
     needsAttention: items.filter((item) => item.status === 'needs_attention')
       .length,
@@ -417,29 +415,34 @@ const findApprovalForEmail = (
   return null;
 };
 
-/** Derives NextAction (Proposal) fields from agent outcomes. */
-const proposalFromOutcome = (
+/** Derives NextAction fields from agent outcomes. */
+const nextActionFromOutcome = (
   acted: ReadonlyArray<{ readonly entry: LedgerEntry }>,
   approval: ApprovalRequest | null
-): { readonly proposal: ProposalType; readonly proposalSummary: string } => {
+): {
+  readonly nextAction: NextActionType;
+  readonly proposalSummary: string;
+} => {
   if (approval !== null) {
     return {
-      proposal: proposalFromAction(approval.action),
+      nextAction: nextActionFromLedgerAction(approval.action),
       proposalSummary: approval.summary
     };
   }
   const first = acted[0]?.entry;
   if (first !== undefined) {
     return {
-      proposal: proposalFromAction(first.action),
+      nextAction: nextActionFromLedgerAction(first.action),
       proposalSummary: first.summary
     };
   }
-  return { proposal: 'no_action', proposalSummary: 'No action' };
+  return { nextAction: 'no_action', proposalSummary: 'No action' };
 };
 
-/** Maps a ledger/approval action kind onto the Proposal union. */
-const proposalFromAction = (action: LedgerEntry['action']): ProposalType => {
+/** Maps a ledger/approval action kind onto the NextAction union. */
+const nextActionFromLedgerAction = (
+  action: LedgerEntry['action']
+): NextActionType => {
   if (
     action === 'send_reply' ||
     action === 'archive' ||
@@ -451,8 +454,8 @@ const proposalFromAction = (action: LedgerEntry['action']): ProposalType => {
 };
 
 /** Builds Attempt pending payload from a legacy ApprovalRequest. */
-const pendingFromApproval = (approval: ApprovalRequest): TriageRunPending =>
-  new TriageRunPending({
+const pendingFromApproval = (approval: ApprovalRequest): AttemptPending =>
+  new AttemptPending({
     action: approval.action,
     summary: approval.summary,
     payload: approval.payload,
