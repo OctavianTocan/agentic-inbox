@@ -275,19 +275,19 @@ function AuditDetail({
             ) : null}
           </section>
 
-          {item.decision ? (
+          {item.classification ? (
             <section className="flex flex-col gap-2">
               <h3 className="font-semibold text-muted-foreground text-xs uppercase">
                 Agent decision
               </h3>
               <div className="flex flex-wrap gap-2">
                 <Badge variant="outline">
-                  {CATEGORY_LABELS[item.decision.category]}
+                  {CATEGORY_LABELS[item.classification.category]}
                 </Badge>
-                <Badge variant="outline">{item.decision.severity}</Badge>
+                <Badge variant="outline">{item.classification.severity}</Badge>
               </div>
               <p className="text-pretty text-sm leading-relaxed">
-                {item.decision.rationale}
+                {item.classification.rationale}
               </p>
             </section>
           ) : null}

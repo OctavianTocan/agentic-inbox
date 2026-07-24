@@ -149,7 +149,7 @@ function triageEventFromPayload(
     return emailId === null ? null : { type, emailId };
   }
   if (type === 'decision') {
-    const emailId = emailIdFromNested(payload, 'decision');
+    const emailId = emailIdFromNested(payload, 'classification');
     return emailId === null ? null : { type, emailId };
   }
   if (type === 'action') {

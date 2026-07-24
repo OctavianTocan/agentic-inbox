@@ -57,7 +57,7 @@ const items: readonly InboxItem[] = [
   {
     email: emails['e-016'],
     status: 'needs_attention',
-    decision: {
+    classification: {
       emailId: 'e-016',
       category: 'safety',
       severity: 'critical',
@@ -85,7 +85,7 @@ const items: readonly InboxItem[] = [
   {
     email: emails['e-014'],
     status: 'needs_attention',
-    decision: {
+    classification: {
       emailId: 'e-014',
       category: 'financial',
       severity: 'high',
@@ -114,7 +114,7 @@ const items: readonly InboxItem[] = [
   {
     email: emails['e-001'],
     status: 'done_for_you',
-    decision: {
+    classification: {
       emailId: 'e-001',
       category: 'request',
       severity: 'low',
@@ -148,7 +148,7 @@ const items: readonly InboxItem[] = [
   {
     email: emails['e-003'],
     status: 'done_for_you',
-    decision: {
+    classification: {
       emailId: 'e-003',
       category: 'supplier_update',
       severity: 'low',
@@ -182,7 +182,7 @@ const items: readonly InboxItem[] = [
   {
     email: emails['e-002'],
     status: 'filed',
-    decision: {
+    classification: {
       emailId: 'e-002',
       category: 'activity_update',
       severity: 'low',
@@ -215,7 +215,7 @@ const items: readonly InboxItem[] = [
 
 function summarize(list: readonly InboxItem[]): InboxSummary {
   return {
-    processed: list.filter((item) => item.decision !== null).length,
+    processed: list.filter((item) => item.classification !== null).length,
     handled: list.filter((item) => item.status === 'done_for_you').length,
     needsAttention: list.filter((item) => item.status === 'needs_attention')
       .length,

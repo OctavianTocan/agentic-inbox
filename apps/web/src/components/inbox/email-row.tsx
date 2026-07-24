@@ -114,7 +114,7 @@ type EmailRowProps = {
  * approval controls. The row follows an email-client scan path instead of a
  * stacked task-card layout.
  *
- * @param item - The joined email, decision, status, and pending state.
+ * @param item - The joined email, classification, status, and pending state.
  * @param isSelected - Whether this row is the open detail selection.
  * @param isDimmed - Whether the row is shown quietly (reviewed, handled, or untriaged).
  * @param filters - Active filters, used to build the "Filter by" submenu state.
@@ -138,7 +138,7 @@ export function EmailRow({
   onRetriage,
   onFiltersChange
 }: EmailRowProps) {
-  const { email, decision, pendingApproval } = item;
+  const { email, classification, pendingApproval } = item;
   const { copy } = useCopyToClipboard();
 
   const undoableAction = item.actions.find(isUndoableAction) ?? null;
@@ -185,7 +185,7 @@ export function EmailRow({
               data-slot="item-description"
             >
               <PreviewMarkdown>
-                {decision?.whyPreview ?? email.body}
+                {classification?.whyPreview ?? email.body}
               </PreviewMarkdown>
             </span>
             <p className="truncate text-muted-foreground text-xs leading-4">
@@ -232,7 +232,7 @@ export function EmailRow({
                   data-slot="item-description"
                 >
                   <PreviewMarkdown>
-                    {decision?.whyPreview ?? email.body}
+                    {classification?.whyPreview ?? email.body}
                   </PreviewMarkdown>
                 </span>
               </div>
@@ -320,7 +320,7 @@ export function EmailRow({
             <ContextMenuSeparator />
           </>
         ) : null}
-        {decision ? (
+        {classification ? (
           <>
             <ContextMenuItem onClick={() => onRetriage(email.id)}>
               <RefreshCwIcon />
@@ -335,16 +335,16 @@ export function EmailRow({
             Filter by
           </ContextMenuSubTrigger>
           <ContextMenuSubContent>
-            {decision ? (
+            {classification ? (
               <ContextMenuItem
                 onClick={() =>
                   onFiltersChange({
                     ...filters,
-                    severity: decision.severity
+                    severity: classification.severity
                   })
                 }
               >
-                Severity: {decision.severity}
+                Severity: {classification.severity}
               </ContextMenuItem>
             ) : null}
             <ContextMenuItem

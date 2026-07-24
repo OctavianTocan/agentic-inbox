@@ -19,7 +19,7 @@ vi.mock('@/lib/inbox/client', async () => {
   const untriaged = {
     items: base.items.map((item) => ({
       ...item,
-      decision: null,
+      classification: null,
       actions: [],
       pendingApproval: null,
       status: 'needs_attention' as const

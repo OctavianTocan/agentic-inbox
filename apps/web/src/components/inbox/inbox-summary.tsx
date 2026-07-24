@@ -36,10 +36,10 @@ function categoryCounts(
 ): ReadonlyMap<Category, number> {
   const counts = new Map<Category, number>();
   for (const item of items) {
-    if (item.decision) {
+    if (item.classification) {
       counts.set(
-        item.decision.category,
-        (counts.get(item.decision.category) ?? 0) + 1
+        item.classification.category,
+        (counts.get(item.classification.category) ?? 0) + 1
       );
     }
   }

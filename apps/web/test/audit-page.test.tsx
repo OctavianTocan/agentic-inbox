@@ -24,7 +24,7 @@ const fakeItem: InboxItem = {
     inReplyTo: null
   },
   status: 'done_for_you',
-  decision: {
+  classification: {
     emailId: 'e-001',
     category: 'request',
     severity: 'low',

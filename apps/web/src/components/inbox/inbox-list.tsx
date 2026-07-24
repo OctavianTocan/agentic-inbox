@@ -80,7 +80,7 @@ function CollapsibleSection({ label, children }: CollapsibleSectionProps) {
  * Filterable email list, grouped into pending-approval, triaged, and untriaged
  * sections. Pending approvals are pinned on top, severity-sorted, capped at
  * five rows behind an expander so a large approval batch never walls off the
- * rest of the inbox. Untriaged items (no decision) render quietly at the bottom
+ * rest of the inbox. Untriaged items (no classification) render quietly at the bottom
  * so a pre-triage inbox reads as unprocessed rather than flagged.
  *
  * @param items - All inbox items, triaged or not.
@@ -135,7 +135,7 @@ export function InboxList({
       isSelected={selectedEmailId === item.email.id}
       isDimmed={
         viewedEmailIds.has(item.email.id) ||
-        item.decision === null ||
+        item.classification === null ||
         item.status !== 'needs_attention'
       }
       item={item}

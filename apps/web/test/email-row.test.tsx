@@ -38,7 +38,7 @@ const baseEmail = {
 const pendingItem: InboxItem = {
   email: baseEmail,
   status: 'needs_attention',
-  decision: {
+  classification: {
     emailId: 'e-042',
     category: 'request',
     severity: 'high',
@@ -257,7 +257,7 @@ describe('EmailRow context menu', () => {
   it('hides Re-triage for an untriaged row, so re-running only applies once a decision exists', async () => {
     const { container } = renderRow({
       ...plainItem,
-      decision: null,
+      classification: null,
       status: 'needs_attention'
     });
     openRowMenu(container);
@@ -293,7 +293,7 @@ describe('EmailRow preview markdown', () => {
     ].join('\n');
     const { container } = renderRow({
       ...plainItem,
-      decision: null,
+      classification: null,
       email: { ...baseEmail, body: markdownBody }
     });
 

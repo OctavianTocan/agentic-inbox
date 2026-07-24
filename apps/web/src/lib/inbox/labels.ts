@@ -77,8 +77,8 @@ export function statusBadgeVariant(
  * @returns Negative when `a` should come before `b`, positive otherwise.
  */
 export function bySeverityDesc(a: InboxItem, b: InboxItem): number {
-  const sa = a.decision ? SEVERITY_RANK[a.decision.severity] : -1;
-  const sb = b.decision ? SEVERITY_RANK[b.decision.severity] : -1;
+  const sa = a.classification ? SEVERITY_RANK[a.classification.severity] : -1;
+  const sb = b.classification ? SEVERITY_RANK[b.classification.severity] : -1;
   return sb - sa;
 }
 

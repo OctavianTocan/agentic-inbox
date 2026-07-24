@@ -60,7 +60,7 @@ type RunViewProps = {
  * @returns The run view.
  */
 export function RunView({ items, onRun, onComplete }: RunViewProps) {
-  const untriaged = items.filter((item) => item.decision === null).length;
+  const untriaged = items.filter((item) => item.classification === null).length;
   const total = items.length > 0 ? untriaged : TOTAL_EMAILS;
   const nextEventId = useRef(0);
   const abortRef = useRef<AbortController | null>(null);
@@ -427,7 +427,7 @@ function eventText(
     return `Failed ${subject}: ${event.reason}`;
   }
   if (event.type === 'decision') {
-    return `Recorded decision: ${subject}`;
+    return `Recorded classification: ${subject}`;
   }
   return `Started: ${subject}`;
 }

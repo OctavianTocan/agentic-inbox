@@ -123,8 +123,8 @@ function filterMeta(
   const projects = new Set(items.map((item) => projectOf(item.email.subject)));
   const categories = new Set<Category>();
   for (const item of items) {
-    if (item.decision) {
-      categories.add(item.decision.category);
+    if (item.classification) {
+      categories.add(item.classification.category);
     }
   }
   return {
@@ -299,7 +299,11 @@ export function InboxFilterMenu({
         <FacetMenu
           active={filters.severity}
           count={(severity) =>
-            countBy(items, severity, (item) => item.decision?.severity ?? null)
+            countBy(
+              items,
+              severity,
+              (item) => item.classification?.severity ?? null
+            )
           }
           display={(value) => value}
           label="Severity"
@@ -323,7 +327,7 @@ export function InboxFilterMenu({
               countBy(
                 items,
                 category,
-                (item) => item.decision?.category ?? null
+                (item) => item.classification?.category ?? null
               )
             }
             display={(value) => CATEGORY_LABELS[value]}
@@ -374,7 +378,11 @@ export function InboxFilterPanel({
       <FacetButtonGroup
         active={filters.severity}
         count={(severity) =>
-          countBy(items, severity, (item) => item.decision?.severity ?? null)
+          countBy(
+            items,
+            severity,
+            (item) => item.classification?.severity ?? null
+          )
         }
         display={(value) => value}
         label="Severity"
@@ -395,7 +403,11 @@ export function InboxFilterPanel({
         <FacetButtonGroup
           active={filters.category}
           count={(category) =>
-            countBy(items, category, (item) => item.decision?.category ?? null)
+            countBy(
+              items,
+              category,
+              (item) => item.classification?.category ?? null
+            )
           }
           display={(value) => CATEGORY_LABELS[value]}
           label="Category"

@@ -31,9 +31,13 @@ export function sectionInbox(
       .filter((item) => item.pendingApproval !== null)
       .sort(compare),
     triaged: filtered
-      .filter((item) => item.pendingApproval === null && item.decision !== null)
+      .filter(
+        (item) => item.pendingApproval === null && item.classification !== null
+      )
       .sort(compare),
-    untriaged: filtered.filter((item) => item.decision === null).sort(compare)
+    untriaged: filtered
+      .filter((item) => item.classification === null)
+      .sort(compare)
   };
 }
 

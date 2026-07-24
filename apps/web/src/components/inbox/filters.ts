@@ -44,13 +44,13 @@ export function matchesFilters(
   }
   if (
     filters.category !== null &&
-    item.decision?.category !== filters.category
+    item.classification?.category !== filters.category
   ) {
     return false;
   }
   if (
     filters.severity !== null &&
-    item.decision?.severity !== filters.severity
+    item.classification?.severity !== filters.severity
   ) {
     return false;
   }

@@ -17,7 +17,7 @@ const untriagedItem: InboxItem = {
     inReplyTo: null
   },
   status: 'needs_attention',
-  decision: null,
+  classification: null,
   pendingApproval: null,
   actions: []
 };

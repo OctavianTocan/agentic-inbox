@@ -172,7 +172,7 @@ export function DetailPane({
     );
   }
 
-  const { email, decision, status, pendingApproval } = item;
+  const { email, classification, status, pendingApproval } = item;
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
@@ -188,17 +188,17 @@ export function DetailPane({
             {email.subject}
           </h2>
           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-            {decision ? (
-              <Badge variant={severityBadgeVariant(decision.severity)}>
-                {decision.severity}
+            {classification ? (
+              <Badge variant={severityBadgeVariant(classification.severity)}>
+                {classification.severity}
               </Badge>
             ) : null}
             <Badge variant={statusBadgeVariant(status)}>
               {STATUS_LABELS[status]}
             </Badge>
-            {decision ? (
+            {classification ? (
               <Badge variant="outline">
-                {CATEGORY_LABELS[decision.category]}
+                {CATEGORY_LABELS[classification.category]}
               </Badge>
             ) : null}
           </div>
@@ -280,7 +280,7 @@ export function DetailPane({
             </ContextMenuContent>
           </ContextMenu>
 
-          {decision ? (
+          {classification ? (
             <div className="flex flex-col gap-4 rounded-md border-primary/40 border-l-2 bg-accent/50 p-4">
               <div className="flex items-center gap-1.5 text-muted-foreground">
                 <SparklesIcon className="size-3.5 text-primary" />
@@ -293,16 +293,16 @@ export function DetailPane({
                   Why the agent decided this
                 </h3>
                 <Markdown containerProps={{ className: 'prose-sm max-w-none' }}>
-                  {decision.rationale}
+                  {classification.rationale}
                 </Markdown>
               </section>
-              {decision.keyFacts.length > 0 ? (
+              {classification.keyFacts.length > 0 ? (
                 <section className="flex flex-col gap-2">
                   <h3 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
                     Key facts
                   </h3>
                   <ul className="flex flex-col gap-1 text-sm">
-                    {decision.keyFacts.map((fact) => (
+                    {classification.keyFacts.map((fact) => (
                       <li className="flex gap-2" key={fact}>
                         <span className="text-muted-foreground">·</span>
                         <span>{fact}</span>

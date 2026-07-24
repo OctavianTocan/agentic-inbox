@@ -14,7 +14,7 @@ import type {
 } from '@app/api-core/Modules/Emails/Domain';
 import type {
   Category as CategorySchema,
-  Decision as DecisionSchema,
+  Classification as ClassificationSchema,
   Severity as SeveritySchema
 } from '@app/api-core/Modules/Triage/Domain';
 import type {
@@ -33,7 +33,7 @@ export type ActionKind = Schema.Schema.Type<typeof ActionKindSchema>;
 export type ApprovalVerdict = 'approve' | 'deny';
 
 export type Email = Schema.Schema.Type<typeof EmailSchema>;
-export type Decision = Schema.Schema.Type<typeof DecisionSchema>;
+export type Classification = Schema.Schema.Type<typeof ClassificationSchema>;
 export type LedgerEntry = Schema.Schema.Type<typeof LedgerEntrySchema>;
 export type ApprovalRequest = Schema.Schema.Type<typeof ApprovalRequestSchema>;
 export type InboxItem = Schema.Schema.Type<typeof InboxItemSchema>;
