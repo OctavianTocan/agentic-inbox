@@ -9,18 +9,18 @@ An ownership table plus hard seam rules — using the naming bundle in [Adopt cl
 ## Notes
 
 - **Domain:** Agentic Inbox triage orchestration glue — readability and separation of concerns, not LangGraph build.
-- **Execution:** Wayfinder sessions resolve decisions only. No product code in this map unless a ticket is explicitly a `task` that unblocks a decision. Code renames to the naming bundle are out of scope until asked.
-- **Baseline:** Treat [Freeze the TriageEngine Effect seam](../agentic-inbox-v2/issues/02-freeze-triage-engine-seam.md) as fixed for *roles*; prefer the new names (InboxOrchestrator / TriageAgent / LedgerService / Attempt) when writing new rules.
+- **Execution:** Wayfinder sessions resolve decisions by default. Rename and Phase 1 wiring for this map have been executed in product code.
+- **Baseline:** Treat [Freeze the TriageEngine Effect seam](../agentic-inbox-v2/issues/02-freeze-triage-engine-seam.md) as fixed for *roles*; code now uses InboxOrchestrator / TriageAgent / LedgerService / Attempt names.
 - **Tracker:** Local markdown under `.scratch/triage-ownership-seams/` (see `docs/agents/issue-tracker.md`).
 - **Skills when resolving:** `/grilling`, `/domain-modeling`; research may read repo sources and v2 map tickets.
-- **Repo hotspots (today’s paths):** `apps/api/src/Modules/{Triage,Agent,Actions,Chat}/*` — map to InboxOrchestrator, TriageAgent, LedgerService, ChatAgent when renaming.
-- **Glossary:** root [`GLOSSARY.md`](../../GLOSSARY.md) uses the new names.
-- **Implementation progress (2026-07-23):** InboxOrchestrator mints/finalizes Attempt rows (`completed` / `interrupted` / `failed`); `runId` threads TriageAgent → Toolkit → LedgerService → ledger; `record_triage` no longer dual-writes Classifications. Still open: resume-by-attemptId (drop conversation/`approvalId`), inbox pending from Attempt, `no_action`, mass rename, LangGraph.
+- **Repo hotspots:** `Modules/Triage` (InboxOrchestrator, Attempts, Classifications), `Modules/Agent` (TriageAgent, ChatAgent, Loop, Toolkit), `Modules/Actions` (LedgerService, LedgerRepo).
+- **Glossary:** root [`GLOSSARY.md`](../../GLOSSARY.md).
+- **Implementation progress (2026-07-24):** Symbols and folders renamed to Attempt / InboxOrchestrator / TriageAgent / ChatAgent / LedgerService / Classifications / Attempts. Mint/finalize + `runId` ledger threading + single Classification writer already landed. Still open: resume-by-attemptId (drop conversation/`approvalId`), inbox pending from Attempt, `no_action` product polish, LangGraph, SQL table renames.
 - **Already settled in charting (not ticket answers — preferences that shape the map):**
   - Destination style: ownership table + hard PR/agent rules (not folder-move plan alone).
   - One ownership story before and after cutover (no temporary second architecture).
   - Publish targets: `apps/api/AGENTS.md`, `.opencodereview/rules/api.md`, `docs/agent-patterns/triage-ownership-seams.md`.
-  - Out of scope for *decision* tickets: LangGraph build and mass rename until asked.
+  - Out of scope for *decision* tickets: LangGraph build until asked.
 
 ## Decisions so far
 
@@ -36,13 +36,11 @@ An ownership table plus hard seam rules — using the naming bundle in [Adopt cl
 
 ## Not yet specified
 
-- Whether inbox `pendingApproval` derivation needs its own follow-up once resume-by-attempt id is implemented.
-- Order of code renames (symbols vs folders vs OpenAPI) when execution is requested.
-- Whether OpenAPI keeps `runId` as the published field name while docs say Attempt.
+- Whether OpenAPI / ledger wire keep publishing the field name `runId` forever or switch to `attemptId`.
+- Whether to rename SQL tables/columns (`triage_runs`, `proposal`, `decisions`) to match TS.
 
 ## Out of scope
 
 - Building LangGraph adapter behind TriageAgent.
-- Mass rename of source files until asked.
-- Reopening [Freeze the TriageEngine Effect seam](../agentic-inbox-v2/issues/02-freeze-triage-engine-seam.md) role split (only the labels change).
+- Reopening [Freeze the TriageEngine Effect seam](../agentic-inbox-v2/issues/02-freeze-triage-engine-seam.md) role split (labels updated).
 - Web UI redesign; Redis; evals; traces UI.
