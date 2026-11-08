@@ -1,0 +1,134 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.2/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "ignoreUnknown": true,
+    "includes": [
+      "**/*.{ts,tsx,json,jsonc}",
+      "!**/node_modules",
+      "!**/.next",
+      "!**/dist",
+      "!**/build",
+      "!**/coverage",
+      "!**/.codegraph",
+      "!.agent",
+      "!vendor",
+      "!apps/web/public",
+      "!apps/web/src/design-system",
+      "!apps/web/src/ai-ui",
+      "!packages/api-core/openapi.json",
+      "!apps/api/src/Modules/Emails/emails.dataset.ts",
+      "!required-workflows.json"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "semicolons": "always",
+      "trailingCommas": "none",
+      "arrowParentheses": "always"
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "correctness": {
+        "useImportExtensions": "off"
+      },
+      "style": {
+        "useFilenamingConvention": {
+          "level": "error",
+          "options": {
+            "strictCase": false,
+            "filenameCases": ["camelCase", "kebab-case"]
+          }
+        }
+      },
+      "suspicious": {
+        "noUnknownAtRules": "off"
+      }
+    },
+    "domains": {
+      "next": "recommended",
+      "react": "recommended"
+    }
+  },
+  "overrides": [
+    {
+      "includes": [
+        "apps/api/src/App.ts",
+        "apps/api/src/Main.ts",
+        "apps/api/src/WebHandler.ts",
+        "apps/api/src/Infrastructure/**/*.ts",
+        "apps/api/src/Lib/**/*.ts",
+        "apps/api/src/Modules/**/*.ts",
+        "apps/api/test/**/*.ts",
+        "packages/api-core/src/Api.ts",
+        "packages/api-core/src/Middleware.ts",
+        "packages/api-core/src/Modules/**/*.ts"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "useFilenamingConvention": {
+              "level": "error",
+              "options": {
+                "strictCase": false,
+                "filenameCases": ["PascalCase"]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/api/migrations/**/*.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "useFilenamingConvention": {
+              "level": "error",
+              "options": {
+                "strictCase": false,
+                "filenameCases": ["snake_case"]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "**/*.generated.ts",
+        "apps/api/src/Modules/Emails/emails.dataset.ts"
+      ],
+      "formatter": {
+        "enabled": false
+      },
+      "linter": {
+        "rules": {
+          "style": {
+            "useFilenamingConvention": "off"
+          }
+        }
+      }
+    }
+  ],
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  }
+}

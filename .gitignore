@@ -1,0 +1,108 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+#########################################
+# Dependencies
+#########################################
+node_modules/
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+#########################################
+# Testing
+#########################################
+coverage/
+.codegraph/
+
+#########################################
+# Next.js & Production
+#########################################
+.next/
+out/
+build/
+
+#########################################
+# Miscellaneous
+#########################################
+.DS_Store
+*.pem
+*.log
+*.pyc
+__pycache__/
+.serena/
+.serena
+.superpowers
+
+#########################################
+# Debug logs
+#########################################
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+#########################################
+# Environment files
+#########################################
+.env*
+.env
+.env.local
+!.env.example
+
+#########################################
+# Vercel
+#########################################
+.vercel
+
+#########################################
+# TypeScript
+#########################################
+*.tsbuildinfo
+next-env.d.ts
+
+#########################################
+# Playwright
+#########################################
+.playwright-mcp/
+
+#########################################
+# Other roots & CI
+#########################################
+refs/
+.omo/
+
+#########################################
+# Monorepo build artifacts
+#########################################
+dist/
+.turbo/
+.cache/
+
+#########################################
+# Directories to ignore
+#########################################
+vendor/
+.data/
+
+#########################################
+# Files to ignore
+#########################################
+.context
+.mcp.json
+
+#########################################
+# Editor/IDE
+#########################################
+# .vscode/ is intentionally tracked
+
+#########################################
+# Project-specific
+#########################################
+scratch/
+
+# Vendored reference source (fetch with the command in repos/README.md)
+repos/effect-smol/

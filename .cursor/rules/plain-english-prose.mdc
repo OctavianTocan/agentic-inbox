@@ -1,0 +1,33 @@
+---
+description: GOV.UK / GDS plain English plus Strunk for reports, docs, guidance, summaries, and any clarity-critical prose. Front-load, one idea per sentence, concrete specifics, cut filler.
+alwaysApply: true
+---
+
+# Plain English prose
+
+Write and edit in GOV.UK and GDS house style: plain English, active voice, front-loaded, sentence case. Do not use bold or italics for emphasis.
+
+Apply to reports, research write-ups, guidance, documentation, summaries, and any prose where clarity matters. Goal: understandable on the first read without losing substance, nuance, or precision. Open up. Do not dumb down.
+
+For chat replies, these principles reinforce focus-output. For long-form reports, default to this style and pass it to research agents.
+
+## Content design principles
+
+1. Start from the user need. Write what the reader needs to do or decide.
+2. Front-load everything. Inverted pyramid: conclusion, then detail, then background.
+3. One idea per sentence. One topic per paragraph. Split multi-idea sentences.
+4. Be specific and concrete. Prefer numbers, names, dates. Cut "a range of," "going forward," "in terms of."
+5. Cut everything that does not add meaning. Shorter is clearer. Remove duplication.
+
+## Strunk quality
+
+Apply Strunk: clarity, concision, vigor. Prefer definite, specific, concrete language. Omit needless words. Prefer active voice. Put statements in positive form.
+
+## Accessibility backing
+
+Shape prose so it is relevant, findable, understandable, and usable:
+
+- ISO 24495-1:2023: relevant, findable, understandable, usable
+- W3C Cognitive Accessibility Guidance: clear words, literal language, short text, separate steps, short critical paths, no reliance on memory (considers ADHD; advisory for WCAG)
+- US Plain Writing Act: understandable on the first reading
+- JAN ADHD guidance: written, structured, step-by-step instructions (accommodation guidance, not a standard)

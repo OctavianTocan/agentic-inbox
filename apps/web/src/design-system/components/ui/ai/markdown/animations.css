@@ -1,0 +1,34 @@
+/* Base animation class */
+.animate-token {
+  animation: var(--animation) var(--duration) var(--delay) both
+    var(--easing, ease-out);
+}
+
+/* Fade animation */
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Blur animation */
+@keyframes blur {
+  from {
+    opacity: 0.2;
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-token {
+    animation: none;
+  }
+}

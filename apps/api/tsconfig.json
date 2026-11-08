@@ -1,0 +1,10 @@
+{
+  "extends": "@tooling/typescript-config/bun",
+  "compilerOptions": {
+    "rootDir": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts", "migrations/**/*.ts"]
+}

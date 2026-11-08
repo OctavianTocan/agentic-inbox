@@ -1,0 +1,18 @@
+[constraints]
+max_cycles = 0
+no_god_files = true
+
+[[layers]]
+name = "app"
+paths = ["apps/web/src/app/**"]
+order = 0
+
+[[layers]]
+name = "design-system"
+paths = ["apps/web/src/design-system/**"]
+order = 1
+
+[[layers]]
+name = "ai-ui"
+paths = ["apps/web/src/ai-ui/**"]
+order = 1

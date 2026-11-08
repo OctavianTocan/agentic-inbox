@@ -1,0 +1,10 @@
+{
+  "name": "@tooling/typescript-config",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./base": "./base.json",
+    "./bun": "./bun.json"
+  }
+}

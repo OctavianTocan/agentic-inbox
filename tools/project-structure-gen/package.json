@@ -1,0 +1,16 @@
+{
+  "name": "project-structure-gen",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate": "bun run src/index.ts generate",
+    "check": "bun run src/index.ts check",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@tooling/typescript-config": "workspace:*",
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
+  }
+}
