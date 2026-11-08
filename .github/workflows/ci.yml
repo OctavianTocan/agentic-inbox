@@ -32,7 +32,7 @@ jobs:
           - 5442:5432
         options: --health-cmd "pg_isready -U agentic_inbox -d agentic_inbox" --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
       - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
         with:
@@ -51,7 +51,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
       - run: bunx react-doctor@latest --no-telemetry --root apps/web
@@ -60,7 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
       - run: curl -fsSL https://raw.githubusercontent.com/sentrux/sentrux/main/install.sh | sh
