@@ -9,7 +9,7 @@ import {
 } from "motion/react";
 import { useEffect } from "react";
 import { cn } from "../../lib/utils";
-import { LogoIcon } from "./logo-icon";
+import { AgenticInboxIcon } from "./agentic-inbox-icon";
 
 const SWEEP_GRADIENT =
   "linear-gradient(90deg, transparent 0%, black 50%, transparent 100%)";
@@ -29,7 +29,7 @@ export type LogoShimmerProps = {
 };
 
 /**
- * Animated shimmering company mark, suitable as a loading indicator. Always
+ * Animated shimmering app mark, suitable as a loading indicator. Always
  * renders `aria-hidden`; consumers provide their own accessible loading label.
  */
 export function LogoShimmer({ className }: LogoShimmerProps) {
@@ -51,7 +51,7 @@ export function LogoShimmer({ className }: LogoShimmerProps) {
 
   if (reduce) {
     return (
-      <LogoIcon
+      <AgenticInboxIcon
         aria-hidden="true"
         className={cn("size-10 text-muted-foreground/55", className)}
       />
@@ -63,7 +63,7 @@ export function LogoShimmer({ className }: LogoShimmerProps) {
       aria-hidden="true"
       className={cn("relative inline-block size-10", className)}
     >
-      <LogoIcon className="absolute inset-0 size-full text-muted-foreground/55" />
+      <AgenticInboxIcon className="absolute inset-0 size-full text-muted-foreground/55" />
       <m.span
         className="absolute inset-0"
         style={{
@@ -72,7 +72,7 @@ export function LogoShimmer({ className }: LogoShimmerProps) {
           WebkitMaskPosition: maskPos,
         }}
       >
-        <LogoIcon className="size-full text-foreground" />
+        <AgenticInboxIcon className="size-full text-foreground" />
       </m.span>
     </span>
   );
