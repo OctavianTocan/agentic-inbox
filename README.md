@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="./.github/media/agentic-inbox-banner-dark.svg">
-    <img src="./.github/media/agentic-inbox-banner-light.svg" alt="Agentic Inbox — human-guided AI email triage" width="100%">
+    <img src="./.github/media/agentic-inbox-banner-light.svg" alt="Agentic Inbox: human-guided AI email triage" width="100%">
   </picture>
 </p>
 
@@ -11,6 +11,10 @@ Agentic Inbox is a local shared-inbox workspace. An AI agent sorts a fixed set
 of sample messages, handles routine follow-ups, and holds sensitive work for a
 human review. Every action has a plain-language rationale and a reversible
 ledger entry.
+
+<p align="center">
+  <img src="./.github/media/agentic-inbox-walkthrough.gif" width="100%" alt="Agentic Inbox: the inbox, then a safety email the agent held for review with its reasoning and proposed reply, then the audit log of what it did">
+</p>
 
 ## What it does
 
