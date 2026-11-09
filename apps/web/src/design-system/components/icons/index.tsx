@@ -355,6 +355,7 @@ export const PanelLeftCloseIcon = hugeicon(HiSidebarLeftClose);
 export const PanelRightCloseIcon = hugeicon(HiSidebarRightClose);
 export const ShieldAlertIcon = hugeicon(HiShieldAlert);
 
+export { AgenticInboxIcon } from "./agentic-inbox-icon";
 export { GithubIcon } from "./github-icon";
 export { GoogleIcon } from "./google-icon";
 export { HuggingFaceLogoIcon } from "./hugging-face-logo-icon";
@@ -363,7 +364,6 @@ export {
   type IntegrationAssetName,
 } from "./integration-asset-icon";
 export { LinkedinIcon } from "./linkedin-icon";
-export { LogoIcon } from "./logo-icon";
 export { NotionIcon } from "./notion-icon";
 export { SlackIcon } from "./slack-icon";
 export { XLogoIcon } from "./x-logo-icon";

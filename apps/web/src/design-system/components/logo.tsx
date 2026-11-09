@@ -1,7 +1,7 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import { siteConfig } from "@/config/site";
 import { cn } from "../lib/utils";
-import { LogoIcon } from "./icons";
+import { AgenticInboxIcon } from "./icons";
 
 const logoVariants = cva("inline-flex items-center gap-3", {
   variants: {
@@ -24,7 +24,7 @@ export type LogoProps = VariantProps<typeof logoVariants> & {
   iconClassName?: string;
 };
 
-/** Company logo pairing the symbol mark with the company name. */
+/** Agentic Inbox logo: the envelope mark beside the app's name. */
 export function Logo({
   size = "md",
   showText = true,
@@ -33,7 +33,7 @@ export function Logo({
 }: LogoProps) {
   return (
     <div className={cn(logoVariants({ size }), className)}>
-      <LogoIcon className={cn(logoIconVariants(), iconClassName)} />
+      <AgenticInboxIcon className={cn(logoIconVariants(), iconClassName)} />
       {showText && (
         <span className="whitespace-nowrap font-bold font-display">
           {siteConfig.name}
