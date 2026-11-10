@@ -7,14 +7,50 @@
 
 # Agentic Inbox
 
-Agentic Inbox is a local shared-inbox workspace. An AI agent sorts a fixed set
-of sample messages, handles routine follow-ups, and holds sensitive work for a
-human review. Every action has a plain-language rationale and a reversible
-ledger entry.
+An AI-assisted shared inbox. The agent handles routine email and holds sensitive
+messages for a human, with its reasoning and a proposed reply beside the message.
+Every action has a plain-language rationale and a reversible ledger entry.
+
+[Open the demo](https://agentic-inbox.octaviantocan.com) ·
+[Run locally](#run-locally) · [Architecture](#architecture)
+
+The public demo is a read-only showcase with seeded sample emails. It does not
+connect to a real mailbox or send email. Triage, chat and action changes require
+a configured local or deployed instance.
+
+## See it
+
+### Know what needs you
+
+The queue separates mail awaiting approval from routine work the agent has handled.
+An at-a-glance summary explains what is left to review.
+
+![Inbox overview: two sample emails awaiting approval, with routine mail below](./.github/media/inbox-overview.png)
+
+### Review a sensitive message
+
+A safety report stays with a human. Open it to read the original email, the agent's
+reasoning and its proposed reply together, with approval and denial controls.
+
+![A safety report held for review, with the original email, agent reasoning and proposed reply](./.github/media/human-review.png)
+
+### Inspect what the agent did
+
+The audit trail keeps the action, its reason and the reply payload together.
+
+![Audit detail showing a supplier acknowledgement, the agent decision and the exact reply payload](./.github/media/audit-trail.png)
+
+<details>
+<summary>Watch the walkthrough</summary>
 
 <p align="center">
-  <img src="./.github/media/agentic-inbox-walkthrough.gif" width="100%" alt="Agentic Inbox: the inbox, then a safety email the agent held for review with its reasoning and proposed reply, then the audit log of what it did">
+  <img src="./.github/media/agentic-inbox-walkthrough.gif" width="100%" alt="Walkthrough of the inbox, a safety email held for review and the audit log">
 </p>
+
+</details>
+
+The screenshots above were captured from the public demo using fictional sample
+messages. The walkthrough also uses sample data.
 
 ## What it does
 
